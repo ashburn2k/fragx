@@ -497,34 +497,36 @@ export default function VendorPricesPage() {
         <div className="text-center py-20 text-slate-500">Loading vendors...</div>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedVendor(ALL_VENDORS_SLUG)}
-                className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  selectedVendor === ALL_VENDORS_SLUG
-                    ? 'bg-teal-600 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
-                }`}
-              >
-                All Vendors
-              </button>
-              {vendors.map(v => (
+          <div className="flex flex-col gap-2">
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <div className="flex items-center gap-2 min-w-max pb-1">
                 <button
-                  key={v.slug}
-                  onClick={() => setSelectedVendor(v.slug)}
-                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    selectedVendor === v.slug
-                      ? 'bg-cyan-500 text-white'
+                  onClick={() => setSelectedVendor(ALL_VENDORS_SLUG)}
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    selectedVendor === ALL_VENDORS_SLUG
+                      ? 'bg-teal-600 text-white'
                       : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
                   }`}
                 >
-                  {v.name}
+                  All Vendors
                 </button>
-              ))}
+                {vendors.map(v => (
+                  <button
+                    key={v.slug}
+                    onClick={() => setSelectedVendor(v.slug)}
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      selectedVendor === v.slug
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
             </div>
             {selectedVendor !== ALL_VENDORS_SLUG && (
-              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit shrink-0">
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
                 <button
                   onClick={() => setViewTab('catalog')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
