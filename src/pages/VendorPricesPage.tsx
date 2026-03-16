@@ -255,6 +255,7 @@ export default function VendorPricesPage() {
   const [pageSize, setPageSize] = useState<PageSize>(50);
   const [viewTab, setViewTab] = useState<ViewTab>('catalog');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
 
   useEffect(() => {
     loadVendors();
@@ -498,11 +499,79 @@ export default function VendorPricesPage() {
       ) : (
         <>
           <div className="flex flex-col gap-2">
-            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <div className="flex items-center gap-2 min-w-max pb-1">
+            {/* Mobile: dropdown */}
+            <div className="sm:hidden flex items-center gap-2">
+              <div className="relative flex-1">
+                <button
+                  onClick={() => setVendorDropdownOpen(o => !o)}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-800 text-sm font-medium text-white border border-slate-700"
+                >
+                  <span className="flex items-center gap-2">
+                    <Store size={14} className="text-slate-400 shrink-0" />
+                    {selectedVendor === ALL_VENDORS_SLUG
+                      ? 'All Vendors'
+                      : vendors.find(v => v.slug === selectedVendor)?.name ?? 'Select Vendor'}
+                  </span>
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${vendorDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {vendorDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl overflow-hidden z-30 shadow-xl">
+                    <button
+                      onClick={() => { setSelectedVendor(ALL_VENDORS_SLUG); setVendorDropdownOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        selectedVendor === ALL_VENDORS_SLUG
+                          ? 'bg-teal-600/20 text-teal-400 font-medium'
+                          : 'text-slate-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      All Vendors
+                    </button>
+                    {vendors.map(v => (
+                      <button
+                        key={v.slug}
+                        onClick={() => { setSelectedVendor(v.slug); setVendorDropdownOpen(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                          selectedVendor === v.slug
+                            ? 'bg-cyan-500/20 text-cyan-400 font-medium'
+                            : 'text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        {v.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {selectedVendor !== ALL_VENDORS_SLUG && (
+                <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 shrink-0">
+                  <button
+                    onClick={() => setViewTab('catalog')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      viewTab === 'catalog' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ShoppingBag size={12} />
+                    Prices
+                  </button>
+                  <button
+                    onClick={() => setViewTab('history')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      viewTab === 'history' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <BarChart2 size={12} />
+                    History
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: pill tabs */}
+            <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedVendor(ALL_VENDORS_SLUG)}
-                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     selectedVendor === ALL_VENDORS_SLUG
                       ? 'bg-teal-600 text-white'
                       : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
@@ -514,7 +583,7 @@ export default function VendorPricesPage() {
                   <button
                     key={v.slug}
                     onClick={() => setSelectedVendor(v.slug)}
-                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                       selectedVendor === v.slug
                         ? 'bg-cyan-500 text-white'
                         : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
@@ -524,29 +593,29 @@ export default function VendorPricesPage() {
                   </button>
                 ))}
               </div>
+              {selectedVendor !== ALL_VENDORS_SLUG && (
+                <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit shrink-0">
+                  <button
+                    onClick={() => setViewTab('catalog')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      viewTab === 'catalog' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ShoppingBag size={14} />
+                    Prices
+                  </button>
+                  <button
+                    onClick={() => setViewTab('history')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      viewTab === 'history' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <BarChart2 size={14} />
+                    Price History
+                  </button>
+                </div>
+              )}
             </div>
-            {selectedVendor !== ALL_VENDORS_SLUG && (
-              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
-                <button
-                  onClick={() => setViewTab('catalog')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    viewTab === 'catalog' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <ShoppingBag size={14} />
-                  Prices
-                </button>
-                <button
-                  onClick={() => setViewTab('history')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    viewTab === 'history' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <BarChart2 size={14} />
-                  Price History
-                </button>
-              </div>
-            )}
           </div>
 
 
