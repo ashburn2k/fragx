@@ -15,8 +15,34 @@ const EQUIPMENT_TAGS = new Set([
   'reef stock', 'subscriptions', 'service', 'box fee', 'shipping',
 ]);
 
-function hasEquipmentTag(tags: string[]): boolean {
-  return tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()));
+const HIDDEN_COLLECTIONS = new Set([
+  'reef-stock', 'heater', 'subscriptions', 'service', 'box-fee', 'shipping',
+  'aquarium-services', 'aquarium-water', 'reef-wear', 'dry-goods', 'drygoods',
+  'freshwater-fish', 'freshwater-&-planted', 'freshwater-invert', 'aquatic-plant',
+  'frozen-food', 'aquarium', 'neptune-systems', 'aquarium-supplies-and-accessories',
+  'aquariums-&-sumps', 'aquarium-furniture', 'aquariums,-tanks-and-bowls',
+  'aquarium-water', 'product', 'additives', 'food', 'fish-food', 'fish-&-coral-foods',
+  'shopkeep', 'reef-wear', 'water-care-and-testing',
+  'supplements-and-internal-health-supplies', 'skimmers,-reactors-&-filtration',
+  'salt-&-maintenance', 'cleaning-supplies', 'heaters-&-chillers', 'fragging-supplies',
+  'temperature-monitoring-and-control', 'auto-top-off', 'rock-&-sand',
+  'feeding-supplies', 'controllers-&-testing', 'panta-rhei',
+]);
+
+const HIDDEN_TAG_PATTERNS = [
+  /^reef.?stock$/i,
+  /^heater/i,
+  /^subscription/i,
+  /^service/i,
+  /^box.?fee$/i,
+  /^shipping/i,
+];
+
+function shouldHideProduct(tags: string[], collection: string): boolean {
+  if (HIDDEN_COLLECTIONS.has(collection.toLowerCase().trim())) return true;
+  if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return true;
+  if (tags.some(t => HIDDEN_TAG_PATTERNS.some(p => p.test(t.trim())))) return true;
+  return false;
 }
 
 type ViewTab = 'catalog' | 'history';
@@ -352,7 +378,7 @@ export default function VendorPricesPage() {
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of products.filter(p => !hasEquipmentTag(p.tags))) {
+    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection))) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -364,7 +390,7 @@ export default function VendorPricesPage() {
   }, [products]);
 
   const applyFilters = useCallback(() => {
-    let result = products.filter(p => !hasEquipmentTag(p.tags));
+    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection));
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
