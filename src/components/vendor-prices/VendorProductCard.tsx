@@ -24,8 +24,9 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
 export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
   const isAreefCreation = (vendorSlug ?? product.vendor_slug) === 'areef-creation';
   const hidePrice = isAreefCreation && product.price === 10000;
+  const isAuction = isAreefCreation && product.price === 1;
 
-  const discountPct = !hidePrice && product.compare_at_price && product.compare_at_price > product.price
+  const discountPct = !hidePrice && !isAuction && product.compare_at_price && product.compare_at_price > product.price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : null;
 
@@ -101,6 +102,8 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
         <div className="flex items-baseline gap-1.5 mt-auto pt-0.5">
           {hidePrice ? (
             <span className="text-slate-500 text-xs italic">Price on request</span>
+          ) : isAuction ? (
+            <span className="text-amber-400 text-xs font-semibold">Auction Price</span>
           ) : (
             <>
               <span className={`font-bold text-sm ${soldOut ? 'text-slate-500 line-through' : 'text-cyan-400'}`}>
