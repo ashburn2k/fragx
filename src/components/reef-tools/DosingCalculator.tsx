@@ -54,9 +54,9 @@ export default function DosingCalculator() {
   }
 
   const result = calc();
-  const inputCls = "w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-500";
-  const selectCls = "w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors";
-  const tabCls = (active: boolean) => `flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${active ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200 border border-slate-700'}`;
+  const inputCls = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500";
+  const selectCls = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors";
+  const tabCls = (active: boolean) => `flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${active ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700'}`;
 
   const paramConfig: Record<Parameter, { label: string; unit: string; placeholder: [string, string] }> = {
     alk: { label: 'Alkalinity', unit: 'dKH', placeholder: ['8.3', '9.0'] },
@@ -67,14 +67,14 @@ export default function DosingCalculator() {
   const cfg = paramConfig[param];
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-colors duration-200">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
           <FlaskConical size={16} className="text-emerald-400" />
         </div>
         <div>
-          <h3 className="text-white font-semibold text-sm">Dosing Calculator</h3>
-          <p className="text-slate-500 text-xs">How much reagent to raise your parameters</p>
+          <h3 className="text-slate-900 dark:text-white font-semibold text-sm">Dosing Calculator</h3>
+          <p className="text-slate-400 dark:text-slate-500 text-xs">How much reagent to raise your parameters</p>
         </div>
       </div>
 
@@ -88,23 +88,23 @@ export default function DosingCalculator() {
 
       <div className="space-y-3">
         <div>
-          <label className="text-xs text-slate-400 mb-1.5 block">Tank Volume (US gallons)</label>
+          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Tank Volume (US gallons)</label>
           <input className={inputCls} placeholder="100" value={volGal} onChange={e => setVolGal(e.target.value)} type="number" min="0" />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-slate-400 mb-1.5 block">Current {cfg.unit}</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Current {cfg.unit}</label>
             <input className={inputCls} placeholder={cfg.placeholder[0]} value={current} onChange={e => setCurrent(e.target.value)} type="number" min="0" step="0.1" />
           </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1.5 block">Target {cfg.unit}</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Target {cfg.unit}</label>
             <input className={inputCls} placeholder={cfg.placeholder[1]} value={target} onChange={e => setTarget(e.target.value)} type="number" min="0" step="0.1" />
           </div>
         </div>
 
         <div>
-          <label className="text-xs text-slate-400 mb-1.5 block">Reagent</label>
+          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Reagent</label>
           {param === 'alk' && (
             <select className={selectCls} value={alkReagent} onChange={e => setAlkReagent(e.target.value as AlkReagent)}>
               {Object.entries(ALK_REAGENTS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
@@ -125,13 +125,13 @@ export default function DosingCalculator() {
 
       {result ? (
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+          <div className="bg-slate-100/60 dark:bg-slate-800/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-emerald-400">{result.grams.toFixed(2)}</div>
-            <div className="text-xs text-slate-400 mt-0.5">grams</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">grams</div>
           </div>
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+          <div className="bg-slate-100/60 dark:bg-slate-800/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-teal-400">{result.tsp.toFixed(2)}</div>
-            <div className="text-xs text-slate-400 mt-0.5">teaspoons</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">teaspoons</div>
           </div>
         </div>
       ) : (

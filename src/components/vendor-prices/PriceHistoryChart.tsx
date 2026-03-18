@@ -41,9 +41,9 @@ export default function PriceHistoryChart({ history, title }: PriceHistoryChartP
   const isFlat = Math.abs(totalChange) < 0.01;
 
   return (
-    <div className="bg-slate-800/50 rounded-lg p-3 space-y-1.5">
+    <div className="bg-slate-100/60 dark:bg-slate-800/50 rounded-lg p-3 space-y-1.5">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-400 truncate max-w-[60%]">{title}</span>
+        <span className="text-slate-500 dark:text-slate-400 truncate max-w-[60%]">{title}</span>
         <span className={`font-semibold ${isFlat ? 'text-slate-400' : isUp ? 'text-red-400' : 'text-green-400'}`}>
           {isFlat ? '—' : `${isUp ? '+' : ''}$${totalChange.toFixed(2)}`}
         </span>
@@ -61,7 +61,7 @@ export default function PriceHistoryChart({ history, title }: PriceHistoryChartP
           <circle key={i} cx={p.x} cy={p.y} r="2" fill={isFlat ? '#64748b' : isUp ? '#f87171' : '#34d399'} />
         ))}
       </svg>
-      <div className="flex items-center justify-between text-[10px] text-slate-500">
+      <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500">
         <span>${min.toFixed(2)}</span>
         <span>{sorted.length} snapshots</span>
         <span>${max.toFixed(2)}</span>

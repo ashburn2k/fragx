@@ -43,17 +43,17 @@ export default function ParameterChecker() {
     setValues(prev => ({ ...prev, [key]: val }));
   }
 
-  const inputCls = "flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-500";
+  const inputCls = "flex-1 min-w-0 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500";
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-colors duration-200">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
           <Activity size={16} className="text-rose-400" />
         </div>
         <div>
-          <h3 className="text-white font-semibold text-sm">Parameter Checker</h3>
-          <p className="text-slate-500 text-xs">Enter your parameters to check if they're in range</p>
+          <h3 className="text-slate-900 dark:text-white font-semibold text-sm">Parameter Checker</h3>
+          <p className="text-slate-400 dark:text-slate-500 text-xs">Enter your parameters to check if they're in range</p>
         </div>
       </div>
 
@@ -66,8 +66,8 @@ export default function ParameterChecker() {
           return (
             <div key={key} className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${sc ? sc.bg : 'border-transparent'}`}>
               <div className="w-28 flex-shrink-0">
-                <div className="text-xs font-medium text-slate-300">{def.label}</div>
-                <div className="text-[10px] text-slate-500">
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{def.label}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500">
                   ideal: {def.ideal[0]}–{def.ideal[1]} {def.unit}
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function ParameterChecker() {
                   step="any"
                   min="0"
                 />
-                {def.unit && <span className="text-xs text-slate-500 flex-shrink-0">{def.unit}</span>}
+                {def.unit && <span className="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">{def.unit}</span>}
               </div>
               {sc && Icon && (
                 <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -94,7 +94,7 @@ export default function ParameterChecker() {
         })}
       </div>
 
-      <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+      <div className="mt-4 flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500">
         <div className="flex items-center gap-1"><CheckCircle size={12} className="text-emerald-400" /> Ideal</div>
         <div className="flex items-center gap-1"><AlertTriangle size={12} className="text-amber-400" /> Acceptable</div>
         <div className="flex items-center gap-1"><XCircle size={12} className="text-red-400" /> Out of Range</div>

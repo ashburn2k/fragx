@@ -4,7 +4,7 @@ type PriceStatus = 'deal' | 'fair' | 'overpriced';
 
 const statusConfig: Record<PriceStatus, { label: string; className: string; Icon: typeof TrendingDown }> = {
   deal: { label: 'Deal', className: 'bg-emerald-900/60 text-emerald-400 border border-emerald-700', Icon: TrendingDown },
-  fair: { label: 'Fair Price', className: 'bg-slate-700 text-slate-300 border border-slate-600', Icon: Minus },
+  fair: { label: 'Fair Price', className: 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600', Icon: Minus },
   overpriced: { label: 'Overpriced', className: 'bg-red-900/60 text-red-400 border border-red-700', Icon: TrendingUp },
 };
 

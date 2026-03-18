@@ -40,7 +40,7 @@ export default function PriceChart({ history }: PriceChartProps) {
 
   return (
     <div>
-      <h4 className="text-slate-400 text-xs uppercase tracking-wider mb-3">Price History ({sorted.length} sales)</h4>
+      <h4 className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider mb-3">Price History ({sorted.length} sales)</h4>
       <div className="w-full overflow-x-auto">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ minWidth: 280 }}>
           <defs>

@@ -15,7 +15,7 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
   teal:    'bg-teal-900/40 text-teal-400 border-teal-800/60',
   amber:   'bg-amber-900/40 text-amber-400 border-amber-800/60',
   rose:    'bg-rose-900/40 text-rose-400 border-rose-800/60',
-  slate:   'bg-slate-800 text-slate-400 border-slate-700',
+  slate:   'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700',
   emerald: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/60',
   sky:     'bg-sky-900/40 text-sky-400 border-sky-800/60',
   orange:  'bg-orange-900/40 text-orange-400 border-orange-800/60',
@@ -42,11 +42,11 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
       rel="noopener noreferrer"
       className={`group flex flex-col border rounded-xl overflow-hidden transition-all duration-200 ${
         soldOut
-          ? 'bg-slate-950 border-slate-700/50 hover:border-slate-600'
-          : 'bg-slate-900 border-slate-800 hover:border-slate-600'
+          ? 'bg-slate-50 dark:bg-slate-950 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400 dark:hover:border-slate-600'
+          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
       }`}
     >
-      <div className="relative aspect-square bg-slate-800 overflow-hidden">
+      <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -55,12 +55,12 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">
+          <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-xs">
             No image
           </div>
         )}
         {soldOut ? (
-          <span className="absolute top-2 left-2 bg-slate-900/90 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-600">
+          <span className="absolute top-2 left-2 bg-slate-900/90 text-slate-200 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-600">
             SOLD OUT
           </span>
         ) : discountPct ? (
@@ -73,17 +73,17 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
         </span>
       </div>
       <div className="p-2.5 flex flex-col gap-1.5 flex-1">
-        <p className={`text-xs font-medium leading-snug line-clamp-2 transition-colors ${soldOut ? 'text-slate-400 group-hover:text-slate-300' : 'text-white group-hover:text-cyan-300'}`}>
+        <p className={`text-xs font-medium leading-snug line-clamp-2 transition-colors ${soldOut ? 'text-slate-500 dark:text-slate-400 group-hover:text-slate-400 dark:group-hover:text-slate-300' : 'text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300'}`}>
           {product.title}
         </p>
         {showVendorBadge && vendorName ? (
           <p className="text-[10px] truncate">
-            <span className="bg-slate-800 text-cyan-400 border border-slate-700 px-1.5 py-0.5 rounded font-medium">
+            <span className="bg-slate-100 dark:bg-slate-800 text-cyan-400 border border-slate-300 dark:border-slate-700 px-1.5 py-0.5 rounded font-medium">
               {vendorName}
             </span>
           </p>
         ) : (
-          <p className="text-slate-500 text-[10px] capitalize truncate">
+          <p className="text-slate-400 dark:text-slate-500 text-[10px] capitalize truncate">
             {product.collection.replace(/-/g, ' ')}
           </p>
         )}
@@ -101,7 +101,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
         )}
         <div className="flex items-baseline gap-1.5 mt-auto pt-0.5">
           {hidePrice ? (
-            <span className="text-slate-500 text-xs italic">Price on request</span>
+            <span className="text-slate-400 dark:text-slate-500 text-xs italic">Price on request</span>
           ) : isAuction ? (
             <span className="text-amber-400 text-xs font-semibold">Auction Price</span>
           ) : (
@@ -110,7 +110,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
                 ${product.price.toFixed(2)}
               </span>
               {!soldOut && product.compare_at_price && (
-                <span className="text-slate-500 text-[10px] line-through">
+                <span className="text-slate-400 dark:text-slate-500 text-[10px] line-through">
                   ${product.compare_at_price.toFixed(2)}
                 </span>
               )}

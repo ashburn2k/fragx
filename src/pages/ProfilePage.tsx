@@ -79,8 +79,8 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
   if (!user || !profile) {
     return (
       <div className="text-center py-20">
-        <User size={40} className="text-slate-600 mx-auto mb-3" />
-        <p className="text-slate-400">Sign in to view your profile</p>
+        <User size={40} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+        <p className="text-slate-500 dark:text-slate-400">Sign in to view your profile</p>
       </div>
     );
   }
@@ -91,16 +91,16 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
   return (
     <div className="space-y-6">
       {/* Profile header */}
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden transition-colors duration-200">
         <div className="h-24 bg-gradient-to-r from-cyan-900/40 via-teal-900/30 to-slate-900" />
         <div className="px-6 pb-6">
           <div className="flex items-end justify-between -mt-10 mb-4">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-3xl font-bold text-white border-4 border-slate-900">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-3xl font-bold text-white border-4 border-white dark:border-slate-900">
               {profile.username[0].toUpperCase()}
             </div>
             <button
               onClick={() => editing ? handleSave() : setEditing(true)}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
+              className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
             >
               {editing ? <><Check size={14} /> {saving ? 'Saving...' : 'Save'}</> : <><Edit3 size={14} /> Edit</>}
             </button>
@@ -111,34 +111,34 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
               <input
                 value={editForm.display_name}
                 onChange={e => setEditForm(f => ({ ...f, display_name: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
+                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
                 placeholder="Display name"
               />
               <textarea
                 value={editForm.bio}
                 onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
                 rows={2}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm resize-none"
+                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm resize-none"
                 placeholder="Bio"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
                   value={editForm.location_city}
                   onChange={e => setEditForm(f => ({ ...f, location_city: e.target.value }))}
-                  className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
+                  className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
                   placeholder="City"
                 />
                 <input
                   value={editForm.location_state}
                   onChange={e => setEditForm(f => ({ ...f, location_state: e.target.value }))}
                   maxLength={2}
-                  className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
+                  className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
                   placeholder="State"
                 />
               </div>
               <button
                 onClick={() => setEditing(false)}
-                className="text-slate-400 hover:text-white text-sm transition-colors flex items-center gap-1"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm transition-colors flex items-center gap-1"
               >
                 <X size={12} />Cancel
               </button>
@@ -146,26 +146,26 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
           ) : (
             <>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-white">{profile.display_name ?? profile.username}</h1>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">{profile.display_name ?? profile.username}</h1>
                 {profile.is_verified && (
                   <ShieldCheck size={18} className="text-cyan-400" aria-label="Verified" />
                 )}
               </div>
-              <p className="text-slate-400 text-sm">@{profile.username}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">@{profile.username}</p>
 
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <span className="flex items-center gap-1.5 bg-slate-800 px-2.5 py-1 rounded-lg text-xs text-slate-300">
+                <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-xs text-slate-700 dark:text-slate-300">
                   <RoleIcon size={12} />
                   {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
                 </span>
                 {(profile.location_city || profile.location_state) && (
-                  <span className="text-slate-500 text-xs">
+                  <span className="text-slate-400 dark:text-slate-500 text-xs">
                     {profile.location_city}{profile.location_city && profile.location_state ? ', ' : ''}{profile.location_state}
                   </span>
                 )}
               </div>
 
-              {profile.bio && <p className="text-slate-300 text-sm mt-3">{profile.bio}</p>}
+              {profile.bio && <p className="text-slate-700 dark:text-slate-300 text-sm mt-3">{profile.bio}</p>}
             </>
           )}
 
@@ -181,9 +181,9 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
               { label: 'Trades', value: profile.total_trades },
               { label: 'Reviews', value: profile.total_reviews },
             ].map(s => (
-              <div key={s.label} className="bg-slate-800 rounded-xl p-3 text-center">
-                <div className="text-white font-bold text-lg">{s.value}</div>
-                <div className="text-slate-400 text-xs">{s.label}</div>
+              <div key={s.label} className="bg-slate-100 dark:bg-slate-800 rounded-xl p-3 text-center transition-colors duration-200">
+                <div className="text-slate-900 dark:text-white font-bold text-lg">{s.value}</div>
+                <div className="text-slate-500 dark:text-slate-400 text-xs">{s.label}</div>
               </div>
             ))}
           </div>
@@ -192,19 +192,19 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
 
       {/* Badges */}
       {badges.length > 0 && (
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5">
-          <h3 className="text-white font-semibold mb-3">Badges</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 transition-colors duration-200">
+          <h3 className="text-slate-900 dark:text-white font-semibold mb-3">Badges</h3>
           <div className="flex flex-wrap gap-2">
             {badges.map(badge => (
               <div
                 key={badge.id}
-                className="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2"
+                className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 transition-colors duration-200"
                 title={badge.description ?? ''}
               >
                 <span className={`text-sm ${badgeColors[badge.color ?? ''] ?? 'text-cyan-400'}`}>
                   ★
                 </span>
-                <span className="text-white text-sm font-medium">{badge.name}</span>
+                <span className="text-slate-900 dark:text-white text-sm font-medium">{badge.name}</span>
               </div>
             ))}
           </div>
@@ -214,7 +214,7 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
       {/* Listings */}
       {!loading && activeListings.length > 0 && (
         <div>
-          <h3 className="text-white font-semibold mb-3">Active Listings ({activeListings.length})</h3>
+          <h3 className="text-slate-900 dark:text-white font-semibold mb-3">Active Listings ({activeListings.length})</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {activeListings.map(l => (
               <ListingCard key={l.id} listing={l} onClick={() => onListingClick(l)} />
@@ -225,34 +225,34 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
 
       {/* Reviews */}
       <div>
-        <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+        <h3 className="text-slate-900 dark:text-white font-semibold mb-3 flex items-center gap-2">
           <Star size={16} className="text-amber-400" />
           Reviews ({reviews.length})
         </h3>
         {reviews.length === 0 ? (
-          <div className="text-center py-8 bg-slate-900 border border-slate-800 rounded-2xl">
-            <MessageSquare size={28} className="text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-500 text-sm">No reviews yet</p>
+          <div className="text-center py-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+            <MessageSquare size={28} className="text-slate-400 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-slate-400 dark:text-slate-500 text-sm">No reviews yet</p>
           </div>
         ) : (
           <div className="space-y-3">
             {reviews.map(review => (
-              <div key={review.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+              <div key={review.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 transition-colors duration-200">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-xs font-bold text-white">
                       {(review.reviewer as { username: string })?.username?.[0]?.toUpperCase() ?? '?'}
                     </div>
-                    <span className="text-slate-300 text-sm font-medium">{(review.reviewer as { username: string })?.username}</span>
+                    <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{(review.reviewer as { username: string })?.username}</span>
                   </div>
                   <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map(i => (
-                      <Star key={i} size={12} className={i <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-600'} />
+                      <Star key={i} size={12} className={i <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-400 dark:text-slate-600'} />
                     ))}
                   </div>
                 </div>
-                {review.comment && <p className="text-slate-400 text-sm">{review.comment}</p>}
-                <p className="text-slate-600 text-xs mt-2">{new Date(review.created_at).toLocaleDateString()}</p>
+                {review.comment && <p className="text-slate-500 dark:text-slate-400 text-sm">{review.comment}</p>}
+                <p className="text-slate-400 dark:text-slate-600 text-xs mt-2">{new Date(review.created_at).toLocaleDateString()}</p>
               </div>
             ))}
           </div>

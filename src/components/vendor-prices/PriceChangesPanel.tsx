@@ -110,7 +110,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-4 animate-pulse h-16" />
+          <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 animate-pulse h-16" />
         ))}
       </div>
     );
@@ -118,10 +118,10 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
 
   if (history.length === 0) {
     return (
-      <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-2xl">
-        <Calendar size={36} className="mx-auto mb-3 text-slate-600" />
-        <p className="text-white font-semibold mb-1">No price history yet</p>
-        <p className="text-slate-400 text-sm">
+      <div className="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl transition-colors duration-200">
+        <Calendar size={36} className="mx-auto mb-3 text-slate-400 dark:text-slate-600" />
+        <p className="text-slate-900 dark:text-white font-semibold mb-1">No price history yet</p>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
           Fetch prices at least once to start recording history. Changes will be tracked each time you refresh.
         </p>
       </div>
@@ -135,11 +135,11 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
           { label: 'Price Increases', value: increases, color: 'text-red-400', bg: 'bg-red-900/20 border-red-800/40' },
           { label: 'Price Decreases', value: decreases, color: 'text-green-400', bg: 'bg-green-900/20 border-green-800/40' },
           { label: 'New Products', value: newCount, color: 'text-cyan-400', bg: 'bg-cyan-900/20 border-cyan-800/40' },
-          { label: 'Unchanged', value: unchanged, color: 'text-slate-400', bg: 'bg-slate-800/40 border-slate-700' },
+          { label: 'Unchanged', value: unchanged, color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-100/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700' },
         ].map(stat => (
-          <div key={stat.label} className={`${stat.bg} border rounded-xl px-4 py-3`}>
+          <div key={stat.label} className={`${stat.bg} border rounded-xl px-4 py-3 transition-colors duration-200`}>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{stat.label}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -152,7 +152,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all capitalize ${
               filter === f
                 ? 'bg-cyan-500 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {f === 'all' ? `All (${grouped.length})` :
@@ -165,12 +165,12 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search products..."
-          className="ml-auto bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-xs w-48"
+          className="ml-auto bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-xs w-48"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-10 text-slate-500 text-sm">No matching products</div>
+        <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm">No matching products</div>
       ) : (
         <div className="space-y-2">
           {filtered.map(product => {
@@ -181,16 +181,16 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
             return (
               <div
                 key={product.shopify_id}
-                className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors duration-200"
               >
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : product.shopify_id)}
-                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-800/50 transition-colors"
+                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors"
                 >
                   <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
                     product.isNew ? 'bg-cyan-900/40' :
                     isUp ? 'bg-red-900/40' :
-                    isDown ? 'bg-green-900/40' : 'bg-slate-800'
+                    isDown ? 'bg-green-900/40' : 'bg-slate-100 dark:bg-slate-800'
                   }`}>
                     {product.isNew ? (
                       <span className="text-cyan-400 text-[9px] font-bold">NEW</span>
@@ -199,13 +199,13 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                     ) : isDown ? (
                       <TrendingDown size={13} className="text-green-400" />
                     ) : (
-                      <Minus size={13} className="text-slate-500" />
+                      <Minus size={13} className="text-slate-400 dark:text-slate-500" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{product.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                    <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{product.title}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                       <span>{product.snapshots.length} snapshot{product.snapshots.length !== 1 ? 's' : ''}</span>
                       <span>·</span>
                       <span>First seen {formatDate(product.snapshots[0].recorded_at)}</span>
@@ -213,9 +213,9 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="text-white font-semibold text-sm">${product.latestPrice.toFixed(2)}</p>
+                    <p className="text-slate-900 dark:text-white font-semibold text-sm">${product.latestPrice.toFixed(2)}</p>
                     {!product.isNew && (
-                      <p className={`text-xs font-medium ${isUp ? 'text-red-400' : isDown ? 'text-green-400' : 'text-slate-500'}`}>
+                      <p className={`text-xs font-medium ${isUp ? 'text-red-400' : isDown ? 'text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
                         {isUp ? '+' : ''}{product.totalChange.toFixed(2)}
                         {product.totalChangePct !== null && (
                           <span className="ml-1 opacity-70">({isUp ? '+' : ''}{product.totalChangePct}%)</span>
@@ -229,21 +229,21 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
-                    className="shrink-0 text-slate-600 hover:text-cyan-400 transition-colors ml-1"
+                    className="shrink-0 text-slate-400 dark:text-slate-600 hover:text-cyan-400 transition-colors ml-1"
                   >
                     <ExternalLink size={13} />
                   </a>
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-slate-800 pt-3 space-y-3">
+                  <div className="px-4 pb-4 border-t border-slate-200 dark:border-slate-800 pt-3 space-y-3">
                     {product.snapshots.length >= 2 && (
                       <PriceHistoryChart history={product.snapshots} title={product.title} />
                     )}
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                       {[...product.snapshots].reverse().map((snap, i) => (
-                        <div key={snap.id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/60 last:border-0">
-                          <div className="flex items-center gap-2 text-slate-400">
+                        <div key={snap.id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60 dark:border-slate-800/60 last:border-0">
+                          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                             <Calendar size={10} className="shrink-0" />
                             <span>{formatDate(snap.recorded_at)}</span>
                             {i === 0 && (
@@ -256,7 +256,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                                 {snap.price_change > 0 ? '+' : ''}{snap.price_change.toFixed(2)}
                               </span>
                             )}
-                            <span className="text-white font-medium">${snap.price.toFixed(2)}</span>
+                            <span className="text-slate-900 dark:text-white font-medium">${snap.price.toFixed(2)}</span>
                           </div>
                         </div>
                       ))}

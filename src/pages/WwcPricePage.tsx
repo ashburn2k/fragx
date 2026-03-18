@@ -155,20 +155,20 @@ export default function WwcPricePage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-white">WWC Live Prices</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">WWC Live Prices</h1>
             <a
               href="https://worldwidecorals.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-400 hover:text-cyan-400 transition-colors"
+              className="text-slate-500 dark:text-slate-400 hover:text-cyan-400 transition-colors"
             >
               <ExternalLink size={16} />
             </a>
           </div>
-          <p className="text-slate-400 text-sm mt-0.5">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
             Real-time retail prices from WorldWideCoral
             {lastRun?.completed_at && (
-              <span className="ml-2 inline-flex items-center gap-1 text-slate-500">
+              <span className="ml-2 inline-flex items-center gap-1 text-slate-400 dark:text-slate-500">
                 <Clock size={11} />
                 Updated {formatDate(lastRun.completed_at)}
               </span>
@@ -178,7 +178,7 @@ export default function WwcPricePage() {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowStats(s => !s)}
-            className={`p-2 rounded-xl border transition-all duration-200 ${showStats ? 'border-cyan-500 text-cyan-400 bg-cyan-900/20' : 'border-slate-700 text-slate-400 hover:text-white'}`}
+            className={`p-2 rounded-xl border transition-all duration-200 ${showStats ? 'border-cyan-500 text-cyan-400 bg-cyan-900/20' : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             title="Price statistics"
           >
             <BarChart2 size={16} />
@@ -205,10 +205,10 @@ export default function WwcPricePage() {
       )}
 
       {products.length === 0 && !loading && !scraping && (
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-10 text-center">
-          <RefreshCw size={36} className="mx-auto mb-3 text-slate-600" />
-          <p className="text-white font-semibold mb-1">No price data yet</p>
-          <p className="text-slate-400 text-sm mb-4">Click "Refresh Prices" to scrape the latest prices from WorldWideCoral.</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-10 text-center transition-colors duration-200">
+          <RefreshCw size={36} className="mx-auto mb-3 text-slate-400 dark:text-slate-600" />
+          <p className="text-slate-900 dark:text-white font-semibold mb-1">No price data yet</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">Click "Refresh Prices" to scrape the latest prices from WorldWideCoral.</p>
           <button
             onClick={handleScrape}
             className="bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-all"
@@ -226,7 +226,7 @@ export default function WwcPricePage() {
                 key={tab}
                 onClick={() => { setActiveTab(tab); setSelectedCollection('all'); }}
                 className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200 capitalize ${
-                  activeTab === tab ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                  activeTab === tab ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {tab === 'coral' ? 'Corals' : 'Fish'}
@@ -243,15 +243,15 @@ export default function WwcPricePage() {
 
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name, collection, or tag..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-sm"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-sm"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white">
                   <X size={14} />
                 </button>
               )}
@@ -261,7 +261,7 @@ export default function WwcPricePage() {
               className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                 showFilters || hasActiveFilters
                   ? 'border-cyan-500 text-cyan-400 bg-cyan-900/20'
-                  : 'border-slate-700 text-slate-400 hover:text-white'
+                  : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <SlidersHorizontal size={15} />
@@ -271,58 +271,58 @@ export default function WwcPricePage() {
           </div>
 
           {showFilters && (
-            <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 space-y-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-4 transition-colors duration-200">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Collection</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Collection</label>
                   <div className="relative">
                     <select
                       value={selectedCollection}
                       onChange={e => setSelectedCollection(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 appearance-none pr-8"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 appearance-none pr-8"
                     >
                       <option value="all">All Collections</option>
                       {allCollections.map(c => (
                         <option key={c} value={c}>{c.replace(/-/g, ' ')}</option>
                       ))}
                     </select>
-                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Price Range</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Price Range</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
                       value={priceMin}
                       onChange={e => setPriceMin(e.target.value)}
                       placeholder="Min $"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
                     />
-                    <span className="text-slate-500 text-sm">–</span>
+                    <span className="text-slate-400 dark:text-slate-500 text-sm">–</span>
                     <input
                       type="number"
                       value={priceMax}
                       onChange={e => setPriceMax(e.target.value)}
                       placeholder="Max $"
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1.5">Sort By</label>
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1.5">Sort By</label>
                   <div className="relative">
                     <select
                       value={sortBy}
                       onChange={e => setSortBy(e.target.value as SortOption)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 appearance-none pr-8"
+                      className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 appearance-none pr-8"
                     >
                       <option value="newest">Newest First</option>
                       <option value="price_asc">Price: Low to High</option>
                       <option value="price_desc">Price: High to Low</option>
                       <option value="title_asc">Name A–Z</option>
                     </select>
-                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -330,17 +330,17 @@ export default function WwcPricePage() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <div
                     onClick={() => setOnSaleOnly(s => !s)}
-                    className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${onSaleOnly ? 'bg-cyan-500' : 'bg-slate-700'}`}
+                    className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${onSaleOnly ? 'bg-cyan-500' : 'bg-slate-200 dark:bg-slate-700'}`}
                   >
                     <div className={`w-3.5 h-3.5 bg-white rounded-full mt-0.75 transition-transform ${onSaleOnly ? 'translate-x-4.5' : 'translate-x-0.75'} m-[3px]`} />
                   </div>
-                  <span className="text-sm text-slate-300 flex items-center gap-1.5">
+                  <span className="text-sm text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <TrendingDown size={13} className="text-red-400" />
                     On sale only
                   </span>
                 </label>
                 {hasActiveFilters && (
-                  <button onClick={clearFilters} className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                  <button onClick={clearFilters} className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1">
                     <X size={12} /> Clear all filters
                   </button>
                 )}
@@ -349,12 +349,12 @@ export default function WwcPricePage() {
           )}
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">
+            <span className="text-slate-500 dark:text-slate-400">
               {filtered.length.toLocaleString()} products
-              {hasActiveFilters && <span className="text-slate-500"> (filtered)</span>}
+              {hasActiveFilters && <span className="text-slate-400 dark:text-slate-500"> (filtered)</span>}
             </span>
             {lastRun && (
-              <span className="text-slate-500 text-xs">
+              <span className="text-slate-400 dark:text-slate-500 text-xs">
                 {lastRun.products_found.toLocaleString()} total in catalog
               </span>
             )}
@@ -363,20 +363,20 @@ export default function WwcPricePage() {
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {Array.from({ length: 24 }).map((_, i) => (
-                <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden animate-pulse">
-                  <div className="aspect-square bg-slate-800" />
+                <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-slate-100 dark:bg-slate-800" />
                   <div className="p-3 space-y-2">
-                    <div className="h-3 bg-slate-800 rounded" />
-                    <div className="h-3 bg-slate-800 rounded w-2/3" />
-                    <div className="h-4 bg-slate-700 rounded w-1/3" />
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded" />
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-2/3" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
                   </div>
                 </div>
               ))}
             </div>
           ) : displayed.length === 0 ? (
             <div className="text-center py-16">
-              <Search size={32} className="mx-auto mb-3 text-slate-600" />
-              <p className="text-slate-400">No products match your filters</p>
+              <Search size={32} className="mx-auto mb-3 text-slate-400 dark:text-slate-600" />
+              <p className="text-slate-500 dark:text-slate-400">No products match your filters</p>
               <button onClick={clearFilters} className="mt-3 text-cyan-400 hover:text-cyan-300 text-sm transition-colors">
                 Clear filters
               </button>
@@ -392,7 +392,7 @@ export default function WwcPricePage() {
                 <div className="text-center pt-2">
                   <button
                     onClick={() => setPage(p => p + 1)}
-                    className="bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-xl transition-colors text-sm font-medium"
+                    className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-8 py-3 rounded-xl transition-colors text-sm font-medium"
                   >
                     Load more ({filtered.length - displayed.length} remaining)
                   </button>

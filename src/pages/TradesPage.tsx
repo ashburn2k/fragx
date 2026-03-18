@@ -138,8 +138,8 @@ export default function TradesPage() {
   if (!user) {
     return (
       <div className="text-center py-20">
-        <ArrowLeftRight size={40} className="text-slate-600 mx-auto mb-3" />
-        <p className="text-slate-400 mb-2">Sign in to access the Trade Network</p>
+        <ArrowLeftRight size={40} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+        <p className="text-slate-500 dark:text-slate-400 mb-2">Sign in to access the Trade Network</p>
       </div>
     );
   }
@@ -152,17 +152,17 @@ export default function TradesPage() {
   ];
 
   const CoralAddForm = ({ onSubmit, onCancel, isWant }: { onSubmit: () => void; onCancel: () => void; isWant?: boolean }) => (
-    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-4">
-      <h3 className="text-white font-semibold">{isWant ? 'Add to Want List' : 'Add to Have List'}</h3>
+    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
+      <h3 className="text-slate-900 dark:text-white font-semibold">{isWant ? 'Add to Want List' : 'Add to Have List'}</h3>
       <div className="grid sm:grid-cols-2 gap-3">
         <select
           value={addForm.species_id}
           onChange={e => setAddForm(f => ({ ...f, species_id: e.target.value, morph_id: '' }))}
-          className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+          className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
         >
           <option value="">Select species...</option>
           {['SPS', 'LPS', 'Soft Coral'].map(g => (
-            <optgroup key={g} label={g} className="bg-slate-800">
+            <optgroup key={g} label={g} className="bg-slate-100 dark:bg-slate-800">
               {species.filter(s => s.coral_group === g).map(s => (
                 <option key={s.id} value={s.id}>{s.genus} {s.species}</option>
               ))}
@@ -173,7 +173,7 @@ export default function TradesPage() {
           <select
             value={addForm.morph_id}
             onChange={e => setAddForm(f => ({ ...f, morph_id: e.target.value }))}
-            className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
+            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
           >
             <option value="">Any morph</option>
             {morphs.map(m => <option key={m.id} value={m.id}>{m.morph_name}</option>)}
@@ -186,7 +186,7 @@ export default function TradesPage() {
           onChange={e => setAddForm(f => ({ ...f, max_price: e.target.value }))}
           type="number"
           placeholder="Max price willing to pay ($)"
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
         />
       ) : (
         <input
@@ -195,17 +195,17 @@ export default function TradesPage() {
           type="number"
           min="1"
           placeholder="Quantity available"
-          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
         />
       )}
       <input
         value={addForm.notes}
         onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
         placeholder="Notes (optional)"
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
       />
       <div className="flex gap-3">
-        <button onClick={onCancel} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl transition-colors text-sm">
+        <button onClick={onCancel} className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white py-3 rounded-xl transition-colors text-sm">
           Cancel
         </button>
         <button
@@ -222,8 +222,8 @@ export default function TradesPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white">Trade Network</h1>
-        <p className="text-slate-400 text-sm mt-0.5">Smart matchmaking for reef hobbyists</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Trade Network</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Smart matchmaking for reef hobbyists</p>
       </div>
 
       {/* Tabs */}
@@ -233,7 +233,7 @@ export default function TradesPage() {
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-              activeTab === id ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+              activeTab === id ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {label}
@@ -250,7 +250,7 @@ export default function TradesPage() {
 
       {loading ? (
         <div className="space-y-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl h-16 animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-16 animate-pulse" />)}
         </div>
       ) : (
         <>
@@ -258,7 +258,7 @@ export default function TradesPage() {
           {activeTab === 'have' && (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <p className="text-slate-400 text-sm">Corals you have available to trade</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Corals you have available to trade</p>
                 <button
                   onClick={() => { setShowAddHave(true); setShowAddWant(false); }}
                   className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-medium"
@@ -271,20 +271,20 @@ export default function TradesPage() {
               {showAddHave && <CoralAddForm onSubmit={addToHave} onCancel={() => setShowAddHave(false)} />}
 
               {haveList.length === 0 ? (
-                <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <Heart size={32} className="text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">Your Have List is empty</p>
-                  <p className="text-slate-500 text-xs mt-1">Add corals you're willing to trade</p>
+                <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <Heart size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Your Have List is empty</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Add corals you're willing to trade</p>
                 </div>
               ) : haveList.map(item => (
-                <div key={item.id} className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+                <div key={item.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
                   <div className="flex items-center gap-3">
                     <div>
-                      <div className="text-white font-medium text-sm">
+                      <div className="text-slate-900 dark:text-white font-medium text-sm">
                         {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
                         {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
                       </div>
-                      <div className="text-slate-500 text-xs mt-0.5">
+                      <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
                         Qty: {item.quantity}
                         {item.notes ? ` · ${item.notes}` : ''}
                       </div>
@@ -303,7 +303,7 @@ export default function TradesPage() {
           {activeTab === 'want' && (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <p className="text-slate-400 text-sm">Corals you're looking to acquire</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Corals you're looking to acquire</p>
                 <button
                   onClick={() => { setShowAddWant(true); setShowAddHave(false); }}
                   className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-medium"
@@ -316,20 +316,20 @@ export default function TradesPage() {
               {showAddWant && <CoralAddForm onSubmit={addToWant} onCancel={() => setShowAddWant(false)} isWant />}
 
               {wantList.length === 0 ? (
-                <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <Inbox size={32} className="text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">Your Want List is empty</p>
-                  <p className="text-slate-500 text-xs mt-1">Add corals you're looking for to get matched</p>
+                <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <Inbox size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Your Want List is empty</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Add corals you're looking for to get matched</p>
                 </div>
               ) : wantList.map(item => (
-                <div key={item.id} className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+                <div key={item.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
                   <div className="flex items-center gap-3">
                     <div>
-                      <div className="text-white font-medium text-sm">
+                      <div className="text-slate-900 dark:text-white font-medium text-sm">
                         {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
                         {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
                       </div>
-                      <div className="text-slate-500 text-xs mt-0.5">
+                      <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
                         {item.max_price ? `Max: $${item.max_price}` : 'No max price'}
                         {item.notes ? ` · ${item.notes}` : ''}
                       </div>
@@ -347,19 +347,19 @@ export default function TradesPage() {
           {/* MATCHES tab */}
           {activeTab === 'matches' && (
             <div className="space-y-3">
-              <p className="text-slate-400 text-sm">Auto-matched traders based on your Have/Want lists</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Auto-matched traders based on your Have/Want lists</p>
               {matches.length === 0 ? (
-                <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <ArrowLeftRight size={32} className="text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">No matches yet</p>
-                  <p className="text-slate-500 text-xs mt-1">Add items to your Have & Want lists to get matched</p>
+                <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <ArrowLeftRight size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">No matches yet</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Add items to your Have & Want lists to get matched</p>
                 </div>
               ) : matches.map(match => {
                 const partner = match.user_a_id === user.id ? match.user_b : match.user_a;
                 const partnerObj = partner as { username: string; display_name: string | null } | undefined;
                 return (
-                  <div key={match.id} className={`bg-slate-900 border rounded-xl p-4 space-y-3 ${
-                    match.status === 'pending' ? 'border-cyan-800' : 'border-slate-800'
+                  <div key={match.id} className={`bg-white dark:bg-slate-900 border rounded-xl p-4 space-y-3 transition-colors duration-200 ${
+                    match.status === 'pending' ? 'border-cyan-800' : 'border-slate-200 dark:border-slate-800'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -367,8 +367,8 @@ export default function TradesPage() {
                           {partnerObj?.username?.[0]?.toUpperCase() ?? '?'}
                         </div>
                         <div>
-                          <div className="text-white font-medium text-sm">{partnerObj?.display_name ?? partnerObj?.username}</div>
-                          <div className="text-slate-400 text-xs">@{partnerObj?.username}</div>
+                          <div className="text-slate-900 dark:text-white font-medium text-sm">{partnerObj?.display_name ?? partnerObj?.username}</div>
+                          <div className="text-slate-500 dark:text-slate-400 text-xs">@{partnerObj?.username}</div>
                         </div>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -414,15 +414,15 @@ export default function TradesPage() {
           {activeTab === 'messages' && (
             <div className="space-y-3">
               {selectedConvo ? (
-                <div className="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden flex flex-col" style={{ height: '60vh' }}>
-                  <div className="flex items-center gap-3 p-4 border-b border-slate-700">
-                    <button onClick={() => setSelectedConvo(null)} className="text-slate-400 hover:text-white transition-colors text-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl overflow-hidden flex flex-col transition-colors duration-200" style={{ height: '60vh' }}>
+                  <div className="flex items-center gap-3 p-4 border-b border-slate-200 dark:border-slate-700">
+                    <button onClick={() => setSelectedConvo(null)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-sm">
                       ← Back
                     </button>
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white">
                       {conversations.find(c => c.partnerId === selectedConvo)?.partnerName?.[0]?.toUpperCase() ?? '?'}
                     </div>
-                    <span className="text-white font-medium">{conversations.find(c => c.partnerId === selectedConvo)?.partnerName}</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{conversations.find(c => c.partnerId === selectedConvo)?.partnerName}</span>
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -431,7 +431,7 @@ export default function TradesPage() {
                         <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
                           msg.sender_id === user.id
                             ? 'bg-cyan-600 text-white rounded-br-sm'
-                            : 'bg-slate-800 text-slate-200 rounded-bl-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-sm'
                         }`}>
                           {msg.content}
                         </div>
@@ -439,13 +439,13 @@ export default function TradesPage() {
                     ))}
                   </div>
 
-                  <div className="p-4 border-t border-slate-700 flex gap-2">
+                  <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-2">
                     <input
                       value={newMsg}
                       onChange={e => setNewMsg(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && sendMessage()}
                       placeholder="Type a message..."
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
+                      className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
                     />
                     <button
                       onClick={sendMessage}
@@ -457,23 +457,23 @@ export default function TradesPage() {
                   </div>
                 </div>
               ) : conversations.length === 0 ? (
-                <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-2xl">
-                  <MessageSquare size={32} className="text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-400 text-sm">No messages yet</p>
-                  <p className="text-slate-500 text-xs mt-1">Contact a seller or respond to a trade match</p>
+                <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                  <MessageSquare size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">No messages yet</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Contact a seller or respond to a trade match</p>
                 </div>
               ) : conversations.map(convo => (
                 <button
                   key={convo.partnerId}
                   onClick={() => loadConversation(convo.partnerId)}
-                  className="w-full flex items-center gap-3 bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl p-4 text-left transition-all"
+                  className="w-full flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 rounded-xl p-4 text-left transition-all"
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
                     {convo.partnerName[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-white font-medium text-sm">{convo.partnerName}</div>
-                    <div className="text-slate-500 text-xs truncate">{convo.lastMsg}</div>
+                    <div className="text-slate-900 dark:text-white font-medium text-sm">{convo.partnerName}</div>
+                    <div className="text-slate-400 dark:text-slate-500 text-xs truncate">{convo.lastMsg}</div>
                   </div>
                   {convo.unread > 0 && (
                     <span className="bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold flex-shrink-0">

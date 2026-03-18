@@ -22,11 +22,11 @@ export default function ReputationScore({ score, totalReviews, size = 'md' }: Re
           <Star
             key={i}
             size={s.star}
-            className={i <= stars ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}
+            className={i <= stars ? 'text-amber-400 fill-amber-400' : 'text-slate-300 dark:text-slate-600'}
           />
         ))}
       </div>
-      <span className={`${s.text} text-slate-400`}>
+      <span className={`${s.text} text-slate-500 dark:text-slate-400`}>
         {score.toFixed(1)} ({totalReviews})
       </span>
     </div>

@@ -33,30 +33,30 @@ export default function SaltMixCalculator() {
   }
 
   const result = calcSalt();
-  const inputCls = "w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-500";
-  const selectCls = "w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors";
-  const tabCls = (active: boolean) => `flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${active ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200 border border-slate-700'}`;
+  const inputCls = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500";
+  const selectCls = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors";
+  const tabCls = (active: boolean) => `flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${active ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-700'}`;
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-colors duration-200">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
           <Beaker size={16} className="text-amber-400" />
         </div>
         <div>
-          <h3 className="text-white font-semibold text-sm">Salt Mix Calculator</h3>
-          <p className="text-slate-500 text-xs">How much salt to mix a batch of saltwater</p>
+          <h3 className="text-slate-900 dark:text-white font-semibold text-sm">Salt Mix Calculator</h3>
+          <p className="text-slate-400 dark:text-slate-500 text-xs">How much salt to mix a batch of saltwater</p>
         </div>
       </div>
 
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-2">
-            <label className="text-xs text-slate-400 mb-1.5 block">Volume to mix</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Volume to mix</label>
             <input className={inputCls} placeholder="20" value={volume} onChange={e => setVolume(e.target.value)} type="number" min="0" />
           </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1.5 block">Unit</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Unit</label>
             <div className="flex gap-1 h-[38px]">
               {(['gallons', 'liters'] as VolumeUnit[]).map(u => (
                 <button key={u} onClick={() => setUnit(u)} className={tabCls(unit === u)}>
@@ -68,13 +68,13 @@ export default function SaltMixCalculator() {
         </div>
 
         <div>
-          <label className="text-xs text-slate-400 mb-1.5 block">Target Specific Gravity</label>
+          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Target Specific Gravity</label>
           <input className={inputCls} placeholder="1.025" value={targetSg} onChange={e => setTargetSg(e.target.value)} type="number" min="1.000" max="1.035" step="0.001" />
-          {result && <p className="text-xs text-slate-500 mt-1">{result.ppt.toFixed(1)} ppt</p>}
+          {result && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{result.ppt.toFixed(1)} ppt</p>}
         </div>
 
         <div>
-          <label className="text-xs text-slate-400 mb-1.5 block">Salt Brand</label>
+          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Salt Brand</label>
           <select className={selectCls} value={saltBrand} onChange={e => setSaltBrand(e.target.value as typeof saltBrand)}>
             <option value="generic">Generic (0.5 cup/gal)</option>
             <option value="instant_ocean">Instant Ocean (~0.5 cup/gal)</option>
@@ -85,22 +85,22 @@ export default function SaltMixCalculator() {
 
       {result && (
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+          <div className="bg-slate-100/60 dark:bg-slate-800/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-amber-400">{result.cups.toFixed(2)}</div>
-            <div className="text-xs text-slate-400 mt-0.5">cups of salt</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">cups of salt</div>
           </div>
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+          <div className="bg-slate-100/60 dark:bg-slate-800/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-teal-400">{result.lbs.toFixed(2)}</div>
-            <div className="text-xs text-slate-400 mt-0.5">lbs of salt</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">lbs of salt</div>
           </div>
-          <div className="bg-slate-800/60 rounded-xl p-3 text-center col-span-2">
+          <div className="bg-slate-100/60 dark:bg-slate-800/60 rounded-xl p-3 text-center col-span-2">
             <div className="text-2xl font-bold text-cyan-400">{result.grams.toFixed(0)}</div>
-            <div className="text-xs text-slate-400 mt-0.5">grams</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">grams</div>
           </div>
         </div>
       )}
 
-      <p className="text-xs text-slate-600 mt-3">Estimates based on dry salt. Always calibrate with a refractometer.</p>
+      <p className="text-xs text-slate-400 dark:text-slate-600 mt-3">Estimates based on dry salt. Always calibrate with a refractometer.</p>
     </div>
   );
 }

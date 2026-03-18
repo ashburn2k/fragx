@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navigation from './components/layout/Navigation';
 import AuthModal from './components/auth/AuthModal';
 import ProfileSetup from './components/auth/ProfileSetup';
@@ -10,6 +11,7 @@ import VendorPricesPage from './pages/VendorPricesPage';
 import TradesPage from './pages/TradesPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+
 type Page = 'reef-tools' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
 
 function AppInner() {
@@ -19,10 +21,10 @@ function AppInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 animate-pulse" />
-          <div className="text-slate-400 text-sm">Loading...</div>
+          <div className="text-slate-500 dark:text-slate-400 text-sm">Loading...</div>
         </div>
       </div>
     );
@@ -42,7 +44,7 @@ function AppInner() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-200">
       <Navigation
         currentPage={currentPage}
         onNavigate={handleNavigate}
@@ -71,8 +73,10 @@ function AppInner() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppInner />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppInner />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

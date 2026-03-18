@@ -175,21 +175,21 @@ function VendorCard({ vendor }: { vendor: Vendor }) {
       href={vendor.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-600 hover:bg-slate-800/60 transition-all duration-200"
+      className="group flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-all duration-200"
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0">
-          <h3 className="text-white font-semibold text-sm leading-snug group-hover:text-cyan-300 transition-colors truncate">
+          <h3 className="text-slate-900 dark:text-white font-semibold text-sm leading-snug group-hover:text-cyan-300 transition-colors truncate">
             {vendor.name}
           </h3>
-          <span className="text-slate-500 text-xs">{vendor.domain}</span>
+          <span className="text-slate-400 dark:text-slate-500 text-xs">{vendor.domain}</span>
         </div>
         <ExternalLink
           size={14}
-          className="shrink-0 text-slate-600 group-hover:text-cyan-400 transition-colors mt-0.5"
+          className="shrink-0 text-slate-400 dark:text-slate-600 group-hover:text-cyan-400 transition-colors mt-0.5"
         />
       </div>
-      <p className="text-slate-400 text-xs leading-relaxed line-clamp-2">{vendor.description}</p>
+      <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">{vendor.description}</p>
     </a>
   );
 }
@@ -204,10 +204,10 @@ function CategorySection({ category }: { category: VendorCategory }) {
           <Icon size={16} className="text-white" />
         </div>
         <div>
-          <h2 className="text-white font-bold text-base leading-tight">{label}</h2>
-          <p className="text-slate-400 text-sm mt-0.5">{description}</p>
+          <h2 className="text-slate-900 dark:text-white font-bold text-base leading-tight">{label}</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{description}</p>
         </div>
-        <span className="ml-auto shrink-0 text-xs text-slate-500 bg-slate-800 px-2.5 py-1 rounded-full">
+        <span className="ml-auto shrink-0 text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
           {vendors.length} stores
         </span>
       </div>
@@ -231,8 +231,8 @@ export default function VendorsPage({ onViewPrices }: VendorsPageProps) {
     <div className="space-y-10">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Online Vendors</h1>
-          <p className="text-slate-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Online Vendors</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
             Curated list of {totalVendors} trusted online coral stores, grouped by category
           </p>
         </div>
@@ -246,15 +246,15 @@ export default function VendorsPage({ onViewPrices }: VendorsPageProps) {
               View Live Prices
             </button>
           )}
-          <div className="shrink-0 flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2">
+          <div className="shrink-0 flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2">
             <ShoppingCart size={14} className="text-cyan-400" />
-            <span className="text-white text-sm font-semibold">{totalVendors}</span>
-            <span className="text-slate-400 text-xs">vendors</span>
+            <span className="text-slate-900 dark:text-white text-sm font-semibold">{totalVendors}</span>
+            <span className="text-slate-500 dark:text-slate-400 text-xs">vendors</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-400 leading-relaxed">
+      <div className="bg-white/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
         All links open the vendor's website in a new tab. FragX is not affiliated with any of these stores.
         Always verify shipping policies and livestock guarantees before purchasing.
       </div>

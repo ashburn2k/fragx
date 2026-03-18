@@ -1,6 +1,7 @@
-import { Wrench, TrendingUp, ArrowLeftRight, User, Menu, X, Bell, LogOut, Store } from 'lucide-react';
+import { Wrench, TrendingUp, ArrowLeftRight, User, Menu, X, Bell, LogOut, Store, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 type Page = 'reef-tools' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
 
@@ -20,23 +21,22 @@ const navItems: { page: Page; label: string; Icon: typeof Wrench }[] = [
 
 export default function Navigation({ currentPage, onNavigate, onAuthClick }: NavigationProps) {
   const { user, profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <>
-      {/* Top bar */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
         <div className="max-w-screen-xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => onNavigate('vendor-prices')}
             className="flex items-center gap-2 group"
           >
-            <span className="font-bold text-white text-lg tracking-tight">
-              Frag<span className="text-cyan-400">X</span>
+            <span className="font-bold text-slate-900 dark:text-white text-lg tracking-tight">
+              Frag<span className="text-cyan-500">X</span>
             </span>
           </button>
 
-          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map(({ page, label, Icon }) => (
               <button
@@ -44,8 +44,8 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 onClick={() => onNavigate(page)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   currentPage === page
-                    ? 'bg-cyan-500/10 text-cyan-400'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Icon size={16} />
@@ -55,23 +55,31 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
           </nav>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
             {user ? (
               <>
-                <button className="p-2 text-slate-400 hover:text-white transition-colors">
+                <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                   <Bell size={18} />
                 </button>
                 <button
                   onClick={() => onNavigate('profile')}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-xs font-bold text-white">
                     {profile?.username?.[0]?.toUpperCase() ?? 'U'}
                   </div>
-                  <span className="text-sm text-slate-300 hidden sm:block">{profile?.username ?? 'Profile'}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300 hidden sm:block">{profile?.username ?? 'Profile'}</span>
                 </button>
                 <button
                   onClick={signOut}
-                  className="p-2 text-slate-400 hover:text-red-400 transition-colors hidden md:block"
+                  className="p-2 text-slate-400 hover:text-red-500 transition-colors hidden md:block"
                   title="Sign out"
                 >
                   <LogOut size={16} />
@@ -87,24 +95,23 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
             )}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-slate-400 hover:text-white transition-colors"
+              className="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden bg-slate-950 border-t border-slate-800 px-4 py-3">
+          <div className="md:hidden bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 px-4 py-3 transition-colors duration-200">
             {navItems.map(({ page, label, Icon }) => (
               <button
                 key={page}
                 onClick={() => { onNavigate(page); setMenuOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   currentPage === page
-                    ? 'bg-cyan-500/10 text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Icon size={18} />
@@ -114,7 +121,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
             {user && (
               <button
                 onClick={signOut}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-400 hover:text-red-300 transition-colors mt-1"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors mt-1"
               >
                 <LogOut size={18} />
                 Sign Out
@@ -124,15 +131,16 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
         )}
       </header>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
         <div className="flex items-center justify-around h-16 px-2">
           {navItems.map(({ page, label, Icon }) => (
             <button
               key={page}
               onClick={() => onNavigate(page)}
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
-                currentPage === page ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
+                currentPage === page
+                  ? 'text-cyan-600 dark:text-cyan-400'
+                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
               <Icon size={20} />

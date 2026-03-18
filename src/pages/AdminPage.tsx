@@ -75,8 +75,8 @@ export default function AdminPage() {
           <Shield size={18} className="text-red-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-slate-400 text-sm">Moderation & platform management</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Moderation & platform management</p>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export default function AdminPage() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-              activeTab === tab.id ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+              activeTab === tab.id ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {tab.label}
@@ -107,7 +107,7 @@ export default function AdminPage() {
 
       {loading ? (
         <div className="grid grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl h-24 animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-24 animate-pulse" />)}
         </div>
       ) : (
         <>
@@ -120,16 +120,16 @@ export default function AdminPage() {
                   { label: 'Registered Users', value: stats.totalUsers, Icon: Users, color: 'text-blue-400' },
                   { label: 'Open Flags', value: stats.openFlags, Icon: Flag, color: 'text-red-400' },
                 ].map(({ label, value, Icon, color }) => (
-                  <div key={label} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                  <div key={label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-colors duration-200">
                     <Icon size={20} className={color} />
-                    <div className="text-2xl font-bold text-white mt-2">{value}</div>
-                    <div className="text-slate-400 text-xs mt-0.5">{label}</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white mt-2">{value}</div>
+                    <div className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">{label}</div>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5">
-                <h3 className="text-white font-semibold mb-3">Platform Health</h3>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 transition-colors duration-200">
+                <h3 className="text-slate-900 dark:text-white font-semibold mb-3">Platform Health</h3>
                 <div className="space-y-2">
                   {[
                     { label: 'Active listing rate', value: stats.totalListings > 0 ? Math.round((stats.activeListings / stats.totalListings) * 100) : 0, color: 'bg-cyan-500' },
@@ -137,10 +137,10 @@ export default function AdminPage() {
                   ].map(item => (
                     <div key={item.label}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-400">{item.label}</span>
-                        <span className="text-white font-medium">{item.value}%</span>
+                        <span className="text-slate-500 dark:text-slate-400">{item.label}</span>
+                        <span className="text-slate-900 dark:text-white font-medium">{item.value}%</span>
                       </div>
-                      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.value}%` }} />
                       </div>
                     </div>
@@ -152,28 +152,28 @@ export default function AdminPage() {
 
           {activeTab === 'flags' && (
             <div className="space-y-3">
-              <p className="text-slate-400 text-sm">{stats.openFlags} open flags requiring review</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">{stats.openFlags} open flags requiring review</p>
               {flags.filter(f => !f.is_resolved).length === 0 ? (
-                <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-2xl">
+                <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
                   <CheckCircle size={32} className="text-emerald-500 mx-auto mb-3" />
                   <p className="text-emerald-400 font-medium">All clear!</p>
-                  <p className="text-slate-500 text-sm mt-1">No open flags to review</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">No open flags to review</p>
                 </div>
               ) : flags.filter(f => !f.is_resolved).map(flag => (
-                <div key={flag.id} className="bg-slate-900 border border-red-900/50 rounded-xl p-4 space-y-3">
+                <div key={flag.id} className="bg-white dark:bg-slate-900 border border-red-900/50 rounded-xl p-4 space-y-3 transition-colors duration-200">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <Flag size={14} className="text-red-400" />
-                        <span className="text-white font-medium text-sm capitalize">{flag.reason.replace('_', ' ')}</span>
+                        <span className="text-slate-900 dark:text-white font-medium text-sm capitalize">{flag.reason.replace('_', ' ')}</span>
                       </div>
                       {flag.listings && (
-                        <p className="text-slate-400 text-xs mt-1">
-                          Listing: <span className="text-slate-300">{flag.listings.title}</span>
+                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+                          Listing: <span className="text-slate-700 dark:text-slate-300">{flag.listings.title}</span>
                         </p>
                       )}
-                      {flag.notes && <p className="text-slate-500 text-xs mt-1">"{flag.notes}"</p>}
-                      <p className="text-slate-600 text-xs mt-1">{new Date(flag.created_at).toLocaleDateString()}</p>
+                      {flag.notes && <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">"{flag.notes}"</p>}
+                      <p className="text-slate-400 dark:text-slate-600 text-xs mt-1">{new Date(flag.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -202,10 +202,10 @@ export default function AdminPage() {
           {activeTab === 'listings' && (
             <div className="space-y-2">
               {listings.map(listing => (
-                <div key={listing.id} className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+                <div key={listing.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
                   <div>
-                    <div className="text-white text-sm font-medium line-clamp-1">{listing.title}</div>
-                    <div className="text-slate-500 text-xs mt-0.5">
+                    <div className="text-slate-900 dark:text-white text-sm font-medium line-clamp-1">{listing.title}</div>
+                    <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
                       by @{(listing.seller as { username: string })?.username} · {new Date(listing.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export default function AdminPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       listing.status === 'active' ? 'bg-emerald-900/40 text-emerald-400' :
                       listing.status === 'removed' ? 'bg-red-900/40 text-red-400' :
-                      'bg-slate-700 text-slate-400'
+                      'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                     }`}>
                       {listing.status}
                     </span>
@@ -233,9 +233,9 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'users' && (
-            <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-2xl">
-              <Users size={32} className="text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 text-sm">User management coming soon</p>
+            <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+              <Users size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
+              <p className="text-slate-500 dark:text-slate-400 text-sm">User management coming soon</p>
             </div>
           )}
         </>

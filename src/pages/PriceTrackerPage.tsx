@@ -139,8 +139,8 @@ export default function PriceTrackerPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white">Price Tracker</h1>
-        <p className="text-slate-400 text-sm mt-0.5">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Price Tracker</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
           {totalCount.toLocaleString()} live coral listings across {vendors.length} vendors
         </p>
       </div>
@@ -148,15 +148,15 @@ export default function PriceTrackerPage() {
       {/* Search + filter bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search corals by name..."
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-sm"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-sm"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
               <X size={14} />
             </button>
           )}
@@ -166,7 +166,7 @@ export default function PriceTrackerPage() {
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
             showFilters || activeFilters.length > 0
               ? 'bg-cyan-500 border-cyan-500 text-white'
-              : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
+              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500'
           }`}
         >
           <SlidersHorizontal size={15} />
@@ -181,17 +181,17 @@ export default function PriceTrackerPage() {
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 space-y-5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-5 space-y-5">
           {/* Coral group */}
           <div>
-            <label className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Coral Type</label>
+            <label className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Coral Type</label>
             <div className="flex flex-wrap gap-2">
               {CORAL_GROUPS.map(g => (
                 <button
                   key={g}
                   onClick={() => setGroup(g)}
                   className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    group === g ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                    group === g ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {g}
@@ -202,14 +202,14 @@ export default function PriceTrackerPage() {
 
           {/* Price range */}
           <div>
-            <label className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Price Range</label>
+            <label className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Price Range</label>
             <div className="flex flex-wrap gap-2">
               {PRICE_RANGES.map((r, i) => (
                 <button
                   key={r.label}
                   onClick={() => setPriceRange(i)}
                   className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    priceRange === i ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                    priceRange === i ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {r.label}
@@ -220,26 +220,26 @@ export default function PriceTrackerPage() {
 
           {/* Vendor */}
           <div>
-            <label className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Vendor</label>
+            <label className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Vendor</label>
             <div className="relative w-64">
               <button
                 onClick={() => setVendorOpen(v => !v)}
-                className="w-full flex items-center justify-between bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white hover:border-slate-500 transition-colors"
+                className="w-full flex items-center justify-between bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white hover:border-slate-400 dark:hover:border-slate-500 transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <Store size={14} className="text-slate-400" />
+                  <Store size={14} className="text-slate-500 dark:text-slate-400" />
                   {vendorFilter}
                 </span>
-                <ChevronDown size={14} className={`text-slate-400 transition-transform ${vendorOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={14} className={`text-slate-500 dark:text-slate-400 transition-transform ${vendorOpen ? 'rotate-180' : ''}`} />
               </button>
               {vendorOpen && (
-                <div className="absolute top-full mt-1 left-0 right-0 bg-slate-800 border border-slate-700 rounded-xl overflow-hidden z-20 shadow-xl max-h-52 overflow-y-auto">
+                <div className="absolute top-full mt-1 left-0 right-0 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden z-20 shadow-xl max-h-52 overflow-y-auto">
                   {['All', ...vendors].map(v => (
                     <button
                       key={v}
                       onClick={() => { setVendorFilter(v); setVendorOpen(false); }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                        vendorFilter === v ? 'text-cyan-400 bg-slate-700' : 'text-slate-300 hover:bg-slate-700'
+                        vendorFilter === v ? 'text-cyan-400 bg-slate-200 dark:bg-slate-700' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       }`}
                     >
                       {v}
@@ -252,7 +252,7 @@ export default function PriceTrackerPage() {
 
           {/* Sort */}
           <div>
-            <label className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Sort By</label>
+            <label className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider mb-2.5 block">Sort By</label>
             <div className="flex flex-wrap gap-2">
               {[
                 { key: 'scraped_at', label: 'Newest First' },
@@ -265,7 +265,7 @@ export default function PriceTrackerPage() {
                   key={s.key}
                   onClick={() => setSortBy(s.key as typeof sortBy)}
                   className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    sortBy === s.key ? 'bg-cyan-500 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                    sortBy === s.key ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {s.label}
@@ -277,7 +277,7 @@ export default function PriceTrackerPage() {
           {activeFilters.length > 0 && (
             <button
               onClick={() => { setGroup('All'); setPriceRange(0); setVendorFilter('All'); setSortBy('scraped_at'); }}
-              className="text-sm text-slate-500 hover:text-white transition-colors flex items-center gap-1.5"
+              className="text-sm text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
             >
               <X size={13} /> Clear all filters
             </button>
@@ -300,7 +300,7 @@ export default function PriceTrackerPage() {
       {/* Sort bar */}
       {!loading && products.length > 0 && (
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 flex items-center gap-1.5 mr-1">
+          <span className="text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mr-1">
             <ArrowUpDown size={12} />
             Sort:
           </span>
@@ -317,7 +317,7 @@ export default function PriceTrackerPage() {
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-medium transition-all ${
                 sortBy === s.key
                   ? 'bg-cyan-500 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               {s.icon}
@@ -331,18 +331,18 @@ export default function PriceTrackerPage() {
       {loading ? (
         <div className="space-y-2">
           {[...Array(12)].map((_, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex items-center gap-4 animate-pulse">
-              <div className="w-14 h-14 rounded-lg bg-slate-800 shrink-0" />
+            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center gap-4 animate-pulse">
+              <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-slate-800 rounded w-2/3" />
-                <div className="h-3 bg-slate-800 rounded w-1/3" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-2/3" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/3" />
               </div>
-              <div className="h-4 bg-slate-800 rounded w-16 shrink-0" />
+              <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-16 shrink-0" />
             </div>
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">
+        <div className="text-center py-16 text-slate-400 dark:text-slate-500">
           <Search size={36} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium">No products found</p>
           <p className="text-sm mt-1">Try adjusting your filters or search</p>
@@ -357,10 +357,10 @@ export default function PriceTrackerPage() {
                 href={p.product_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-4 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 hover:border-slate-600 hover:bg-slate-800/60 transition-all duration-150"
+                className="group flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-all duration-150"
               >
                 {/* Thumbnail */}
-                <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0 relative">
+                <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 relative">
                   {p.image_url ? (
                     <img
                       src={p.image_url}
@@ -370,7 +370,7 @@ export default function PriceTrackerPage() {
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-700">
+                    <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
                     </div>
                   )}
@@ -378,8 +378,8 @@ export default function PriceTrackerPage() {
 
                 {/* Title + vendor */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{p.title}</p>
-                  <p className="text-slate-500 text-xs mt-0.5">{p.vendor_name}</p>
+                  <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{p.title}</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">{p.vendor_name}</p>
                 </div>
 
                 {/* Price + discount + link */}
@@ -390,12 +390,12 @@ export default function PriceTrackerPage() {
                     </span>
                   )}
                   <div className="text-right">
-                    <div className="text-white font-bold text-sm">${Number(p.price).toFixed(2)}</div>
+                    <div className="text-slate-900 dark:text-white font-bold text-sm">${Number(p.price).toFixed(2)}</div>
                     {p.compare_at_price && Number(p.compare_at_price) > Number(p.price) && (
-                      <div className="text-slate-500 text-xs line-through">${Number(p.compare_at_price).toFixed(2)}</div>
+                      <div className="text-slate-400 dark:text-slate-500 text-xs line-through">${Number(p.compare_at_price).toFixed(2)}</div>
                     )}
                   </div>
-                  <ExternalLink size={14} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+                  <ExternalLink size={14} className="text-slate-400 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors" />
                 </div>
               </a>
             );
@@ -406,21 +406,21 @@ export default function PriceTrackerPage() {
       {/* Pagination */}
       {!loading && totalCount > PAGE_SIZE && (
         <div className="flex items-center justify-between pt-2">
-          <span className="text-slate-500 text-sm">
+          <span className="text-slate-400 dark:text-slate-500 text-sm">
             Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, totalCount)} of {totalCount.toLocaleString()}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl text-sm disabled:opacity-40 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               Prev
             </button>
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={(page + 1) * PAGE_SIZE >= totalCount}
-              className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm disabled:opacity-40 hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl text-sm disabled:opacity-40 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               Next
             </button>

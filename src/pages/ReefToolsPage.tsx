@@ -42,7 +42,7 @@ export default function ReefToolsPage() {
     `px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
       active
         ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-        : 'text-slate-400 hover:text-white border border-transparent hover:border-slate-700'
+        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-slate-300 dark:hover:border-slate-700'
     }`;
 
   return (
@@ -53,8 +53,8 @@ export default function ReefToolsPage() {
             <Wrench size={20} className="text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Reef Tools</h1>
-            <p className="text-slate-400 text-sm">Calculators and references for reef hobbyists</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reef Tools</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Calculators and references for reef hobbyists</p>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function ReefToolsPage() {
         ))}
       </div>
 
-      <p className="text-xs text-slate-600 mt-8 text-center">
+      <p className="text-xs text-slate-400 dark:text-slate-600 mt-8 text-center">
         Calculations are estimates. Always verify with calibrated test equipment. Parameters may vary by coral species and system.
       </p>
     </div>

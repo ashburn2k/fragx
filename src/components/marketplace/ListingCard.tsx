@@ -25,10 +25,10 @@ export default function ListingCard({ listing, onClick }: ListingCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/40 hover:-translate-y-0.5 text-left w-full"
+      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/20 dark:hover:shadow-black/40 hover:-translate-y-0.5 text-left w-full"
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-slate-800">
+      <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800">
         <img
           src={imageUrl}
           alt={listing.title}
@@ -71,12 +71,12 @@ export default function ListingCard({ listing, onClick }: ListingCardProps) {
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="text-white font-semibold text-sm leading-tight mb-1 group-hover:text-cyan-400 transition-colors line-clamp-2">
+        <h3 className="text-slate-900 dark:text-white font-semibold text-sm leading-tight mb-1 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2">
           {listing.title}
         </h3>
 
         {listing.coral_species && (
-          <p className="text-slate-500 text-xs mb-2 italic">
+          <p className="text-slate-400 dark:text-slate-500 text-xs mb-2 italic">
             {listing.coral_morphs ? listing.coral_morphs.morph_name + ' — ' : ''}
             {listing.coral_species.genus} {listing.coral_species.species}
           </p>
@@ -85,7 +85,7 @@ export default function ListingCard({ listing, onClick }: ListingCardProps) {
         <div className="flex items-center justify-between mt-2">
           <div>
             {listing.asking_price ? (
-              <span className="text-white font-bold text-lg">${listing.asking_price.toLocaleString()}</span>
+              <span className="text-slate-900 dark:text-white font-bold text-lg">${listing.asking_price.toLocaleString()}</span>
             ) : (
               <span className="text-orange-400 font-medium text-sm flex items-center gap-1">
                 <ArrowLeftRight size={12} />
@@ -94,19 +94,19 @@ export default function ListingCard({ listing, onClick }: ListingCardProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-slate-500 text-xs">
+          <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
             {listing.is_shipping_available && <Truck size={12} />}
             {listing.is_local_pickup && <Package size={12} />}
           </div>
         </div>
 
         {/* Seller + location */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-800">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
               {seller?.username?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <span className="text-slate-400 text-xs truncate max-w-[60px]">{seller?.username ?? 'Unknown'}</span>
+            <span className="text-slate-500 dark:text-slate-400 text-xs truncate max-w-[60px]">{seller?.username ?? 'Unknown'}</span>
             {seller && (
               <span className={`flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
                 seller.role === 'farm'
@@ -124,7 +124,7 @@ export default function ListingCard({ listing, onClick }: ListingCardProps) {
               <ReputationScore score={seller.reputation_score} totalReviews={seller.total_reviews} size="sm" />
             )}
             {(listing.location_city || listing.location_state) && (
-              <span className="text-slate-500 text-xs flex items-center gap-0.5">
+              <span className="text-slate-400 dark:text-slate-500 text-xs flex items-center gap-0.5">
                 <MapPin size={10} />
                 {listing.location_city ? `${listing.location_city}, ` : ''}{listing.location_state}
               </span>

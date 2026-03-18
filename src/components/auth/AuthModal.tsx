@@ -34,9 +34,9 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-8 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl w-full max-w-sm p-8 relative transition-colors duration-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
           <X size={20} />
         </button>
 
@@ -44,8 +44,8 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center mb-4">
             <Waves size={28} className="text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-white">Welcome to FragX</h2>
-          <p className="text-slate-400 text-sm mt-1.5">Sign in to buy, sell, and trade frags</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome to FragX</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5">Sign in to buy, sell, and trade frags</p>
         </div>
 
         {error && (
@@ -63,7 +63,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           {loading ? 'Redirecting...' : 'Continue with Google'}
         </button>
 
-        <p className="text-center text-xs text-slate-500 mt-6 leading-relaxed">
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-6 leading-relaxed">
           By signing in, you agree to our terms of service.
           <br />
           Your Google account is used for authentication only.
