@@ -23,7 +23,7 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
 
 export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
   const isAreefCreation = (vendorSlug ?? product.vendor_slug) === 'areef-creation';
-  const hidePrice = isAreefCreation && (product.price === 10000 || product.price === 1);
+  const hidePrice = isAreefCreation && product.price === 10000;
 
   const discountPct = !hidePrice && product.compare_at_price && product.compare_at_price > product.price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
