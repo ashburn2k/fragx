@@ -51,6 +51,8 @@ type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'title_asc';
 type PageSize = 50 | 100 | 200;
 const ALL_VENDORS_SLUG = '__all__';
 
+const PRODUCT_SELECT_COLUMNS = 'id,vendor_slug,title,handle,collection,tags,price,compare_at_price,image_url,is_available,scraped_at';
+
 const COLLECTION_LABEL_MAP: Record<string, string> = {
   'acropora': 'Acropora',
   'acros-millis': 'Acropora / Millepora',
@@ -273,7 +275,7 @@ const VENDOR_DISPLAY_ORDER = [
 
 export default function VendorPricesPage() {
   const [vendors, setVendors] = useState<VendorScrapeConfig[]>([]);
-  const [selectedVendor, setSelectedVendor] = useState<string>(ALL_VENDORS_SLUG);
+  const [selectedVendor, setSelectedVendor] = useState<string>('');
   const [products, setProducts] = useState<VendorProduct[]>([]);
   const [filtered, setFiltered] = useState<VendorProduct[]>([]);
   const [displayed, setDisplayed] = useState<VendorProduct[]>([]);
@@ -300,7 +302,9 @@ export default function VendorPricesPage() {
   }, []);
 
   useEffect(() => {
-    loadProducts(selectedVendor);
+    if (selectedVendor) {
+      loadProducts(selectedVendor);
+    }
   }, [selectedVendor]);
 
   async function loadVendors() {
@@ -316,18 +320,22 @@ export default function VendorPricesPage() {
         return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
       });
       setVendors(sorted);
+      if (!selectedVendor || selectedVendor === '') {
+        setSelectedVendor(sorted[0].slug);
+      }
     }
   }
 
   async function fetchAllProducts(filters: { vendor_slug?: string }): Promise<VendorProduct[]> {
     const PAGE = 1000;
+    const MAX_ROWS = filters.vendor_slug ? 5000 : 3000;
     let all: VendorProduct[] = [];
     let from = 0;
 
-    while (true) {
+    while (all.length < MAX_ROWS) {
       let query = supabase
         .from('vendor_products')
-        .select('*')
+        .select(PRODUCT_SELECT_COLUMNS)
         .not('collection', 'in', '("dry-goods","drygoods","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei")')
         .order('scraped_at', { ascending: false })
         .range(from, from + PAGE - 1);
@@ -338,7 +346,7 @@ export default function VendorPricesPage() {
 
       const { data, error } = await query;
       if (error || !data || data.length === 0) break;
-      all = all.concat(data);
+      all = all.concat(data as VendorProduct[]);
       if (data.length < PAGE) break;
       from += PAGE;
     }
