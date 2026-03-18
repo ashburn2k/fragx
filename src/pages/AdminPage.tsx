@@ -179,7 +179,7 @@ export default function AdminPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => resolveFlag(flag.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-900 py-2 rounded-xl text-xs font-medium transition-all"
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 py-2 rounded-xl text-xs font-medium transition-all"
                     >
                       <CheckCircle size={12} />
                       Resolve
@@ -211,8 +211,8 @@ export default function AdminPage() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      listing.status === 'active' ? 'bg-emerald-900/40 text-emerald-400' :
-                      listing.status === 'removed' ? 'bg-red-900/40 text-red-400' :
+                      listing.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' :
+                      listing.status === 'removed' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' :
                       'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                     }`}>
                       {listing.status}

@@ -195,11 +195,11 @@ export default function WwcPricePage() {
       </div>
 
       {scraping && (
-        <div className="bg-cyan-900/20 border border-cyan-700/40 rounded-xl p-4 flex items-center gap-3">
-          <RefreshCw size={16} className="animate-spin text-cyan-400 shrink-0" />
+        <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-700/40 rounded-xl p-4 flex items-center gap-3">
+          <RefreshCw size={16} className="animate-spin text-cyan-600 dark:text-cyan-400 shrink-0" />
           <div>
-            <p className="text-cyan-300 text-sm font-medium">Scraping WWC catalog...</p>
-            <p className="text-cyan-500 text-xs mt-0.5">Fetching prices from 60+ coral & fish collections. This may take a minute.</p>
+            <p className="text-cyan-700 dark:text-cyan-300 text-sm font-medium">Scraping WWC catalog...</p>
+            <p className="text-cyan-600 dark:text-cyan-500 text-xs mt-0.5">Fetching prices from 60+ coral & fish collections. This may take a minute.</p>
           </div>
         </div>
       )}
@@ -260,7 +260,7 @@ export default function WwcPricePage() {
               onClick={() => setShowFilters(s => !s)}
               className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                 showFilters || hasActiveFilters
-                  ? 'border-cyan-500 text-cyan-400 bg-cyan-900/20'
+                  ? 'border-cyan-500 text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20'
                   : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >

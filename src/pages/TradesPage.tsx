@@ -372,10 +372,10 @@ export default function TradesPage() {
                         </div>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        match.status === 'pending' ? 'bg-cyan-900/40 text-cyan-400' :
-                        match.status === 'contacted' ? 'bg-amber-900/40 text-amber-400' :
-                        match.status === 'completed' ? 'bg-emerald-900/40 text-emerald-400' :
-                        'bg-slate-700 text-slate-400'
+                        match.status === 'pending' ? 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400' :
+                        match.status === 'contacted' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' :
+                        match.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' :
+                        'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                       }`}>
                         {match.status}
                       </span>
@@ -385,14 +385,14 @@ export default function TradesPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => updateMatchStatus(match.id, 'contacted')}
-                          className="flex-1 flex items-center justify-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-800 py-2 rounded-xl text-xs font-medium transition-all"
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800 py-2 rounded-xl text-xs font-medium transition-all"
                         >
                           <MessageSquare size={12} />
                           Contact
                         </button>
                         <button
                           onClick={() => updateMatchStatus(match.id, 'completed')}
-                          className="flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-800 py-2 px-3 rounded-xl text-xs font-medium transition-all"
+                          className="flex items-center justify-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 py-2 px-3 rounded-xl text-xs font-medium transition-all"
                         >
                           <CheckCircle size={12} />
                         </button>

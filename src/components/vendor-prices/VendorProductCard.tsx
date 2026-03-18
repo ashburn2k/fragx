@@ -11,14 +11,14 @@ interface VendorProductCardProps {
 }
 
 const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
-  cyan:    'bg-cyan-900/40 text-cyan-400 border-cyan-800/60',
-  teal:    'bg-teal-900/40 text-teal-400 border-teal-800/60',
-  amber:   'bg-amber-900/40 text-amber-400 border-amber-800/60',
-  rose:    'bg-rose-900/40 text-rose-400 border-rose-800/60',
-  slate:   'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700',
-  emerald: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/60',
-  sky:     'bg-sky-900/40 text-sky-400 border-sky-800/60',
-  orange:  'bg-orange-900/40 text-orange-400 border-orange-800/60',
+  cyan:    'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/60',
+  teal:    'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800/60',
+  amber:   'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/60',
+  rose:    'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/60',
+  slate:   'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700',
+  emerald: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60',
+  sky:     'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800/60',
+  orange:  'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/60',
 };
 
 export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
@@ -78,7 +78,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
         </p>
         {showVendorBadge && vendorName ? (
           <p className="text-[10px] truncate">
-            <span className="bg-slate-100 dark:bg-slate-800 text-cyan-400 border border-slate-300 dark:border-slate-700 px-1.5 py-0.5 rounded font-medium">
+            <span className="bg-slate-100 dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 border border-slate-300 dark:border-slate-700 px-1.5 py-0.5 rounded font-medium">
               {vendorName}
             </span>
           </p>

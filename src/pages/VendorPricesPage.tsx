@@ -520,14 +520,14 @@ export default function VendorPricesPage() {
   const tagOptions = buildTagFilterOptions(collectionFilteredProducts);
 
   const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], { base: string; active: string }> = {
-    cyan:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 hover:border-cyan-400 dark:hover:border-cyan-700/60',    active: 'bg-cyan-900/40 text-cyan-300 border-cyan-600' },
-    teal:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:border-teal-400 dark:hover:border-teal-700/60',    active: 'bg-teal-900/40 text-teal-300 border-teal-600' },
-    amber:   { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:border-amber-400 dark:hover:border-amber-700/60',  active: 'bg-amber-900/40 text-amber-300 border-amber-600' },
-    rose:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 hover:border-rose-400 dark:hover:border-rose-700/60',    active: 'bg-rose-900/40 text-rose-300 border-rose-600' },
+    cyan:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 hover:border-cyan-400 dark:hover:border-cyan-700/60',    active: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-cyan-400 dark:border-cyan-600' },
+    teal:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:border-teal-400 dark:hover:border-teal-700/60',    active: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-400 dark:border-teal-600' },
+    amber:   { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 hover:border-amber-400 dark:hover:border-amber-700/60',  active: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-400 dark:border-amber-600' },
+    rose:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 hover:border-rose-400 dark:hover:border-rose-700/60',    active: 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 border-rose-400 dark:border-rose-600' },
     slate:   { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-500',        active: 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white border-slate-400 dark:border-slate-500' },
-    emerald: { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:border-emerald-400 dark:hover:border-emerald-700/60', active: 'bg-emerald-900/40 text-emerald-300 border-emerald-600' },
-    sky:     { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-300 hover:border-sky-400 dark:hover:border-sky-700/60',      active: 'bg-sky-900/40 text-sky-300 border-sky-600' },
-    orange:  { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-300 hover:border-orange-400 dark:hover:border-orange-700/60', active: 'bg-orange-900/40 text-orange-300 border-orange-600' },
+    emerald: { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:border-emerald-400 dark:hover:border-emerald-700/60', active: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-400 dark:border-emerald-600' },
+    sky:     { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-300 hover:border-sky-400 dark:hover:border-sky-700/60',      active: 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 border-sky-400 dark:border-sky-600' },
+    orange:  { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-300 hover:border-orange-400 dark:hover:border-orange-700/60', active: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border-orange-400 dark:border-orange-600' },
   };
 
   return (
@@ -567,7 +567,7 @@ export default function VendorPricesPage() {
                       onClick={() => { setSelectedVendor(ALL_VENDORS_SLUG); setVendorDropdownOpen(false); }}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                         selectedVendor === ALL_VENDORS_SLUG
-                          ? 'bg-teal-600/20 text-teal-400 font-medium'
+                          ? 'bg-teal-100 dark:bg-teal-600/20 text-teal-700 dark:text-teal-400 font-medium'
                           : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
@@ -579,7 +579,7 @@ export default function VendorPricesPage() {
                         onClick={() => { setSelectedVendor(v.slug); setVendorDropdownOpen(false); }}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                           selectedVendor === v.slug
-                            ? 'bg-cyan-500/20 text-cyan-400 font-medium'
+                            ? 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 font-medium'
                             : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
@@ -667,13 +667,13 @@ export default function VendorPricesPage() {
 
 
           {scraping && (
-            <div className="bg-cyan-900/20 border border-cyan-700/40 rounded-xl p-4 flex items-center gap-3">
-              <RefreshCw size={15} className="animate-spin text-cyan-400 shrink-0" />
+            <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-700/40 rounded-xl p-4 flex items-center gap-3">
+              <RefreshCw size={15} className="animate-spin text-cyan-600 dark:text-cyan-400 shrink-0" />
               <div>
-                <p className="text-cyan-300 text-sm font-medium">
+                <p className="text-cyan-700 dark:text-cyan-300 text-sm font-medium">
                   Scraping {currentVendor?.name} catalog...
                 </p>
-                <p className="text-cyan-500 text-xs mt-0.5">
+                <p className="text-cyan-600 dark:text-cyan-500 text-xs mt-0.5">
                   Fetching products from all collections. This may take a minute.
                 </p>
               </div>
@@ -773,7 +773,7 @@ export default function VendorPricesPage() {
                   onClick={() => setShowFilters(s => !s)}
                   className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                     showFilters || hasActiveFilters
-                      ? 'border-cyan-500 text-cyan-400 bg-cyan-900/20'
+                      ? 'border-cyan-500 text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20'
                       : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >

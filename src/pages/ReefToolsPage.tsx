@@ -41,7 +41,7 @@ export default function ReefToolsPage() {
   const tabCls = (active: boolean) =>
     `px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
       active
-        ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+        ? 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30'
         : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-slate-300 dark:hover:border-slate-700'
     }`;
 

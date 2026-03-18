@@ -289,7 +289,7 @@ export default function PriceTrackerPage() {
       {activeFilters.length > 0 && !showFilters && (
         <div className="flex flex-wrap gap-2">
           {activeFilters.map(f => (
-            <span key={f} className="flex items-center gap-1.5 bg-cyan-900/30 border border-cyan-700/40 text-cyan-300 rounded-lg px-3 py-1 text-xs font-medium">
+            <span key={f} className="flex items-center gap-1.5 bg-cyan-100 dark:bg-cyan-900/30 border border-cyan-300 dark:border-cyan-700/40 text-cyan-700 dark:text-cyan-300 rounded-lg px-3 py-1 text-xs font-medium">
               <Tag size={11} />
               {f}
             </span>
