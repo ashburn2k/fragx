@@ -35,10 +35,10 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
       href={productUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex flex-col bg-slate-900 border rounded-xl overflow-hidden transition-all duration-200 ${
+      className={`group flex flex-col border rounded-xl overflow-hidden transition-all duration-200 ${
         soldOut
-          ? 'border-slate-800 opacity-60 hover:opacity-80'
-          : 'border-slate-800 hover:border-slate-600'
+          ? 'bg-slate-950 border-slate-700/50 hover:border-slate-600'
+          : 'bg-slate-900 border-slate-800 hover:border-slate-600'
       }`}
     >
       <div className="relative aspect-square bg-slate-800 overflow-hidden">
@@ -46,7 +46,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
           <img
             src={product.image_url}
             alt={product.title}
-            className={`w-full h-full object-cover transition-transform duration-300 ${soldOut ? 'grayscale' : 'group-hover:scale-105'}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
         ) : (
@@ -55,7 +55,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
           </div>
         )}
         {soldOut ? (
-          <span className="absolute top-2 left-2 bg-slate-700 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-600">
+          <span className="absolute top-2 left-2 bg-slate-900/90 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-600">
             SOLD OUT
           </span>
         ) : discountPct ? (
@@ -68,7 +68,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
         </span>
       </div>
       <div className="p-2.5 flex flex-col gap-1.5 flex-1">
-        <p className="text-white text-xs font-medium leading-snug line-clamp-2 group-hover:text-cyan-300 transition-colors">
+        <p className={`text-xs font-medium leading-snug line-clamp-2 transition-colors ${soldOut ? 'text-slate-400 group-hover:text-slate-300' : 'text-white group-hover:text-cyan-300'}`}>
           {product.title}
         </p>
         {showVendorBadge && vendorName ? (
@@ -95,8 +95,10 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
           </div>
         )}
         <div className="flex items-baseline gap-1.5 mt-auto pt-0.5">
-          <span className="text-cyan-400 font-bold text-sm">${product.price.toFixed(2)}</span>
-          {product.compare_at_price && (
+          <span className={`font-bold text-sm ${soldOut ? 'text-slate-500 line-through' : 'text-cyan-400'}`}>
+            ${product.price.toFixed(2)}
+          </span>
+          {!soldOut && product.compare_at_price && (
             <span className="text-slate-500 text-[10px] line-through">
               ${product.compare_at_price.toFixed(2)}
             </span>
