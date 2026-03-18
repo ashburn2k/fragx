@@ -28,19 +28,25 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
   const productUrl = `${vendorBaseUrl}/products/${product.handle}`;
   const normalizedTags = getProductNormalizedTags(product.tags).slice(0, 3);
 
+  const soldOut = !product.is_available;
+
   return (
     <a
       href={productUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-600 transition-all duration-200"
+      className={`group flex flex-col bg-slate-900 border rounded-xl overflow-hidden transition-all duration-200 ${
+        soldOut
+          ? 'border-slate-800 opacity-60 hover:opacity-80'
+          : 'border-slate-800 hover:border-slate-600'
+      }`}
     >
       <div className="relative aspect-square bg-slate-800 overflow-hidden">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover transition-transform duration-300 ${soldOut ? 'grayscale' : 'group-hover:scale-105'}`}
             loading="lazy"
           />
         ) : (
@@ -48,11 +54,15 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
             No image
           </div>
         )}
-        {discountPct && (
+        {soldOut ? (
+          <span className="absolute top-2 left-2 bg-slate-700 text-slate-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-600">
+            SOLD OUT
+          </span>
+        ) : discountPct ? (
           <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
             -{discountPct}%
           </span>
-        )}
+        ) : null}
         <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 rounded p-1">
           <ExternalLink size={11} className="text-white" />
         </span>

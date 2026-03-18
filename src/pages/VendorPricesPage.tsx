@@ -250,6 +250,7 @@ export default function VendorPricesPage() {
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [hideSoldOut, setHideSoldOut] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(50);
@@ -290,7 +291,6 @@ export default function VendorPricesPage() {
       let query = supabase
         .from('vendor_products')
         .select('*')
-        .eq('is_available', true)
         .not('collection', 'in', '("dry-goods","drygoods","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei")')
         .order('scraped_at', { ascending: false })
         .range(from, from + PAGE - 1);
@@ -389,6 +389,7 @@ export default function VendorPricesPage() {
     if (priceMin) result = result.filter(p => p.price >= parseFloat(priceMin));
     if (priceMax) result = result.filter(p => p.price <= parseFloat(priceMax));
     if (onSaleOnly) result = result.filter(p => p.compare_at_price && p.compare_at_price > p.price);
+    if (hideSoldOut) result = result.filter(p => p.is_available);
 
     result.sort((a, b) => {
       if (sortBy === 'price_asc') return a.price - b.price;
@@ -399,7 +400,7 @@ export default function VendorPricesPage() {
 
     setFiltered(result);
     setPage(1);
-  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, collectionTabs, selectedTags]);
+  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags]);
 
   useEffect(() => { applyFilters(); }, [applyFilters]);
   useEffect(() => { setPage(1); }, [pageSize]);
@@ -437,6 +438,7 @@ export default function VendorPricesPage() {
     setPriceMin('');
     setPriceMax('');
     setOnSaleOnly(false);
+    setHideSoldOut(false);
     setSortBy('newest');
     setSelectedTags(new Set());
   }
@@ -450,7 +452,7 @@ export default function VendorPricesPage() {
     });
   }
 
-  const hasActiveFilters = search || selectedCollection !== 'all' || priceMin || priceMax || onSaleOnly || selectedTags.size > 0;
+  const hasActiveFilters = search || selectedCollection !== 'all' || priceMin || priceMax || onSaleOnly || hideSoldOut || selectedTags.size > 0;
 
   const formatDate = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
@@ -827,19 +829,30 @@ export default function VendorPricesPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <div
-                        onClick={() => setOnSaleOnly(s => !s)}
-                        className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${onSaleOnly ? 'bg-cyan-500' : 'bg-slate-700'}`}
-                      >
-                        <div className={`w-3.5 h-3.5 bg-white rounded-full transition-transform m-[3px] ${onSaleOnly ? 'translate-x-4' : 'translate-x-0'}`} />
-                      </div>
-                      <span className="text-sm text-slate-300 flex items-center gap-1.5">
-                        <TrendingDown size={13} className="text-red-400" />
-                        On sale only
-                      </span>
-                    </label>
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <div
+                          onClick={() => setOnSaleOnly(s => !s)}
+                          className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${onSaleOnly ? 'bg-cyan-500' : 'bg-slate-700'}`}
+                        >
+                          <div className={`w-3.5 h-3.5 bg-white rounded-full transition-transform m-[3px] ${onSaleOnly ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </div>
+                        <span className="text-sm text-slate-300 flex items-center gap-1.5">
+                          <TrendingDown size={13} className="text-red-400" />
+                          On sale only
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <div
+                          onClick={() => setHideSoldOut(s => !s)}
+                          className={`w-9 h-5 rounded-full transition-colors cursor-pointer ${hideSoldOut ? 'bg-cyan-500' : 'bg-slate-700'}`}
+                        >
+                          <div className={`w-3.5 h-3.5 bg-white rounded-full transition-transform m-[3px] ${hideSoldOut ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </div>
+                        <span className="text-sm text-slate-300">Hide sold out</span>
+                      </label>
+                    </div>
                     {hasActiveFilters && (
                       <button onClick={clearFilters} className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1">
                         <X size={12} /> Clear all filters
