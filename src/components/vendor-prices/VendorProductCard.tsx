@@ -7,6 +7,7 @@ interface VendorProductCardProps {
   vendorBaseUrl: string;
   vendorName?: string;
   showVendorBadge?: boolean;
+  vendorSlug?: string;
 }
 
 const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
@@ -20,8 +21,11 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
   orange:  'bg-orange-900/40 text-orange-400 border-orange-800/60',
 };
 
-export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge }: VendorProductCardProps) {
-  const discountPct = product.compare_at_price && product.compare_at_price > product.price
+export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
+  const isAreefCreation = (vendorSlug ?? product.vendor_slug) === 'areef-creation';
+  const hidePrice = isAreefCreation && (product.price === 10000 || product.price === 1);
+
+  const discountPct = !hidePrice && product.compare_at_price && product.compare_at_price > product.price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : null;
 
@@ -95,13 +99,19 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
           </div>
         )}
         <div className="flex items-baseline gap-1.5 mt-auto pt-0.5">
-          <span className={`font-bold text-sm ${soldOut ? 'text-slate-500 line-through' : 'text-cyan-400'}`}>
-            ${product.price.toFixed(2)}
-          </span>
-          {!soldOut && product.compare_at_price && (
-            <span className="text-slate-500 text-[10px] line-through">
-              ${product.compare_at_price.toFixed(2)}
-            </span>
+          {hidePrice ? (
+            <span className="text-slate-500 text-xs italic">Price on request</span>
+          ) : (
+            <>
+              <span className={`font-bold text-sm ${soldOut ? 'text-slate-500 line-through' : 'text-cyan-400'}`}>
+                ${product.price.toFixed(2)}
+              </span>
+              {!soldOut && product.compare_at_price && (
+                <span className="text-slate-500 text-[10px] line-through">
+                  ${product.compare_at_price.toFixed(2)}
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>

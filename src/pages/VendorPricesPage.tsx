@@ -943,6 +943,7 @@ export default function VendorPricesPage() {
                           vendorBaseUrl={vendorCfg?.public_url ?? vendorCfg?.base_url ?? currentVendor?.public_url ?? currentVendor?.base_url ?? ''}
                           vendorName={vendorCfg?.name}
                           showVendorBadge={selectedVendor === ALL_VENDORS_SLUG}
+                          vendorSlug={product.vendor_slug}
                         />
                       );
                     })}
