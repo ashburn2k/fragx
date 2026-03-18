@@ -302,10 +302,10 @@ export default function VendorPricesPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedVendor) {
+    if (selectedVendor && vendors.length > 0) {
       loadProducts(selectedVendor);
     }
-  }, [selectedVendor]);
+  }, [selectedVendor, vendors]);
 
   async function loadVendors() {
     const { data } = await supabase
@@ -321,7 +321,7 @@ export default function VendorPricesPage() {
       });
       setVendors(sorted);
       if (!selectedVendor || selectedVendor === '') {
-        setSelectedVendor(sorted[0].slug);
+        setSelectedVendor(ALL_VENDORS_SLUG);
       }
     }
   }
