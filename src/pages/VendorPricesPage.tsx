@@ -12,6 +12,7 @@ const EQUIPMENT_TAGS = new Set([
   'dosing', 'testing', 'ro/di', 'rodi', 'ro di', 'fragging', 'light', 'filtration',
   'pump', 'rock', 'maintenance', 'powerhead', 'heater', 'salt', 'ato', 'merch',
   'bacteria', 'lighting', 'equipment', 'plumbing', 'sand',
+  'reef stock', 'subscriptions', 'service', 'box fee', 'shipping',
 ]);
 
 function hasEquipmentTag(tags: string[]): boolean {
