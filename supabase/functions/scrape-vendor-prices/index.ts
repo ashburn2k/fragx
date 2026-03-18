@@ -14,7 +14,7 @@ interface ShopifyProduct {
   tags: string[];
   body_html: string;
   images: { src: string }[];
-  variants: { price: string; compare_at_price: string | null }[];
+  variants: { price: string; compare_at_price: string | null; available: boolean }[];
 }
 
 interface VendorConfig {
@@ -71,6 +71,7 @@ function buildRecord(
   if (!variant) return null;
   const price = parseFloat(variant.price);
   if (isNaN(price) || price <= 0) return null;
+  const isAvailable = product.variants.some(v => v.available === true);
   return {
     vendor_slug: vendorSlug,
     shopify_id: product.id,
@@ -86,7 +87,7 @@ function buildRecord(
       ? product.body_html.replace(/<[^>]*>/g, "").trim().slice(0, 1000)
       : null,
     scraped_at: new Date().toISOString(),
-    is_available: true,
+    is_available: isAvailable,
   };
 }
 
