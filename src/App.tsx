@@ -3,23 +3,19 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Navigation from './components/layout/Navigation';
 import AuthModal from './components/auth/AuthModal';
 import ProfileSetup from './components/auth/ProfileSetup';
-import MarketplacePage from './pages/MarketplacePage';
+import ReefToolsPage from './pages/ReefToolsPage';
 import PriceTrackerPage from './pages/PriceTrackerPage';
 import VendorsPage from './pages/VendorsPage';
 import VendorPricesPage from './pages/VendorPricesPage';
 import TradesPage from './pages/TradesPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
-import ListingDetail from './components/marketplace/ListingDetail';
-import { Listing } from './lib/supabase';
-
-type Page = 'marketplace' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
+type Page = 'reef-tools' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
 
 function AppInner() {
   const { user, profile, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('vendor-prices');
   const [showAuth, setShowAuth] = useState(false);
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
 
   if (loading) {
     return (
@@ -42,12 +38,6 @@ function AppInner() {
       return;
     }
     setCurrentPage(page);
-    setSelectedListing(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function handleListingClick(listing: Listing) {
-    setSelectedListing(listing);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -60,37 +50,13 @@ function AppInner() {
       />
 
       <main className="max-w-screen-xl mx-auto px-4 pt-20 pb-24 md:pb-8">
-        {selectedListing ? (
-          <ListingDetail
-            listing={selectedListing}
-            onBack={() => setSelectedListing(null)}
-            onRefresh={() => {}}
-          />
-        ) : (
-          <>
-            {currentPage === 'marketplace' && (
-              <MarketplacePage />
-            )}
-            {currentPage === 'price-tracker' && (
-              <PriceTrackerPage />
-            )}
-{currentPage === 'vendors' && (
-              <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />
-            )}
-            {currentPage === 'vendor-prices' && (
-              <VendorPricesPage />
-            )}
-            {currentPage === 'trades' && (
-              <TradesPage />
-            )}
-            {currentPage === 'profile' && (
-              <ProfilePage onListingClick={handleListingClick} />
-            )}
-            {currentPage === 'admin' && user && (
-              <AdminPage />
-            )}
-          </>
-        )}
+        {currentPage === 'reef-tools' && <ReefToolsPage />}
+        {currentPage === 'price-tracker' && <PriceTrackerPage />}
+        {currentPage === 'vendors' && <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />}
+        {currentPage === 'vendor-prices' && <VendorPricesPage />}
+        {currentPage === 'trades' && <TradesPage />}
+        {currentPage === 'profile' && <ProfilePage onListingClick={() => {}} />}
+        {currentPage === 'admin' && user && <AdminPage />}
       </main>
 
       {showAuth && (

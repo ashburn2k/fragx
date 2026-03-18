@@ -1,8 +1,8 @@
-import { ShoppingBag, TrendingUp, ArrowLeftRight, User, Menu, X, Bell, LogOut, Store } from 'lucide-react';
+import { Wrench, TrendingUp, ArrowLeftRight, User, Menu, X, Bell, LogOut, Store } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-type Page = 'marketplace' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
+type Page = 'reef-tools' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
 
 interface NavigationProps {
   currentPage: Page;
@@ -10,9 +10,9 @@ interface NavigationProps {
   onAuthClick: () => void;
 }
 
-const navItems: { page: Page; label: string; Icon: typeof ShoppingBag }[] = [
+const navItems: { page: Page; label: string; Icon: typeof Wrench }[] = [
   { page: 'vendor-prices', label: 'Vendor Prices', Icon: Store },
-  { page: 'marketplace', label: 'Market', Icon: ShoppingBag },
+  { page: 'reef-tools', label: 'Reef Tools', Icon: Wrench },
   { page: 'price-tracker', label: 'Prices', Icon: TrendingUp },
   { page: 'trades', label: 'Trades', Icon: ArrowLeftRight },
   { page: 'profile', label: 'Profile', Icon: User },
