@@ -8,6 +8,16 @@ import VendorProductCard from '../components/vendor-prices/VendorProductCard';
 import PriceChangesPanel from '../components/vendor-prices/PriceChangesPanel';
 import { buildTagFilterOptions, productMatchesTagFilter, getSmallTagLabels, NormalizedTag } from '../lib/tagNormalizer';
 
+const EQUIPMENT_TAGS = new Set([
+  'dosing', 'testing', 'ro/di', 'rodi', 'ro di', 'fragging', 'light', 'filtration',
+  'pump', 'rock', 'maintenance', 'powerhead', 'heater', 'salt', 'ato', 'merch',
+  'bacteria', 'lighting', 'equipment', 'plumbing', 'sand',
+]);
+
+function hasEquipmentTag(tags: string[]): boolean {
+  return tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()));
+}
+
 type ViewTab = 'catalog' | 'history';
 
 type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'title_asc';
@@ -341,7 +351,7 @@ export default function VendorPricesPage() {
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of products) {
+    for (const p of products.filter(p => !hasEquipmentTag(p.tags))) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -353,7 +363,7 @@ export default function VendorPricesPage() {
   }, [products]);
 
   const applyFilters = useCallback(() => {
-    let result = [...products];
+    let result = products.filter(p => !hasEquipmentTag(p.tags));
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
