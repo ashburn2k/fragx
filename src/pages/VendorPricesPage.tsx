@@ -328,11 +328,10 @@ export default function VendorPricesPage() {
 
   async function fetchAllProducts(filters: { vendor_slug?: string }): Promise<VendorProduct[]> {
     const PAGE = 1000;
-    const MAX_ROWS = filters.vendor_slug ? 5000 : Infinity;
     let all: VendorProduct[] = [];
     let from = 0;
 
-    while (all.length < MAX_ROWS) {
+    while (true) {
       let query = supabase
         .from('vendor_products')
         .select(PRODUCT_SELECT_COLUMNS)
