@@ -78,12 +78,12 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
         </p>
         {showVendorBadge && vendorName ? (
           <p className="text-[10px] truncate">
-            <span className="bg-slate-100 dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 border border-slate-300 dark:border-slate-700 px-1.5 py-0.5 rounded font-medium">
+            <span className="bg-cyan-50 dark:bg-slate-800 text-cyan-900 dark:text-cyan-400 border border-cyan-200 dark:border-slate-700 px-1.5 py-0.5 rounded font-semibold">
               {vendorName}
             </span>
           </p>
         ) : (
-          <p className="text-slate-400 dark:text-slate-500 text-[10px] capitalize truncate">
+          <p className="text-slate-500 dark:text-slate-500 text-[10px] capitalize truncate">
             {product.collection.replace(/-/g, ' ')}
           </p>
         )}
