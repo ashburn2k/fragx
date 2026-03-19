@@ -328,7 +328,7 @@ export default function VendorPricesPage() {
 
   async function fetchAllProducts(filters: { vendor_slug?: string }): Promise<VendorProduct[]> {
     const PAGE = 1000;
-    const MAX_ROWS = filters.vendor_slug ? 5000 : 3000;
+    const MAX_ROWS = filters.vendor_slug ? 5000 : Infinity;
     let all: VendorProduct[] = [];
     let from = 0;
 
