@@ -134,7 +134,7 @@ function shouldHideProduct(tags: string[], collection: string, title = ''): bool
 
 type ViewTab = 'catalog' | 'history';
 
-type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'title_asc';
+type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'title_asc' | 'random';
 type PageSize = 50 | 100 | 200;
 const ALL_VENDORS_SLUG = '__all__';
 
@@ -453,7 +453,12 @@ export default function VendorPricesPage() {
 
     if (vendorSlug === ALL_VENDORS_SLUG) {
       const data = await fetchAllProducts({});
+      for (let i = data.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [data[i], data[j]] = [data[j], data[i]];
+      }
       setProducts(data);
+      setSortBy('random');
       setLastRun(null);
       setLoading(false);
       return;
@@ -528,12 +533,14 @@ export default function VendorPricesPage() {
     if (onSaleOnly) result = result.filter(p => p.compare_at_price && p.compare_at_price > p.price);
     if (hideSoldOut) result = result.filter(p => p.is_available);
 
-    result.sort((a, b) => {
-      if (sortBy === 'price_asc') return a.price - b.price;
-      if (sortBy === 'price_desc') return b.price - a.price;
-      if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
-      return new Date(b.scraped_at).getTime() - new Date(a.scraped_at).getTime();
-    });
+    if (sortBy !== 'random') {
+      result.sort((a, b) => {
+        if (sortBy === 'price_asc') return a.price - b.price;
+        if (sortBy === 'price_desc') return b.price - a.price;
+        if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
+        return new Date(b.scraped_at).getTime() - new Date(a.scraped_at).getTime();
+      });
+    }
 
     setFiltered(result);
     setPage(1);
@@ -1018,6 +1025,7 @@ export default function VendorPricesPage() {
                           onChange={e => setSortBy(e.target.value as SortOption)}
                           className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 appearance-none pr-8"
                         >
+                          <option value="random">Random</option>
                           <option value="newest">Newest First</option>
                           <option value="price_asc">Price: Low to High</option>
                           <option value="price_desc">Price: High to Low</option>
