@@ -491,6 +491,54 @@ async function scrapeVendor(
   return scrapeShopifyVendor(vendor, includefish, supabase);
 }
 
+async function runScrapeJob(
+  vendors: (VendorConfig & { last_scraped_at: string | null })[],
+  includefish: boolean,
+  force: boolean,
+  supabase: ReturnType<typeof createClient>
+): Promise<void> {
+  const now = Date.now();
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+  for (const vendor of vendors) {
+    if (!force && vendor.last_scraped_at) {
+      const lastMs = new Date(vendor.last_scraped_at).getTime();
+      if (now - lastMs < THIRTY_DAYS_MS) continue;
+    }
+
+    const { data: runData } = await supabase
+      .from("vendor_scrape_runs")
+      .insert({ vendor_slug: vendor.slug, status: "running" })
+      .select()
+      .single();
+
+    const runId = runData?.id;
+
+    try {
+      const result = await scrapeVendor(vendor, includefish, supabase);
+
+      if (runId) {
+        await supabase
+          .from("vendor_scrape_runs")
+          .update({
+            completed_at: new Date().toISOString(),
+            products_found: result.found,
+            status: "completed",
+          })
+          .eq("id", runId);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (runId) {
+        await supabase
+          .from("vendor_scrape_runs")
+          .update({ status: "failed", error_message: msg })
+          .eq("id", runId);
+      }
+    }
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -525,56 +573,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const now = Date.now();
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
-    const results: Record<string, { found: number; priceChanges: number; errors: number; skipped?: boolean }> = {};
-
-    for (const vendor of vendors as (VendorConfig & { last_scraped_at: string | null })[]) {
-      if (!force && vendor.last_scraped_at) {
-        const lastMs = new Date(vendor.last_scraped_at).getTime();
-        if (now - lastMs < THIRTY_DAYS_MS) {
-          results[vendor.slug] = { found: 0, priceChanges: 0, errors: 0, skipped: true };
-          continue;
-        }
-      }
-
-      const { data: runData } = await supabase
-        .from("vendor_scrape_runs")
-        .insert({ vendor_slug: vendor.slug, status: "running" })
-        .select()
-        .single();
-
-      const runId = runData?.id;
-
-      try {
-        const result = await scrapeVendor(vendor, includefish, supabase);
-        results[vendor.slug] = result;
-
-        if (runId) {
-          await supabase
-            .from("vendor_scrape_runs")
-            .update({
-              completed_at: new Date().toISOString(),
-              products_found: result.found,
-              status: "completed",
-            })
-            .eq("id", runId);
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        results[vendor.slug] = { found: 0, priceChanges: 0, errors: 1 };
-        if (runId) {
-          await supabase
-            .from("vendor_scrape_runs")
-            .update({ status: "failed", error_message: msg })
-            .eq("id", runId);
-        }
-      }
-    }
+    EdgeRuntime.waitUntil(
+      runScrapeJob(
+        vendors as (VendorConfig & { last_scraped_at: string | null })[],
+        includefish,
+        force,
+        supabase
+      )
+    );
 
     return new Response(
-      JSON.stringify({ success: true, results }),
+      JSON.stringify({ success: true, queued: vendors.map((v: VendorConfig) => v.slug) }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
