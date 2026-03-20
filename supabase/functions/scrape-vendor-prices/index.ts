@@ -187,6 +187,19 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
     }
   }
 
+  const imgRegex = /(?:data-src|src)="([^"]*\/media\/catalog\/product\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
+  const productImages: string[] = [];
+  const seenImgs = new Set<string>();
+  let im;
+  while ((im = imgRegex.exec(html)) !== null) {
+    const url = im[1].startsWith("http") ? im[1] : `${baseUrl}${im[1]}`;
+    const base = url.split("?")[0];
+    if (!seenImgs.has(base)) {
+      productImages.push(url);
+      seenImgs.add(base);
+    }
+  }
+
   return items.map((item, idx) => {
     const price = parseFloat(item.price);
     if (isNaN(price) || price <= 0) return null;
@@ -200,7 +213,7 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
       collection,
       price,
       compare_at_price: null,
-      image_url: null,
+      image_url: productImages[idx] ?? null,
       tags: [],
       description: null,
       scraped_at: new Date().toISOString(),
@@ -222,6 +235,9 @@ async function scrapeMagentoVendor(
   for (const p of (existingRaw ?? [])) {
     existingMap.set(p.shopify_id, p);
   }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
   const allRecords = new Map<number, object>();
   const seenIds = new Set<number>();
@@ -285,6 +301,8 @@ async function scrapeMagentoVendor(
       });
     }
   }
+
+  await resolveImageUrls(supabase, allRecords, existingMap, storagePrefix, vendor.slug);
 
   let totalFound = 0;
   let errors = 0;
