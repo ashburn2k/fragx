@@ -1,4 +1,5 @@
 import { ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 import { VendorProduct } from '../../lib/supabase';
 import { getProductNormalizedTags, NormalizedTag } from '../../lib/tagNormalizer';
 
@@ -22,6 +23,7 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
 };
 
 export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
+  const [imgError, setImgError] = useState(false);
   const isAreefCreation = (vendorSlug ?? product.vendor_slug) === 'areef-creation';
   const hidePrice = isAreefCreation && product.price === 10000;
   const isAuction = isAreefCreation && product.price === 1;
@@ -49,12 +51,13 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
       }`}
     >
       <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
-        {product.image_url ? (
+        {product.image_url && !imgError ? (
           <img
             src={product.image_url}
             alt={product.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-xs">
