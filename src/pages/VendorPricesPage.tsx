@@ -303,7 +303,7 @@ export default function VendorPricesPage() {
   const [hideSoldOut, setHideSoldOut] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<PageSize>(50);
+  const [pageSize, setPageSize] = useState<PageSize>(200);
   const [viewTab, setViewTab] = useState<ViewTab>('catalog');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
