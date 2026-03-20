@@ -795,6 +795,11 @@ export default function VendorPricesPage() {
 
   const tagOptions = buildTagFilterOptions(collectionFilteredProducts);
 
+  const catalogCount = useMemo(
+    () => products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug)).length,
+    [products]
+  );
+
   const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], { base: string; active: string }> = {
     cyan:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 hover:border-cyan-400 dark:hover:border-cyan-700/60',    active: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-cyan-400 dark:border-cyan-600' },
     teal:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 hover:border-teal-400 dark:hover:border-teal-700/60',    active: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-400 dark:border-teal-600' },
@@ -1044,7 +1049,7 @@ export default function VendorPricesPage() {
                     >
                       All
                       <span className={`text-xs font-normal ${selectedCollection === 'all' ? 'opacity-80' : 'opacity-50'}`}>
-                        {products.length.toLocaleString()}
+                        {catalogCount.toLocaleString()}
                       </span>
                     </button>
                     {visibleTabs.map(({ label, count }) => (
@@ -1299,7 +1304,7 @@ export default function VendorPricesPage() {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 dark:text-slate-500 text-xs hidden sm:inline">
-                    {products.length.toLocaleString()} total in catalog
+                    {catalogCount.toLocaleString()} total in catalog
                   </span>
                   <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 transition-colors duration-200">
                     {([50, 100, 200] as PageSize[]).map(size => (
