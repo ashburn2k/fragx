@@ -585,7 +585,9 @@ async function scrapeShopifyVendor(
   const allRecords = new Map<number, object>();
   const historyRecords: object[] = [];
 
-  if (vendor.use_products_endpoint !== false) {
+  const useProductsEndpoint = vendor.use_products_endpoint !== false;
+
+  if (useProductsEndpoint) {
     const products = await fetchAllPages(vendor.base_url, "/products.json");
     for (const product of products) {
       if (seenIds.has(product.id)) continue;
@@ -597,7 +599,7 @@ async function scrapeShopifyVendor(
     }
   }
 
-  const collections = [
+  const collections = useProductsEndpoint ? [] : [
     ...vendor.coral_collections,
     ...(includefish ? vendor.fish_collections : []),
   ];

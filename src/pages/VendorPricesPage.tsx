@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Search, RefreshCw,
   X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff
@@ -374,6 +374,17 @@ export default function VendorPricesPage() {
   const [collectionOverflowOpen, setCollectionOverflowOpen] = useState(false);
   const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
 
+  const isMountedRef = useRef(true);
+  const scrapeAbortRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      scrapeAbortRef.current = true;
+    };
+  }, []);
+
   const MAX_VISIBLE_TABS = 6;
   const MAX_VISIBLE_VENDORS = 5;
 
@@ -382,6 +393,9 @@ export default function VendorPricesPage() {
   }, []);
 
   useEffect(() => {
+    scrapeAbortRef.current = true;
+    setScraping(false);
+    setScrapeError(null);
     if (selectedVendor && vendors.length > 0) {
       loadProducts(selectedVendor);
     }
@@ -435,33 +449,45 @@ export default function VendorPricesPage() {
     setSelectedTags(new Set());
     setCollectionOverflowOpen(false);
 
-    if (vendorSlug === ALL_VENDORS_SLUG) {
-      const data = await fetchAllProducts({});
-      for (let i = data.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [data[i], data[j]] = [data[j], data[i]];
+    try {
+      if (vendorSlug === ALL_VENDORS_SLUG) {
+        const data = await fetchAllProducts({});
+        for (let i = data.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [data[i], data[j]] = [data[j], data[i]];
+        }
+        if (isMountedRef.current) {
+          setProducts(data);
+          setSortBy('random');
+          setLastRun(null);
+        }
+        return;
       }
-      setProducts(data);
-      setSortBy('random');
-      setLastRun(null);
-      setLoading(false);
-      return;
-    }
 
-    const [data, runRes] = await Promise.all([
-      fetchAllProducts({ vendor_slug: vendorSlug }),
-      supabase
-        .from('vendor_scrape_runs')
-        .select('*')
-        .eq('vendor_slug', vendorSlug)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
-    setProducts(data);
-    setLastRun(runRes.data);
-    setLoading(false);
+      const [data, runRes] = await Promise.all([
+        fetchAllProducts({ vendor_slug: vendorSlug }),
+        supabase
+          .from('vendor_scrape_runs')
+          .select('*')
+          .eq('vendor_slug', vendorSlug)
+          .eq('status', 'completed')
+          .order('completed_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (isMountedRef.current) {
+        setProducts(data);
+        setLastRun(runRes.data);
+      }
+    } catch (err) {
+      if (isMountedRef.current) {
+        setScrapeError(err instanceof Error ? err.message : 'Failed to load products');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    }
   }
 
   const collectionTabs = useMemo(() => {
@@ -535,9 +561,11 @@ export default function VendorPricesPage() {
   useEffect(() => { setDisplayed(filtered.slice(0, page * pageSize)); }, [filtered, page, pageSize]);
 
   async function handleScrape() {
-    if (!selectedVendor) return;
+    if (!selectedVendor || selectedVendor === ALL_VENDORS_SLUG) return;
+    scrapeAbortRef.current = false;
     setScraping(true);
     setScrapeError(null);
+    const targetVendor = selectedVendor;
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scrape-vendor-prices`;
       const res = await fetch(url, {
@@ -546,36 +574,62 @@ export default function VendorPricesPage() {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ vendor_slug: selectedVendor, include_fish: true, force: true }),
+        body: JSON.stringify({ vendor_slug: targetVendor, include_fish: true, force: true }),
       });
       const data = await res.json();
       if (!data.success) {
-        setScrapeError(data.error ?? 'Scrape failed');
-        setScraping(false);
+        if (isMountedRef.current) setScrapeError(data.error ?? 'Scrape failed');
+        if (isMountedRef.current) setScraping(false);
         return;
       }
-      const maxAttempts = 150;
-      for (let i = 0; i < maxAttempts; i++) {
-        await new Promise(r => setTimeout(r, 2000));
-        const { data: runData } = await supabase
-          .from('vendor_scrape_runs')
-          .select('status, error_message')
-          .eq('vendor_slug', selectedVendor)
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (runData?.status === 'completed') {
-          await loadProducts(selectedVendor);
+
+      const POLL_INTERVAL = 3000;
+      const MAX_WAIT_MS = 10 * 60 * 1000;
+      const STUCK_THRESHOLD_MS = 8 * 60 * 1000;
+      const startTime = Date.now();
+
+      while (!scrapeAbortRef.current) {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+        if (scrapeAbortRef.current) break;
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed > MAX_WAIT_MS) {
+          if (isMountedRef.current) setScrapeError('Scrape timed out. The store may have too many products. Try again later.');
           break;
-        } else if (runData?.status === 'failed') {
-          setScrapeError(runData.error_message ?? 'Scrape failed');
-          break;
+        }
+
+        try {
+          const { data: runData } = await supabase
+            .from('vendor_scrape_runs')
+            .select('status, error_message, started_at')
+            .eq('vendor_slug', targetVendor)
+            .order('started_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (!runData) continue;
+
+          if (runData.status === 'completed') {
+            if (isMountedRef.current) await loadProducts(targetVendor);
+            break;
+          } else if (runData.status === 'failed') {
+            if (isMountedRef.current) setScrapeError(runData.error_message ?? 'Scrape failed');
+            break;
+          } else if (runData.status === 'running') {
+            const runAge = Date.now() - new Date(runData.started_at).getTime();
+            if (runAge > STUCK_THRESHOLD_MS) {
+              if (isMountedRef.current) await loadProducts(targetVendor);
+              break;
+            }
+          }
+        } catch {
+          // ignore individual poll errors
         }
       }
     } catch (err) {
-      setScrapeError(err instanceof Error ? err.message : 'Unknown error');
+      if (isMountedRef.current) setScrapeError(err instanceof Error ? err.message : 'Unknown error');
     }
-    setScraping(false);
+    if (isMountedRef.current) setScraping(false);
   }
 
   function clearFilters() {
