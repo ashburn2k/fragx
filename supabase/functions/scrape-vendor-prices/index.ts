@@ -121,10 +121,10 @@ async function fetchPage(url: string): Promise<ShopifyProduct[]> {
   }
 }
 
-async function fetchAllPages(baseUrl: string, path: string): Promise<ShopifyProduct[]> {
+async function fetchAllPages(baseUrl: string, path: string, maxPages = 15): Promise<ShopifyProduct[]> {
   const all: ShopifyProduct[] = [];
   let page = 1;
-  while (true) {
+  while (page <= maxPages) {
     const url = `${baseUrl}${path}?limit=250&page=${page}`;
     const products = await fetchPage(url);
     if (products.length === 0) break;
