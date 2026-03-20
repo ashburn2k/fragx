@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, ArrowLeftRight } from 'lucide-react';
+import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import UserControlPanel from '../components/admin/UserControlPanel';
 import TradeModPanel from '../components/admin/TradeModPanel';
 import ListingsPanel from '../components/admin/ListingsPanel';
@@ -28,7 +28,8 @@ export default function AdminPage() {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState<AdminStats>({ totalListings: 0, activeListings: 0, totalUsers: 0, openFlags: 0 });
   const [flags, setFlags] = useState<FlaggedItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'trades' | 'users' | 'tools'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'users' | 'tools'>('overview');
+  const [listingSubTab, setListingSubTab] = useState<'trade-listings' | 'have-want'>('trade-listings');
   const [loading, setLoading] = useState(true);
   const [cacheRunning, setCacheRunning] = useState(false);
   const [cacheResult, setCacheResult] = useState<{ enriched?: number; cached?: number; remaining?: number } | null>(null);
@@ -116,7 +117,6 @@ export default function AdminPage() {
           { id: 'overview' as const, label: 'Overview' },
           { id: 'flags' as const, label: 'Flags', count: stats.openFlags },
           { id: 'listings' as const, label: 'Listings' },
-          { id: 'trades' as const, label: 'Trades' },
           { id: 'users' as const, label: 'Users' },
           { id: 'tools' as const, label: 'Tools' },
         ].map(tab => (
@@ -218,7 +218,7 @@ export default function AdminPage() {
                     </button>
                     {flag.listing_id && (
                       <button
-                        onClick={() => removeListing(flag.listing_id!)}
+                        onClick={async () => { await supabase.from('listings').update({ status: 'removed' }).eq('id', flag.listing_id!); loadAdmin(); }}
                         className="flex-1 flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-900 py-2 rounded-xl text-xs font-medium transition-all"
                       >
                         <XCircle size={12} />
@@ -231,9 +231,30 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'listings' && <ListingsPanel />}
-
-          {activeTab === 'trades' && <TradeModPanel />}
+          {activeTab === 'listings' && (
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                {[
+                  { id: 'trade-listings' as const, label: 'Trade Listings' },
+                  { id: 'have-want' as const, label: 'Have / Want Lists' },
+                ].map(sub => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setListingSubTab(sub.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
+                      listingSubTab === sub.id
+                        ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+              {listingSubTab === 'trade-listings' && <ListingsPanel />}
+              {listingSubTab === 'have-want' && <TradeModPanel />}
+            </div>
+          )}
 
           {activeTab === 'users' && <UserControlPanel />}
 
