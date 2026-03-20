@@ -30,6 +30,12 @@ const HIDDEN_COLLECTIONS = new Set([
   'salt-&-maintenance', 'cleaning-supplies', 'heaters-&-chillers', 'fragging-supplies',
   'temperature-monitoring-and-control', 'auto-top-off', 'rock-&-sand',
   'feeding-supplies', 'controllers-&-testing', 'panta-rhei',
+  'replacement-blades', 'power-supply-holder', 'light-shade', 'aquarium-viewer',
+  'bracket', '3d-printing', 'flipper-accessories', 'aquarium-cleaning-supplies',
+  'scrubber', 'phytoplankton', 'lighting-bundle-pack', 'hand-held-scraper',
+  'animals-&-pet-supplies', 'aquarium-lighting', 'aquarium-pumps', 'filtration-bundle-pack',
+  'fish-supplies', 'guard', 'home-&-garden', 'led-light', 'mount', 'protein-skimmer',
+  'sea-urchin-hats', 'show', 'zooplankton', 'clothing',
 ]);
 
 const HIDDEN_TAG_PATTERNS = [
