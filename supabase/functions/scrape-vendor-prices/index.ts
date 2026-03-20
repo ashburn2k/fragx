@@ -200,10 +200,24 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
     }
   }
 
+  function slugifyName(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  const usedLinks = new Set<string>();
+
   return items.map((item, idx) => {
     const price = parseFloat(item.price);
     if (isNaN(price) || price <= 0) return null;
-    const handle = productLinks[idx] ?? `${item.item_id}.html`;
+    const nameSlug = slugifyName(item.item_name);
+    const matchedLink = productLinks.find(l => !usedLinks.has(l) && l.replace(/\.html$/, "").includes(nameSlug));
+    let handle: string;
+    if (matchedLink) {
+      handle = matchedLink;
+      usedLinks.add(matchedLink);
+    } else {
+      handle = `${item.item_id}.html`;
+    }
     return {
       vendor_slug: vendorSlug,
       shopify_id: parseInt(item.item_id),
