@@ -78,22 +78,16 @@ async function cacheImage(
   }
 }
 
-async function resolveImageUrls(
-  supabase: ReturnType<typeof createClient>,
+function resolveImageUrls(
   allRecords: Map<number, object>,
   existingMap: Map<number, ExistingProduct>,
-  storagePrefix: string,
-  vendorSlug: string
-): Promise<void> {
+  storagePrefix: string
+): void {
   for (const [shopifyId, record] of allRecords) {
     const rec = record as Record<string, unknown>;
     const existing = existingMap.get(shopifyId);
     if (typeof existing?.image_url === "string" && existing.image_url.startsWith(storagePrefix)) {
       rec.image_url = existing.image_url;
-    } else if (typeof rec.image_url === "string" && rec.image_url) {
-      const path = `${vendorSlug}/${shopifyId}`;
-      const cached = await cacheImage(supabase, rec.image_url, path);
-      if (cached) rec.image_url = cached;
     }
   }
 }
@@ -321,7 +315,7 @@ async function scrapeMagentoVendor(
     }
   }
 
-  await resolveImageUrls(supabase, allRecords, existingMap, storagePrefix, vendor.slug);
+  resolveImageUrls(allRecords, existingMap, storagePrefix);
 
   let totalFound = 0;
   let errors = 0;
@@ -517,7 +511,7 @@ async function scrapeVenderUpVendor(
     }
   }
 
-  await resolveImageUrls(supabase, allRecords, existingMap, storagePrefix, vendor.slug);
+  resolveImageUrls(allRecords, existingMap, storagePrefix);
 
   let totalFound = 0;
   let errors = 0;
@@ -667,7 +661,7 @@ async function scrapeShopifyVendor(
     }
   }
 
-  await resolveImageUrls(supabase, allRecords, existingMap, storagePrefix, vendor.slug);
+  resolveImageUrls(allRecords, existingMap, storagePrefix);
 
   let totalFound = 0;
   let errors = 0;
