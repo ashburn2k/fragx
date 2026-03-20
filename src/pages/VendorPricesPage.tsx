@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Search, RefreshCw,
-  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag
+  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal
 } from 'lucide-react';
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
@@ -307,6 +307,9 @@ export default function VendorPricesPage() {
   const [viewTab, setViewTab] = useState<ViewTab>('catalog');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
+  const [collectionOverflowOpen, setCollectionOverflowOpen] = useState(false);
+
+  const MAX_VISIBLE_TABS = 8;
 
   useEffect(() => {
     loadVendors();
@@ -368,6 +371,7 @@ export default function VendorPricesPage() {
     setLoading(true);
     setSelectedCollection('all');
     setSelectedTags(new Set());
+    setCollectionOverflowOpen(false);
 
     if (vendorSlug === ALL_VENDORS_SLUG) {
       const data = await fetchAllProducts({});
@@ -728,9 +732,12 @@ export default function VendorPricesPage() {
 
           {(viewTab === 'catalog' || selectedVendor === ALL_VENDORS_SLUG) && products.length > 0 && (
             <>
-              {collectionTabs.length > 1 && (
-                <div className="overflow-x-auto -mx-1 px-1 pb-1">
-                  <div className="flex gap-1.5 min-w-max">
+              {collectionTabs.length > 1 && (() => {
+                const visibleTabs = collectionTabs.slice(0, MAX_VISIBLE_TABS);
+                const overflowTabs = collectionTabs.slice(MAX_VISIBLE_TABS);
+                const overflowActive = overflowTabs.some(t => t.label === selectedCollection);
+                return (
+                  <div className="flex flex-wrap gap-1.5">
                     <button
                       onClick={() => setSelectedCollection('all')}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-medium transition-all duration-150 whitespace-nowrap ${
@@ -744,7 +751,7 @@ export default function VendorPricesPage() {
                         {products.length.toLocaleString()}
                       </span>
                     </button>
-                    {collectionTabs.map(({ label, count }) => (
+                    {visibleTabs.map(({ label, count }) => (
                       <button
                         key={label}
                         onClick={() => setSelectedCollection(label)}
@@ -760,9 +767,47 @@ export default function VendorPricesPage() {
                         </span>
                       </button>
                     ))}
+                    {overflowTabs.length > 0 && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setCollectionOverflowOpen(o => !o)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-sm font-medium transition-all duration-150 whitespace-nowrap ${
+                            overflowActive
+                              ? 'bg-cyan-600/25 text-cyan-500 dark:text-cyan-300 border-cyan-600'
+                              : collectionOverflowOpen
+                                ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white border-slate-300 dark:border-slate-600'
+                                : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-600'
+                          }`}
+                        >
+                          <MoreHorizontal size={14} />
+                          {overflowActive
+                            ? collectionTabs.find(t => t.label === selectedCollection)?.label
+                            : `${overflowTabs.length} more`}
+                          <ChevronDown size={12} className={`transition-transform ${collectionOverflowOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {collectionOverflowOpen && (
+                          <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden z-30 shadow-xl min-w-40">
+                            {overflowTabs.map(({ label, count }) => (
+                              <button
+                                key={label}
+                                onClick={() => { setSelectedCollection(label); setCollectionOverflowOpen(false); }}
+                                className={`w-full text-left flex items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors ${
+                                  selectedCollection === label
+                                    ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-medium'
+                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                {label}
+                                <span className="text-xs opacity-50">{count}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               <div className="flex gap-2">
                 <div className="relative flex-1">
