@@ -55,36 +55,38 @@ function extractOgImage(html: string): string | null {
   return null;
 }
 
-async function enrichMagentoImages(
+async function enrichNullImageProducts(
   supabase: ReturnType<typeof createClient>,
   enrichLimit: number
 ): Promise<{ enriched: number; failed: number }> {
-  const { data: magentoVendors } = await supabase
+  const { data: vendors } = await supabase
     .from("vendor_scrape_configs")
-    .select("slug, base_url")
-    .eq("platform", "magento")
-    .eq("is_active", true);
+    .select("slug, base_url, platform")
+    .eq("is_active", true)
+    .not("platform", "eq", "venderup");
 
-  if (!magentoVendors || magentoVendors.length === 0) {
+  if (!vendors || vendors.length === 0) {
     return { enriched: 0, failed: 0 };
   }
 
   let enriched = 0;
   let failed = 0;
 
-  for (const vendor of magentoVendors) {
+  for (const vendor of vendors) {
     const remaining = enrichLimit - enriched - failed;
     if (remaining <= 0) break;
 
     const { data: products } = await supabase
       .from("vendor_products")
-      .select("id, handle")
+      .select("id, handle, shopify_id")
       .eq("vendor_slug", vendor.slug)
       .is("image_url", null)
       .eq("is_available", true)
-      .limit(remaining);
+      .limit(Math.min(remaining, 20));
 
-    for (const product of products ?? []) {
+    if (!products || products.length === 0) continue;
+
+    for (const product of products) {
       const productUrl = product.handle.endsWith(".html")
         ? `${vendor.base_url}/${product.handle}`
         : `${vendor.base_url}/products/${product.handle}`;
@@ -107,9 +109,11 @@ async function enrichMagentoImages(
         const imageUrl = extractOgImage(html);
 
         if (imageUrl) {
+          const path = `${vendor.slug}/${product.shopify_id}`;
+          const cachedUrl = await cacheImage(supabase, imageUrl, path);
           await supabase
             .from("vendor_products")
-            .update({ image_url: imageUrl })
+            .update({ image_url: cachedUrl ?? imageUrl })
             .eq("id", product.id);
           enriched++;
         } else {
@@ -119,7 +123,7 @@ async function enrichMagentoImages(
         failed++;
       }
 
-      await new Promise(r => setTimeout(r, 250));
+      await new Promise(r => setTimeout(r, 300));
     }
   }
 
@@ -144,7 +148,7 @@ Deno.serve(async (req: Request) => {
     const limit: number = body.limit ?? 100;
     const enrichLimit: number = body.enrich_limit ?? 50;
 
-    const magentoResult = await enrichMagentoImages(supabase, enrichLimit);
+    const enrichResult = await enrichNullImageProducts(supabase, enrichLimit);
 
     let vendorCached = 0;
     let vendorFailed = 0;
@@ -214,7 +218,7 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        magento_enrichment: magentoResult,
+        null_image_enrichment: enrichResult,
         vendor_products: { cached: vendorCached, failed: vendorFailed },
         wwc_products: { cached: wwcCached, failed: wwcFailed },
         remaining_uncached: remaining,
