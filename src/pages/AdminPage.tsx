@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, ArrowLeftRight } from 'lucide-react';
 import UserControlPanel from '../components/admin/UserControlPanel';
+import TradeModPanel from '../components/admin/TradeModPanel';
 
 interface FlaggedItem {
   id: string;
@@ -27,15 +28,17 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats>({ totalListings: 0, activeListings: 0, totalUsers: 0, openFlags: 0 });
   const [flags, setFlags] = useState<FlaggedItem[]>([]);
   const [listings, setListings] = useState<{ id: string; title: string; status: string; seller?: { username: string }; created_at: string }[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'users' | 'tools'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'trades' | 'users' | 'tools'>('overview');
   const [loading, setLoading] = useState(true);
   const [cacheRunning, setCacheRunning] = useState(false);
   const [cacheResult, setCacheResult] = useState<{ enriched?: number; cached?: number; remaining?: number } | null>(null);
 
+  const isAdmin = profile?.role === 'admin' || profile?.username === 'hui';
+
   useEffect(() => {
-    if (!user || profile?.username !== 'hui') return;
+    if (!user || !isAdmin) return;
     loadAdmin();
-  }, [user, profile]);
+  }, [user, isAdmin]);
 
   async function loadAdmin() {
     setLoading(true);
@@ -100,7 +103,7 @@ export default function AdminPage() {
     }
   }
 
-  if (!user || profile?.username !== 'hui') return null;
+  if (!user || !isAdmin) return null;
 
   return (
     <div className="space-y-5">
@@ -120,6 +123,7 @@ export default function AdminPage() {
           { id: 'overview' as const, label: 'Overview' },
           { id: 'flags' as const, label: 'Flags', count: stats.openFlags },
           { id: 'listings' as const, label: 'Listings' },
+          { id: 'trades' as const, label: 'Trades' },
           { id: 'users' as const, label: 'Users' },
           { id: 'tools' as const, label: 'Tools' },
         ].map(tab => (
@@ -266,6 +270,8 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+
+          {activeTab === 'trades' && <TradeModPanel />}
 
           {activeTab === 'users' && <UserControlPanel />}
 

@@ -6,7 +6,7 @@ import {
   ChevronDown, X, AlertTriangle, CheckCircle, UserCheck, RefreshCw
 } from 'lucide-react';
 
-type UserRole = 'hobbyist' | 'vendor' | 'farm' | 'moderator';
+type UserRole = 'hobbyist' | 'vendor' | 'farm' | 'moderator' | 'admin';
 
 interface ManagedUser {
   id: string;
@@ -32,6 +32,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   vendor: 'Vendor',
   farm: 'Farm',
   moderator: 'Moderator',
+  admin: 'Admin',
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -39,6 +40,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   vendor: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400',
   farm: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400',
   moderator: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400',
+  admin: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',
 };
 
 export default function UserControlPanel() {
@@ -408,18 +410,28 @@ export default function UserControlPanel() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {(['hobbyist', 'vendor', 'farm', 'moderator'] as UserRole[]).map(role => (
+                  {(['hobbyist', 'vendor', 'farm', 'moderator', 'admin'] as UserRole[]).map(role => (
                     <button
                       key={role}
                       onClick={() => setPromoteRole(role)}
                       className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-all ${
                         promoteRole === role
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                          ? role === 'admin'
+                            ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                            : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
                           : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                       }`}
                     >
-                      <span className="font-medium">{ROLE_LABELS[role]}</span>
-                      {promoteRole === role && <CheckCircle size={16} className="text-amber-500" />}
+                      <div>
+                        <span className="font-medium">{ROLE_LABELS[role]}</span>
+                        {role === 'admin' && (
+                          <span className="ml-2 text-xs text-red-400 dark:text-red-500">full platform access</span>
+                        )}
+                        {role === 'moderator' && (
+                          <span className="ml-2 text-xs text-amber-400 dark:text-amber-500">trade moderation</span>
+                        )}
+                      </div>
+                      {promoteRole === role && <CheckCircle size={16} className={role === 'admin' ? 'text-red-500' : 'text-amber-500'} />}
                     </button>
                   ))}
                 </div>
@@ -430,7 +442,9 @@ export default function UserControlPanel() {
                   <button
                     onClick={handlePromote}
                     disabled={actionLoading || promoteRole === selectedUser.role}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-medium transition-all"
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl disabled:opacity-50 text-white text-sm font-medium transition-all ${
+                      promoteRole === 'admin' ? 'bg-red-500 hover:bg-red-600' : 'bg-amber-500 hover:bg-amber-600'
+                    }`}
                   >
                     <UserCheck size={14} />
                     {actionLoading ? 'Saving...' : 'Set Role'}

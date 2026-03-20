@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil } from 'lucide-react';
+import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil, Shield } from 'lucide-react';
 import { supabase, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import TradeSidebar from '../components/trades/TradeSidebar';
 import ImageUpload from '../components/trades/ImageUpload';
+import TradeModPanel from '../components/admin/TradeModPanel';
 
 const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Zoanthids', 'Mushrooms', 'Frag Pack', 'Other'];
 
-type TradeTab = 'have' | 'want' | 'matches' | 'messages';
+type TradeTab = 'have' | 'want' | 'matches' | 'messages' | 'moderate';
 
 type TradeForm = { coral_type: string; notes: string; quantity: string; max_price: string; asking_price: string };
 
@@ -93,7 +94,8 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
 }
 
 export default function TradesPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const canModerate = profile?.role === 'moderator' || profile?.role === 'admin';
   const [activeTab, setActiveTab] = useState<TradeTab>('have');
   const [haveList, setHaveList] = useState<HaveListItem[]>([]);
   const [wantList, setWantList] = useState<WantListItem[]>([]);
@@ -293,11 +295,12 @@ export default function TradesPage() {
     );
   }
 
-  const tabs: { id: TradeTab; label: string; count?: number }[] = [
+  const tabs: { id: TradeTab; label: string; count?: number; modOnly?: boolean }[] = [
     { id: 'have', label: 'Have', count: haveList.length },
     { id: 'want', label: 'Want', count: wantList.length },
     { id: 'matches', label: 'Matches', count: matches.filter(m => m.status === 'pending').length },
     { id: 'messages', label: 'Messages', count: conversations.reduce((a, c) => a + c.unread, 0) },
+    ...(canModerate ? [{ id: 'moderate' as TradeTab, label: 'Moderate', modOnly: true }] : []),
   ];
 
   return (
@@ -310,14 +313,19 @@ export default function TradesPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {tabs.map(({ id, label, count }) => (
+        {tabs.map(({ id, label, count, modOnly }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
             className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-              activeTab === id ? 'bg-cyan-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              activeTab === id
+                ? modOnly ? 'bg-amber-500 text-white' : 'bg-cyan-500 text-white'
+                : modOnly
+                  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
+            {modOnly && <Shield size={12} />}
             {label}
             {count !== undefined && count > 0 && (
               <span className={`text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold ${
@@ -541,6 +549,17 @@ export default function TradesPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* MODERATE tab */}
+          {activeTab === 'moderate' && canModerate && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl">
+                <Shield size={14} className="text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <p className="text-amber-700 dark:text-amber-400 text-xs">Moderator view — you can edit or remove any trade entry platform-wide.</p>
+              </div>
+              <TradeModPanel />
             </div>
           )}
 

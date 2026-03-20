@@ -5,7 +5,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type UserRole = 'hobbyist' | 'vendor' | 'farm';
+export type UserRole = 'hobbyist' | 'vendor' | 'farm' | 'moderator' | 'admin';
 export type RarityTier = 'Common' | 'Uncommon' | 'Rare' | 'Ultra Rare' | 'Grail';
 export type CareDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 export type ListingType = 'sale' | 'trade' | 'both';
@@ -27,6 +27,7 @@ export interface Profile {
   total_sales: number;
   total_trades: number;
   is_verified: boolean;
+  is_banned: boolean;
   created_at: string;
 }
 
