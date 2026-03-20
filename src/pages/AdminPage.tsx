@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, ArrowLeftRight } from 'lucide-react';
 import UserControlPanel from '../components/admin/UserControlPanel';
 import TradeModPanel from '../components/admin/TradeModPanel';
+import ListingsPanel from '../components/admin/ListingsPanel';
 
 interface FlaggedItem {
   id: string;
@@ -27,7 +28,6 @@ export default function AdminPage() {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState<AdminStats>({ totalListings: 0, activeListings: 0, totalUsers: 0, openFlags: 0 });
   const [flags, setFlags] = useState<FlaggedItem[]>([]);
-  const [listings, setListings] = useState<{ id: string; title: string; status: string; seller?: { username: string }; created_at: string }[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'trades' | 'users' | 'tools'>('overview');
   const [loading, setLoading] = useState(true);
   const [cacheRunning, setCacheRunning] = useState(false);
@@ -42,13 +42,12 @@ export default function AdminPage() {
 
   async function loadAdmin() {
     setLoading(true);
-    const [listingCount, activeCount, userCount, flagCount, flagsData, listingsData] = await Promise.all([
+    const [listingCount, activeCount, userCount, flagCount, flagsData] = await Promise.all([
       supabase.from('listings').select('id', { count: 'exact', head: true }),
       supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('flags').select('id', { count: 'exact', head: true }).eq('is_resolved', false),
       supabase.from('flags').select('*, listings(title, seller_id)').order('created_at', { ascending: false }).limit(20),
-      supabase.from('listings').select('*, seller:seller_id(username)').order('created_at', { ascending: false }).limit(30),
     ]);
 
     setStats({
@@ -58,17 +57,11 @@ export default function AdminPage() {
       openFlags: flagCount.count ?? 0,
     });
     setFlags(flagsData.data ?? []);
-    setListings(listingsData.data ?? []);
     setLoading(false);
   }
 
   async function resolveFlag(id: string) {
     await supabase.from('flags').update({ is_resolved: true }).eq('id', id);
-    loadAdmin();
-  }
-
-  async function removeListing(id: string) {
-    await supabase.from('listings').update({ status: 'removed' }).eq('id', id);
     loadAdmin();
   }
 
@@ -238,38 +231,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'listings' && (
-            <div className="space-y-2">
-              {listings.map(listing => (
-                <div key={listing.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
-                  <div>
-                    <div className="text-slate-900 dark:text-white text-sm font-medium line-clamp-1">{listing.title}</div>
-                    <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
-                      by @{(listing.seller as { username: string })?.username} · {new Date(listing.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      listing.status === 'active' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' :
-                      listing.status === 'removed' ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400' :
-                      'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                    }`}>
-                      {listing.status}
-                    </span>
-                    {listing.status === 'active' && (
-                      <button
-                        onClick={() => removeListing(listing.id)}
-                        className="text-slate-500 hover:text-red-400 transition-colors"
-                        title="Remove listing"
-                      >
-                        <XCircle size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {activeTab === 'listings' && <ListingsPanel />}
 
           {activeTab === 'trades' && <TradeModPanel />}
 
