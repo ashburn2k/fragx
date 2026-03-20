@@ -347,18 +347,6 @@ function getCollectionLabel(handle: string): string {
   return handle.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-const VENDOR_DISPLAY_ORDER = [
-  'unique-corals',
-  'vivid-aquariums',
-  'world-wide-corals',
-  'battle-corals',
-  'reef-chasers',
-  'cherry-corals',
-  'cornbred-corals',
-  'fragbox-corals',
-  'reef-raft-usa',
-  'pacific-east-aquaculture',
-];
 
 export default function VendorPricesPage() {
   const [vendors, setVendors] = useState<VendorScrapeConfig[]>([]);
@@ -406,11 +394,7 @@ export default function VendorPricesPage() {
       .eq('is_active', true);
 
     if (data && data.length > 0) {
-      const sorted = [...data].sort((a, b) => {
-        const ai = VENDOR_DISPLAY_ORDER.indexOf(a.slug);
-        const bi = VENDOR_DISPLAY_ORDER.indexOf(b.slug);
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      });
+      const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
       setVendors(sorted);
       if (!selectedVendor || selectedVendor === '') {
         setSelectedVendor(ALL_VENDORS_SLUG);
