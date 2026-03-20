@@ -19,7 +19,52 @@ const EQUIPMENT_TAGS = new Set([
   'scrubber', 'phytoplankton', 'lighting bundle pack', 'hand held scraper',
   'printed reef', 'flipper aquarium products', 'reefbreeders.com',
   'dalua international llc', 'pod your reef', 'nature dimensions',
+  'sticker', 'decal', 'additive', 'supplement', 'chemical', 'treatment',
 ]);
+
+const HIDDEN_TITLE_PATTERNS = [
+  /sticker/i,
+  /decal/i,
+  /bumper.?sticker/i,
+  /\bshipping\b/i,
+  /flat.?rate.?ship/i,
+  /overnight.?ship/i,
+  /handling.?fee/i,
+  /phosphate.?remov/i,
+  /phosphat-e/i,
+  /\bkalkwasser\b/i,
+  /\balkalinity\s+(supplement|solution|part)/i,
+  /\bcalcium\s+(part|solution|supplement)/i,
+  /\bmagnesium\s+(part|solution|supplement)/i,
+  /\btrace\s+elements?\b/i,
+  /\bamino\s+acids?\b/i,
+  /\bactivated\s+carbon\b/i,
+  /\bphos.?(guard|ban|sorb|rx|net)\b/i,
+  /\bcarbon\s+dosing\b/i,
+  /\bnitrate\s+remov/i,
+  /\bskimmer\b/i,
+  /\bpump\b/i,
+  /\bpowerhead\b/i,
+  /\bheater\b/i,
+  /\bfilter\b/i,
+  /\brefractometer\b/i,
+  /\btest\s+kit\b/i,
+  /\bsalt\s+mix\b/i,
+  /\bwater\s+change/i,
+  /\baquarium\s+glass/i,
+  /\bmagnetic\s+cleaner/i,
+  /\brodi?\s+unit\b/i,
+  /\bfrag\s+(plug|rack|disk|disc)\b/i,
+  /\bglue\b/i,
+  /\bsuper\s+glue\b/i,
+  /\bgift\s+card\b/i,
+  /\bgift\s+certificate\b/i,
+  /\bt.?shirt\b/i,
+  /\bhat\b.*\breef\b|\breef\b.*\bhat\b/i,
+  /\bhoodie\b/i,
+  /\bsweatshirt\b/i,
+  /\btank\s+top\b/i,
+];
 
 const HIDDEN_COLLECTIONS = new Set([
   'reef-stock', 'heater', 'subscriptions', 'service', 'box-fee', 'shipping',
@@ -50,10 +95,11 @@ const HIDDEN_TAG_PATTERNS = [
   /^shipping/i,
 ];
 
-function shouldHideProduct(tags: string[], collection: string): boolean {
+function shouldHideProduct(tags: string[], collection: string, title = ''): boolean {
   if (HIDDEN_COLLECTIONS.has(collection.toLowerCase().trim())) return true;
   if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return true;
   if (tags.some(t => HIDDEN_TAG_PATTERNS.some(p => p.test(t.trim())))) return true;
+  if (title && HIDDEN_TITLE_PATTERNS.some(p => p.test(title))) return true;
   return false;
 }
 
@@ -403,7 +449,7 @@ export default function VendorPricesPage() {
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection))) {
+    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title))) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -415,7 +461,7 @@ export default function VendorPricesPage() {
   }, [products]);
 
   const applyFilters = useCallback(() => {
-    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection));
+    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title));
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
