@@ -16,6 +16,8 @@ const EQUIPMENT_TAGS = new Set([
   'replacement blades', 'power supply holder', 'light shade', 'aquarium viewer',
   'bracket', '3d printing', 'flipper accessories', 'aquarium cleaning supplies',
   'scrubber', 'phytoplankton', 'lighting bundle pack', 'hand held scraper',
+  'printed reef', 'flipper aquarium products', 'reefbreeders.com',
+  'dalua international llc', 'pod your reef', 'nature dimensions',
 ]);
 
 const HIDDEN_COLLECTIONS = new Set([
