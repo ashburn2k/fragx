@@ -14,7 +14,9 @@ const EQUIPMENT_TAGS = new Set([
   'dosing', 'testing', 'ro/di', 'rodi', 'ro di', 'fragging', 'light', 'filtration',
   'pump', 'rock', 'maintenance', 'powerhead', 'heater', 'salt', 'ato', 'merch',
   'bacteria', 'lighting', 'equipment', 'plumbing', 'sand',
-  'reef stock', 'subscriptions', 'service', 'box fee', 'shipping',
+  'reef stock', 'subscriptions', 'service', 'box fee', 'shipping', 'shipping fee',
+  'shipping upgrade', 'shipping insurance', 'handling fee', 'overnight shipping',
+  'flat rate shipping', 'live arrival guarantee', 'lag',
   'replacement blades', 'power supply holder', 'light shade', 'aquarium viewer',
   'bracket', '3d printing', 'flipper accessories', 'aquarium cleaning supplies',
   'scrubber', 'phytoplankton', 'lighting bundle pack', 'hand held scraper',
@@ -23,6 +25,10 @@ const EQUIPMENT_TAGS = new Set([
   'sticker', 'decal', 'additive', 'supplement', 'chemical', 'treatment',
   'food', 'coral food', 'reef food', 'fish food', 'frozen food', 'phytoplankton', 'zooplankton',
   'copepods', 'rotifers', 'mysis', 'brine shrimp', 'flake', 'pellet',
+  'medication', 'medicine', 'ich treatment', 'parasite', 'antibiotic', 'probiotic',
+  'vitamin', 'ich', 'velvet', 'disease', 'treatment', 'medicated',
+  'water change', 'water maintenance', 'algae scraper', 'algae magnet',
+  'tank maintenance', 'water conditioner', 'dechlorinator',
 ]);
 
 const HIDDEN_TITLE_PATTERNS = [
@@ -93,6 +99,40 @@ const HIDDEN_TITLE_PATTERNS = [
   /\bpoly.?lab\b/i,
   /\bbenny.?stick/i,
   /\bfrag.?biotic/i,
+  /\bshipping\s+(insurance|protection|fee|cost|upgrade|box|label)\b/i,
+  /\bovernight\s+(delivery|ship)/i,
+  /\blive\s+arrival\s+guarantee\b/i,
+  /\bship.?box\b/i,
+  /\bhandling\b/i,
+  /\bcarrier\s+(bag|fee)\b/i,
+  /\bich\b/i,
+  /\bvelvet\b/i,
+  /\bparasite/i,
+  /\bmedication\b/i,
+  /\bmedicated\b/i,
+  /\bantibiotic/i,
+  /\bprobiotic\b/i,
+  /\bvitamin\s+(c|b|supplement)/i,
+  /\bcopper\s+(treat|safe|power|solution)/i,
+  /\bmetronidazole\b/i,
+  /\bchloroquine\b/i,
+  /\bpraziquantel\b|\bprazi\s*pro\b/i,
+  /\bformalin\b/i,
+  /\bfuran\b/i,
+  /\bkanamycin\b/i,
+  /\bhydrogen\s+peroxide\b/i,
+  /\bdisease\s+(treat|cure|prevent)/i,
+  /\bfish\s+(treat|cure|heal|med)/i,
+  /\balgae\s+(wafer|sheet|clip|disc)\b/i,
+  /\bbloodworm\b/i,
+  /\bkrill\b/i,
+  /\bspirulina\b/i,
+  /\bgamma\s+(mysis|krill|blood)/i,
+  /\bwater\s+conditioner\b/i,
+  /\bdechlorinator\b/i,
+  /\btank\s+maintenance\b/i,
+  /\balgae\s+(scraper|magnet|cleaner|scrubber)\b/i,
+  /\baquarium\s+maintenance\b/i,
 ];
 
 const HIDDEN_COLLECTIONS = new Set([
@@ -117,6 +157,14 @@ const HIDDEN_COLLECTIONS = new Set([
   'merch', 'apparel', 'fragging', 'salt', 'ro-di', 'lighting',
   'nugget_giftcard', 'gift-card', 'gift-cards', 'gift-certificates',
   'freshwater', 'pond', 'terrarium', 'reptile',
+  'medication', 'medications', 'fish-medication', 'fish-health', 'disease-treatment',
+  'treatments', 'ich-treatment', 'parasite-treatment', 'fish-treatments',
+  'shipping-upgrade', 'shipping-insurance', 'shipping-protection', 'shipping-fee',
+  'overnight-shipping', 'flat-rate-shipping', 'live-arrival',
+  'maintenance', 'water-maintenance', 'water-care', 'tank-maintenance',
+  'algae-control', 'algae-scrapers', 'cleaning',
+  'fish-food', 'coral-food', 'reef-food', 'frozen-foods',
+  'live-food', 'dry-food', 'food-and-supplements',
 ]);
 
 const HIDDEN_PRODUCT_TYPES = new Set([
@@ -128,6 +176,14 @@ const HIDDEN_PRODUCT_TYPES = new Set([
   'fragging supplies', 'testing', 'dosing', 'skimmer',
   'aquarium', 'aquarium furniture', 'aquarium supplies and accessories',
   'controller', 'powerhead', 'auto top off', 'ato',
+  'medication', 'medications', 'fish medication', 'fish health', 'treatment',
+  'disease treatment', 'ich treatment', 'parasite treatment',
+  'shipping', 'shipping fee', 'shipping upgrade', 'shipping insurance',
+  'overnight shipping', 'flat rate shipping', 'live arrival guarantee',
+  'handling', 'handling fee',
+  'maintenance', 'water maintenance', 'water care', 'tank maintenance',
+  'fish food', 'coral food', 'reef food', 'frozen food', 'live food',
+  'food and supplements', 'fish food and supplements',
 ]);
 
 const HIDDEN_TAG_PATTERNS = [
@@ -137,6 +193,13 @@ const HIDDEN_TAG_PATTERNS = [
   /^service/i,
   /^box.?fee$/i,
   /^shipping/i,
+  /^medication/i,
+  /^treatment/i,
+  /^parasite/i,
+  /^maintenance/i,
+  /^handling.?fee/i,
+  /^live.?arrival/i,
+  /^overnight.?ship/i,
 ];
 
 function shouldHideProduct(tags: string[], collection: string, title = '', productType = ''): boolean {
@@ -442,7 +505,7 @@ export default function VendorPricesPage() {
       let query = supabase
         .from('vendor_products')
         .select(PRODUCT_SELECT_COLUMNS)
-        .not('collection', 'in', '("dry-goods","drygoods","dry-good","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei","equipment","aquarium-supplies","supplements","testing","dosing","merch","apparel","fragging","salt","ro-di","lighting","nugget_giftcard","gift-card","gift-cards","gift-certificates","freshwater","pond","terrarium","reptile")')
+        .not('collection', 'in', '("dry-goods","drygoods","dry-good","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei","equipment","aquarium-supplies","supplements","testing","dosing","merch","apparel","fragging","salt","ro-di","lighting","nugget_giftcard","gift-card","gift-cards","gift-certificates","freshwater","pond","terrarium","reptile","medication","medications","fish-medication","fish-health","disease-treatment","treatments","ich-treatment","parasite-treatment","fish-treatments","shipping-upgrade","shipping-insurance","shipping-protection","shipping-fee","overnight-shipping","flat-rate-shipping","live-arrival","maintenance","water-maintenance","water-care","tank-maintenance","algae-control","algae-scrapers","cleaning","coral-food","reef-food","frozen-foods","live-food","dry-food","food-and-supplements")')
         .order('scraped_at', { ascending: false })
         .range(from, from + PAGE - 1);
 
