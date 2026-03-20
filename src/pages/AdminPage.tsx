@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import UserControlPanel from '../components/admin/UserControlPanel';
 
 interface FlaggedItem {
   id: string;
@@ -266,12 +267,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {activeTab === 'users' && (
-            <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
-              <Users size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-500 dark:text-slate-400 text-sm">User management coming soon</p>
-            </div>
-          )}
+          {activeTab === 'users' && <UserControlPanel />}
 
           {activeTab === 'tools' && (
             <div className="space-y-4">
