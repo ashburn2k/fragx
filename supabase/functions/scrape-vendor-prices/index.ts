@@ -136,6 +136,205 @@ async function fetchAllPages(baseUrl: string, path: string): Promise<ShopifyProd
   return all;
 }
 
+async function fetchHtmlPage(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+      },
+      signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
+interface MagentoItem {
+  item_name: string;
+  item_id: string;
+  price: string;
+  item_category?: string;
+}
+
+function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl: string, collection: string): object[] {
+  const items: MagentoItem[] = [];
+  const itemRegex = /\{"item_name":"([^"]+)","item_id":"(\d+)","price":"([\d.]+)"[^}]*\}/g;
+  let m;
+  const seenIds = new Set<string>();
+  while ((m = itemRegex.exec(html)) !== null) {
+    if (!seenIds.has(m[2])) {
+      items.push({ item_name: m[1], item_id: m[2], price: m[3] });
+      seenIds.add(m[2]);
+    }
+  }
+
+  if (items.length === 0) return [];
+
+  const domain = baseUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const linkRegex = new RegExp(`href="https://${domain.replace(/\./g, "\\.")}/(([\\w-]+\\.html))"`, "g");
+  const productLinks: string[] = [];
+  const seenLinks = new Set<string>();
+  let lm;
+  while ((lm = linkRegex.exec(html)) !== null) {
+    const path = lm[1];
+    if (path.includes("-") && !seenLinks.has(path)) {
+      productLinks.push(path);
+      seenLinks.add(path);
+    }
+  }
+
+  return items.map((item, idx) => {
+    const price = parseFloat(item.price);
+    if (isNaN(price) || price <= 0) return null;
+    const handle = productLinks[idx] ?? `${item.item_id}.html`;
+    return {
+      vendor_slug: vendorSlug,
+      shopify_id: parseInt(item.item_id),
+      handle,
+      title: item.item_name,
+      product_type: item.item_category ?? "coral",
+      collection,
+      price,
+      compare_at_price: null,
+      image_url: null,
+      tags: [],
+      description: null,
+      scraped_at: new Date().toISOString(),
+      is_available: true,
+    };
+  }).filter(Boolean);
+}
+
+async function scrapeMagentoVendor(
+  vendor: VendorConfig,
+  supabase: ReturnType<typeof createClient>
+): Promise<{ found: number; priceChanges: number; errors: number }> {
+  const { data: existingRaw } = await supabase
+    .from("vendor_products")
+    .select("shopify_id, price, handle, title, image_url")
+    .eq("vendor_slug", vendor.slug);
+
+  const existingMap = new Map<number, ExistingProduct>();
+  for (const p of (existingRaw ?? [])) {
+    existingMap.set(p.shopify_id, p);
+  }
+
+  const allRecords = new Map<number, object>();
+  const seenIds = new Set<number>();
+
+  for (const catalogPath of vendor.coral_collections) {
+    let page = 1;
+    while (true) {
+      const url = `${vendor.base_url}/${catalogPath}?product_list_limit=96&p=${page}`;
+      const html = await fetchHtmlPage(url);
+      if (!html) break;
+
+      const products = parseMagentoProductsFromHtml(html, vendor.slug, vendor.base_url, catalogPath.replace(/\.html$/, ""));
+      if (products.length === 0) break;
+
+      for (const product of products) {
+        const rec = product as { shopify_id: number };
+        if (!seenIds.has(rec.shopify_id)) {
+          allRecords.set(rec.shopify_id, product);
+          seenIds.add(rec.shopify_id);
+        }
+      }
+
+      if (products.length < 96) break;
+      page++;
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  const historyRecords: object[] = [];
+  for (const [shopifyId, record] of allRecords) {
+    const rec = record as { shopify_id: number; price: number; handle: string; title: string; compare_at_price: number | null };
+    const existing = existingMap.get(shopifyId);
+
+    if (!existing) {
+      historyRecords.push({
+        vendor_slug: vendor.slug,
+        shopify_id: rec.shopify_id,
+        handle: rec.handle,
+        title: rec.title,
+        price: rec.price,
+        compare_at_price: rec.compare_at_price,
+        price_change: null,
+        price_change_pct: null,
+        recorded_at: new Date().toISOString(),
+      });
+    } else if (Math.abs(existing.price - rec.price) >= 0.01) {
+      const change = rec.price - existing.price;
+      const changePct = existing.price > 0
+        ? Math.round((change / existing.price) * 10000) / 100
+        : null;
+      historyRecords.push({
+        vendor_slug: vendor.slug,
+        shopify_id: rec.shopify_id,
+        handle: rec.handle,
+        title: rec.title,
+        price: rec.price,
+        compare_at_price: rec.compare_at_price,
+        price_change: Math.round(change * 100) / 100,
+        price_change_pct: changePct,
+        recorded_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  let totalFound = 0;
+  let errors = 0;
+  const recordsArr = Array.from(allRecords.values());
+  const BATCH = 250;
+
+  for (let i = 0; i < recordsArr.length; i += BATCH) {
+    const { error } = await supabase
+      .from("vendor_products")
+      .upsert(recordsArr.slice(i, i + BATCH), { onConflict: "vendor_slug,shopify_id" });
+    if (error) {
+      console.error(`Upsert error for ${vendor.slug}:`, error.message);
+      errors++;
+    } else {
+      totalFound += Math.min(BATCH, recordsArr.length - i);
+    }
+  }
+
+  if (historyRecords.length > 0) {
+    const HBATCH = 500;
+    for (let i = 0; i < historyRecords.length; i += HBATCH) {
+      const { error } = await supabase
+        .from("vendor_price_history")
+        .insert(historyRecords.slice(i, i + HBATCH));
+      if (error) {
+        console.error(`History insert error for ${vendor.slug}:`, error.message);
+      }
+    }
+  }
+
+  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
+  if (unseenIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unseenIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false, scraped_at: new Date().toISOString() })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
+    }
+  }
+
+  await supabase
+    .from("vendor_scrape_configs")
+    .update({ last_scraped_at: new Date().toISOString() })
+    .eq("slug", vendor.slug);
+
+  return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
+}
+
 function buildShopifyRecord(
   product: ShopifyProduct,
   vendorSlug: string,
@@ -487,6 +686,9 @@ async function scrapeVendor(
 ): Promise<{ found: number; priceChanges: number; errors: number }> {
   if (vendor.platform === "venderup") {
     return scrapeVenderUpVendor(vendor, supabase);
+  }
+  if (vendor.platform === "magento") {
+    return scrapeMagentoVendor(vendor, supabase);
   }
   return scrapeShopifyVendor(vendor, includefish, supabase);
 }

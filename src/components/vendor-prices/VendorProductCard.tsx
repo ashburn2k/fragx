@@ -30,7 +30,9 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : null;
 
-  const productUrl = `${vendorBaseUrl}/products/${product.handle}`;
+  const productUrl = product.handle.endsWith('.html')
+    ? `${vendorBaseUrl}/${product.handle}`
+    : `${vendorBaseUrl}/products/${product.handle}`;
   const normalizedTags = getProductNormalizedTags(product.tags).slice(0, 3);
 
   const soldOut = !product.is_available;
