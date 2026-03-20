@@ -175,46 +175,51 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
   if (items.length === 0) return [];
 
   const domain = baseUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  const linkRegex = new RegExp(`href="https://${domain.replace(/\./g, "\\.")}/(([\\w-]+\\.html))"`, "g");
-  const productLinks: string[] = [];
-  const seenLinks = new Set<string>();
+
+  const linkPattern = new RegExp(`href="https://${domain.replace(/\./g, "\\.")}/(([\\w-]+)\\.html)"`, "g");
+  const linkPositions: { pos: number; handle: string }[] = [];
   let lm;
-  while ((lm = linkRegex.exec(html)) !== null) {
-    const path = lm[1];
-    if (path.includes("-") && !seenLinks.has(path)) {
-      productLinks.push(path);
-      seenLinks.add(path);
-    }
+  while ((lm = linkPattern.exec(html)) !== null) {
+    linkPositions.push({ pos: lm.index, handle: lm[1] });
   }
 
-  const imgRegex = /(?:data-src|src)="([^"]*\/media\/catalog\/product\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
-  const productImages: string[] = [];
-  const seenImgs = new Set<string>();
+  const imgPattern = /(?:data-src|src)="([^"]*\/media\/catalog\/product\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
+  const imgPositions: { pos: number; url: string }[] = [];
   let im;
-  while ((im = imgRegex.exec(html)) !== null) {
-    const url = im[1].startsWith("http") ? im[1] : `${baseUrl}${im[1]}`;
-    const base = url.split("?")[0];
-    if (!seenImgs.has(base)) {
-      productImages.push(url);
-      seenImgs.add(base);
-    }
+  while ((im = imgPattern.exec(html)) !== null) {
+    const raw = im[1];
+    const url = (raw.startsWith("http") ? raw : `${baseUrl}${raw}`).split("?")[0];
+    imgPositions.push({ pos: im.index, url });
   }
+
+  const handleImageMap = new Map<string, string>();
+  for (let i = 0; i < linkPositions.length; i++) {
+    const { pos, handle } = linkPositions[i];
+    if (handleImageMap.has(handle)) continue;
+    const nextLinkPos = i + 1 < linkPositions.length ? linkPositions[i + 1].pos : html.length;
+    const nearbyImg = imgPositions.find(img => img.pos > pos && img.pos < nextLinkPos);
+    if (nearbyImg) handleImageMap.set(handle, nearbyImg.url);
+  }
+
+  const allHandles = linkPositions
+    .map(l => l.handle)
+    .filter((h, i, arr) => arr.indexOf(h) === i);
 
   function slugifyName(name: string): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
-  const usedLinks = new Set<string>();
+  const usedHandles = new Set<string>();
 
-  return items.map((item, idx) => {
+  return items.map((item) => {
     const price = parseFloat(item.price);
     if (isNaN(price) || price <= 0) return null;
     const nameSlug = slugifyName(item.item_name);
-    const matchedLink = productLinks.find(l => !usedLinks.has(l) && l.replace(/\.html$/, "").includes(nameSlug));
+    const matchedHandle = allHandles.find(h => !usedHandles.has(h) && h.includes(nameSlug));
     let handle: string;
-    if (matchedLink) {
-      handle = matchedLink;
-      usedLinks.add(matchedLink);
+    if (matchedHandle) {
+      handle = matchedHandle;
+      usedHandles.add(matchedHandle);
     } else {
       handle = `${item.item_id}.html`;
     }
@@ -227,7 +232,7 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
       collection,
       price,
       compare_at_price: null,
-      image_url: productImages[idx] ?? null,
+      image_url: handleImageMap.get(handle) ?? null,
       tags: [],
       description: null,
       scraped_at: new Date().toISOString(),
