@@ -376,6 +376,7 @@ export default function VendorPricesPage() {
 
   const isMountedRef = useRef(true);
   const scrapeAbortRef = useRef(false);
+  const loadRequestIdRef = useRef(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -444,7 +445,9 @@ export default function VendorPricesPage() {
   }
 
   async function loadProducts(vendorSlug: string) {
+    const requestId = ++loadRequestIdRef.current;
     setLoading(true);
+    setProducts([]);
     setSelectedCollection('all');
     setSelectedTags(new Set());
     setCollectionOverflowOpen(false);
@@ -456,7 +459,7 @@ export default function VendorPricesPage() {
           const j = Math.floor(Math.random() * (i + 1));
           [data[i], data[j]] = [data[j], data[i]];
         }
-        if (isMountedRef.current) {
+        if (isMountedRef.current && requestId === loadRequestIdRef.current) {
           setProducts(data);
           setSortBy('random');
           setLastRun(null);
@@ -475,16 +478,16 @@ export default function VendorPricesPage() {
           .limit(1)
           .maybeSingle(),
       ]);
-      if (isMountedRef.current) {
+      if (isMountedRef.current && requestId === loadRequestIdRef.current) {
         setProducts(data);
         setLastRun(runRes.data);
       }
     } catch (err) {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && requestId === loadRequestIdRef.current) {
         setScrapeError(err instanceof Error ? err.message : 'Failed to load products');
       }
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && requestId === loadRequestIdRef.current) {
         setLoading(false);
       }
     }
