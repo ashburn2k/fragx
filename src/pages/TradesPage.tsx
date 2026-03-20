@@ -1,10 +1,91 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
 import { supabase, CoralSpecies, CoralMorph, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import RarityBadge from '../components/ui/RarityBadge';
 
 type TradeTab = 'have' | 'want' | 'matches' | 'messages';
+
+interface CoralAddFormProps {
+  addForm: { species_id: string; morph_id: string; notes: string; quantity: string; max_price: string };
+  setAddForm: React.Dispatch<React.SetStateAction<{ species_id: string; morph_id: string; notes: string; quantity: string; max_price: string }>>;
+  species: CoralSpecies[];
+  morphs: CoralMorph[];
+  submitting: boolean;
+  onSubmit: () => void;
+  onCancel: () => void;
+  isWant?: boolean;
+}
+
+function CoralAddForm({ addForm, setAddForm, species, morphs, submitting, onSubmit, onCancel, isWant }: CoralAddFormProps) {
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
+      <h3 className="text-slate-900 dark:text-white font-semibold">{isWant ? 'Add to Want List' : 'Add to Have List'}</h3>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <select
+          value={addForm.species_id}
+          onChange={e => setAddForm(f => ({ ...f, species_id: e.target.value, morph_id: '' }))}
+          className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
+        >
+          <option value="">Select species...</option>
+          {['SPS', 'LPS', 'Soft Coral'].map(g => (
+            <optgroup key={g} label={g} className="bg-slate-100 dark:bg-slate-800">
+              {species.filter(s => s.coral_group === g).map(s => (
+                <option key={s.id} value={s.id}>{s.genus} {s.species}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        {morphs.length > 0 && (
+          <select
+            value={addForm.morph_id}
+            onChange={e => setAddForm(f => ({ ...f, morph_id: e.target.value }))}
+            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
+          >
+            <option value="">Any morph</option>
+            {morphs.map(m => <option key={m.id} value={m.id}>{m.morph_name}</option>)}
+          </select>
+        )}
+      </div>
+      {isWant ? (
+        <input
+          value={addForm.max_price}
+          onChange={e => setAddForm(f => ({ ...f, max_price: e.target.value }))}
+          type="number"
+          placeholder="Max price willing to pay ($)"
+          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+        />
+      ) : (
+        <input
+          value={addForm.quantity}
+          onChange={e => setAddForm(f => ({ ...f, quantity: e.target.value }))}
+          type="number"
+          min="1"
+          placeholder="Quantity available"
+          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+        />
+      )}
+      <input
+        value={addForm.notes}
+        onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
+        placeholder="Notes (optional)"
+        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+      />
+      <div className="flex gap-3">
+        <button onClick={onCancel} className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white py-3 rounded-xl transition-colors text-sm">
+          Cancel
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={submitting || !addForm.species_id}
+          className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+        >
+          {submitting ? 'Adding...' : 'Add'}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function TradesPage() {
   const { user } = useAuth();
@@ -151,74 +232,6 @@ export default function TradesPage() {
     { id: 'messages', label: 'Messages', count: conversations.reduce((a, c) => a + c.unread, 0) },
   ];
 
-  const CoralAddForm = ({ onSubmit, onCancel, isWant }: { onSubmit: () => void; onCancel: () => void; isWant?: boolean }) => (
-    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
-      <h3 className="text-slate-900 dark:text-white font-semibold">{isWant ? 'Add to Want List' : 'Add to Have List'}</h3>
-      <div className="grid sm:grid-cols-2 gap-3">
-        <select
-          value={addForm.species_id}
-          onChange={e => setAddForm(f => ({ ...f, species_id: e.target.value, morph_id: '' }))}
-          className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
-        >
-          <option value="">Select species...</option>
-          {['SPS', 'LPS', 'Soft Coral'].map(g => (
-            <optgroup key={g} label={g} className="bg-slate-100 dark:bg-slate-800">
-              {species.filter(s => s.coral_group === g).map(s => (
-                <option key={s.id} value={s.id}>{s.genus} {s.species}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        {morphs.length > 0 && (
-          <select
-            value={addForm.morph_id}
-            onChange={e => setAddForm(f => ({ ...f, morph_id: e.target.value }))}
-            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
-          >
-            <option value="">Any morph</option>
-            {morphs.map(m => <option key={m.id} value={m.id}>{m.morph_name}</option>)}
-          </select>
-        )}
-      </div>
-      {isWant ? (
-        <input
-          value={addForm.max_price}
-          onChange={e => setAddForm(f => ({ ...f, max_price: e.target.value }))}
-          type="number"
-          placeholder="Max price willing to pay ($)"
-          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-        />
-      ) : (
-        <input
-          value={addForm.quantity}
-          onChange={e => setAddForm(f => ({ ...f, quantity: e.target.value }))}
-          type="number"
-          min="1"
-          placeholder="Quantity available"
-          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-        />
-      )}
-      <input
-        value={addForm.notes}
-        onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
-        placeholder="Notes (optional)"
-        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-      />
-      <div className="flex gap-3">
-        <button onClick={onCancel} className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white py-3 rounded-xl transition-colors text-sm">
-          Cancel
-        </button>
-        <button
-          onClick={onSubmit}
-          disabled={submitting || !addForm.species_id}
-          className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
-        >
-          {submitting ? 'Adding...' : 'Add'}
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-5">
       <div>
@@ -268,7 +281,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddHave && <CoralAddForm onSubmit={addToHave} onCancel={() => setShowAddHave(false)} />}
+              {showAddHave && <CoralAddForm addForm={addForm} setAddForm={setAddForm} species={species} morphs={morphs} submitting={submitting} onSubmit={addToHave} onCancel={() => setShowAddHave(false)} />}
 
               {haveList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -313,7 +326,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddWant && <CoralAddForm onSubmit={addToWant} onCancel={() => setShowAddWant(false)} isWant />}
+              {showAddWant && <CoralAddForm addForm={addForm} setAddForm={setAddForm} species={species} morphs={morphs} submitting={submitting} onSubmit={addToWant} onCancel={() => setShowAddWant(false)} isWant />}
 
               {wantList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
