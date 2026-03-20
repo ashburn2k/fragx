@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw } from 'lucide-react';
 
 interface FlaggedItem {
   id: string;
@@ -26,8 +26,10 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats>({ totalListings: 0, activeListings: 0, totalUsers: 0, openFlags: 0 });
   const [flags, setFlags] = useState<FlaggedItem[]>([]);
   const [listings, setListings] = useState<{ id: string; title: string; status: string; seller?: { username: string }; created_at: string }[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'users' | 'tools'>('overview');
   const [loading, setLoading] = useState(true);
+  const [cacheRunning, setCacheRunning] = useState(false);
+  const [cacheResult, setCacheResult] = useState<{ enriched?: number; cached?: number; remaining?: number } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +68,37 @@ export default function AdminPage() {
     loadAdmin();
   }
 
+  async function runImageCache() {
+    setCacheRunning(true);
+    setCacheResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const res = await fetch(`${supabaseUrl}/functions/v1/cache-product-images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token ?? anonKey}`,
+          'Content-Type': 'application/json',
+          'Apikey': anonKey,
+        },
+        body: JSON.stringify({ limit: 100, enrich_limit: 50 }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setCacheResult({
+          enriched: json.null_image_enrichment?.enriched ?? 0,
+          cached: (json.vendor_products?.cached ?? 0) + (json.wwc_products?.cached ?? 0),
+          remaining: json.remaining_uncached ?? 0,
+        });
+      }
+    } catch {
+      setCacheResult(null);
+    } finally {
+      setCacheRunning(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -87,6 +120,7 @@ export default function AdminPage() {
           { id: 'flags' as const, label: 'Flags', count: stats.openFlags },
           { id: 'listings' as const, label: 'Listings' },
           { id: 'users' as const, label: 'Users' },
+          { id: 'tools' as const, label: 'Tools' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -236,6 +270,45 @@ export default function AdminPage() {
             <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
               <Users size={32} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
               <p className="text-slate-500 dark:text-slate-400 text-sm">User management coming soon</p>
+            </div>
+          )}
+
+          {activeTab === 'tools' && (
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                    <ImageIcon size={18} className="text-cyan-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-slate-900 dark:text-white font-semibold text-sm">Image Cache</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 leading-relaxed">
+                      Fetches missing product images from vendor pages and caches them to Supabase storage. Processes up to 50 null-image products and 100 uncached external images per run.
+                    </p>
+                    {cacheResult && (
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <span className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">
+                          {cacheResult.enriched} images enriched
+                        </span>
+                        <span className="text-xs bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 px-3 py-1 rounded-full">
+                          {cacheResult.cached} images cached
+                        </span>
+                        <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full">
+                          {cacheResult.remaining} remaining
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={runImageCache}
+                    disabled={cacheRunning}
+                    className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded-xl transition-all flex-shrink-0"
+                  >
+                    <RefreshCw size={14} className={cacheRunning ? 'animate-spin' : ''} />
+                    {cacheRunning ? 'Running...' : 'Run'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </>
