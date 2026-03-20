@@ -202,12 +202,26 @@ const HIDDEN_TAG_PATTERNS = [
   /^overnight.?ship/i,
 ];
 
-function shouldHideProduct(tags: string[], collection: string, title = '', productType = ''): boolean {
+const VENDOR_HIDE_RULES: Record<string, { collections?: RegExp[]; titlePatterns?: RegExp[]; tags?: RegExp[] }> = {
+  aquasd: {
+    collections: [/^locals?-?only$/i],
+    titlePatterns: [/\blocals?\s+only\b/i],
+    tags: [/^locals?\s*only$/i],
+  },
+};
+
+function shouldHideProduct(tags: string[], collection: string, title = '', productType = '', vendorSlug = ''): boolean {
   if (HIDDEN_COLLECTIONS.has(collection.toLowerCase().trim())) return true;
   if (productType && HIDDEN_PRODUCT_TYPES.has(productType.toLowerCase().trim())) return true;
   if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return true;
   if (tags.some(t => HIDDEN_TAG_PATTERNS.some(p => p.test(t.trim())))) return true;
   if (title && HIDDEN_TITLE_PATTERNS.some(p => p.test(title))) return true;
+  if (vendorSlug && VENDOR_HIDE_RULES[vendorSlug]) {
+    const rules = VENDOR_HIDE_RULES[vendorSlug];
+    if (rules.collections?.some(p => p.test(collection.trim()))) return true;
+    if (title && rules.titlePatterns?.some(p => p.test(title))) return true;
+    if (rules.tags?.some(p => tags.some(t => p.test(t.trim())))) return true;
+  }
   return false;
 }
 
@@ -575,7 +589,7 @@ export default function VendorPricesPage() {
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type))) {
+    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug))) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -587,7 +601,7 @@ export default function VendorPricesPage() {
   }, [products]);
 
   const applyFilters = useCallback(() => {
-    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type));
+    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug));
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
