@@ -7,6 +7,7 @@ import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '..
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
 import PriceChangesPanel from '../components/vendor-prices/PriceChangesPanel';
 import ScrapeProgressBar from '../components/vendor-prices/ScrapeProgressBar';
+import ImageCacheProgressBanner from '../components/vendor-prices/ImageCacheProgressBanner';
 import { buildTagFilterOptions, productMatchesTagFilter, getSmallTagLabels, NormalizedTag } from '../lib/tagNormalizer';
 
 const EQUIPMENT_TAGS = new Set([
@@ -797,6 +798,8 @@ export default function VendorPricesPage() {
             </div>
           </div>
 
+
+          <ImageCacheProgressBanner />
 
           {scraping && currentVendor && (
             <ScrapeProgressBar
