@@ -147,6 +147,197 @@ async function fetchHtmlPage(url: string): Promise<string | null> {
   }
 }
 
+interface WooCommerceProduct {
+  id: number;
+  name: string;
+  slug: string;
+  permalink: string;
+  prices: {
+    price: string;
+    regular_price: string;
+    sale_price: string;
+    currency_minor_unit: number;
+  };
+  images: { src: string }[];
+  categories: { id: number; name: string; slug: string }[];
+  tags: { id: number; name: string; slug: string }[];
+  short_description: string;
+  is_in_stock: boolean;
+  on_sale: boolean;
+}
+
+function buildWooCommerceRecord(
+  product: WooCommerceProduct,
+  vendorSlug: string,
+  collection: string
+): object | null {
+  const minorUnit = product.prices.currency_minor_unit ?? 2;
+  const divisor = Math.pow(10, minorUnit);
+  const price = parseInt(product.prices.price) / divisor;
+  const regularPrice = parseInt(product.prices.regular_price) / divisor;
+  if (isNaN(price) || price <= 0) return null;
+  const compareAtPrice = product.on_sale && regularPrice > price ? regularPrice : null;
+  return {
+    vendor_slug: vendorSlug,
+    shopify_id: product.id,
+    handle: product.slug,
+    title: product.name,
+    product_type: collection,
+    collection,
+    price,
+    compare_at_price: compareAtPrice,
+    image_url: product.images?.[0]?.src ?? null,
+    tags: product.tags?.map(t => t.slug) ?? [],
+    description: product.short_description
+      ? product.short_description.replace(/<[^>]*>/g, "").trim().slice(0, 1000)
+      : null,
+    scraped_at: new Date().toISOString(),
+    is_available: product.is_in_stock,
+  };
+}
+
+async function scrapeWooCommerceVendor(
+  vendor: VendorConfig,
+  supabase: ReturnType<typeof createClient>
+): Promise<{ found: number; priceChanges: number; errors: number }> {
+  const { data: existingRaw } = await supabase
+    .from("vendor_products")
+    .select("shopify_id, price, handle, title, image_url")
+    .eq("vendor_slug", vendor.slug);
+
+  const existingMap = new Map<number, ExistingProduct>();
+  for (const p of (existingRaw ?? [])) {
+    existingMap.set(p.shopify_id, p);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
+
+  const allRecords = new Map<number, object>();
+  const seenIds = new Set<number>();
+  const PER_PAGE = 100;
+
+  const collections = vendor.coral_collections.length > 0 ? vendor.coral_collections : ["all-products"];
+
+  for (const categorySlug of collections) {
+    let page = 1;
+    while (true) {
+      const url = `${vendor.base_url}/wp-json/wc/store/v1/products?per_page=${PER_PAGE}&page=${page}&category=${categorySlug}&orderby=date&order=desc`;
+      let products: WooCommerceProduct[] = [];
+      try {
+        const res = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; coral-price-tracker/1.0)" },
+          signal: AbortSignal.timeout(25000),
+        });
+        if (!res.ok) break;
+        products = await res.json();
+      } catch {
+        break;
+      }
+      if (!Array.isArray(products) || products.length === 0) break;
+
+      for (const product of products) {
+        if (seenIds.has(product.id)) continue;
+        const record = buildWooCommerceRecord(product, vendor.slug, categorySlug);
+        if (!record) continue;
+        allRecords.set(product.id, record);
+        seenIds.add(product.id);
+      }
+
+      if (products.length < PER_PAGE) break;
+      page++;
+      await new Promise(r => setTimeout(r, 300));
+    }
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  const historyRecords: object[] = [];
+  for (const [shopifyId, record] of allRecords) {
+    const rec = record as { shopify_id: number; price: number; handle: string; title: string; compare_at_price: number | null };
+    const existing = existingMap.get(shopifyId);
+
+    if (!existing) {
+      historyRecords.push({
+        vendor_slug: vendor.slug,
+        shopify_id: rec.shopify_id,
+        handle: rec.handle,
+        title: rec.title,
+        price: rec.price,
+        compare_at_price: rec.compare_at_price,
+        price_change: null,
+        price_change_pct: null,
+        recorded_at: new Date().toISOString(),
+      });
+    } else if (Math.abs(existing.price - rec.price) >= 0.01) {
+      const change = rec.price - existing.price;
+      const changePct = existing.price > 0
+        ? Math.round((change / existing.price) * 10000) / 100
+        : null;
+      historyRecords.push({
+        vendor_slug: vendor.slug,
+        shopify_id: rec.shopify_id,
+        handle: rec.handle,
+        title: rec.title,
+        price: rec.price,
+        compare_at_price: rec.compare_at_price,
+        price_change: Math.round(change * 100) / 100,
+        price_change_pct: changePct,
+        recorded_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  resolveImageUrls(allRecords, existingMap, storagePrefix);
+
+  let totalFound = 0;
+  let errors = 0;
+  const recordsArr = Array.from(allRecords.values());
+  const BATCH = 250;
+
+  for (let i = 0; i < recordsArr.length; i += BATCH) {
+    const { error } = await supabase
+      .from("vendor_products")
+      .upsert(recordsArr.slice(i, i + BATCH), { onConflict: "vendor_slug,shopify_id" });
+    if (error) {
+      console.error(`Upsert error for ${vendor.slug}:`, error.message);
+      errors++;
+    } else {
+      totalFound += Math.min(BATCH, recordsArr.length - i);
+    }
+  }
+
+  if (historyRecords.length > 0) {
+    const HBATCH = 500;
+    for (let i = 0; i < historyRecords.length; i += HBATCH) {
+      const { error } = await supabase
+        .from("vendor_price_history")
+        .insert(historyRecords.slice(i, i + HBATCH));
+      if (error) {
+        console.error(`History insert error for ${vendor.slug}:`, error.message);
+      }
+    }
+  }
+
+  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
+  if (unseenIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unseenIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false, scraped_at: new Date().toISOString() })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
+    }
+  }
+
+  await supabase
+    .from("vendor_scrape_configs")
+    .update({ last_scraped_at: new Date().toISOString() })
+    .eq("slug", vendor.slug);
+
+  return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
+}
+
 interface MagentoItem {
   item_name: string;
   item_id: string;
@@ -722,6 +913,9 @@ async function scrapeVendor(
   }
   if (vendor.platform === "magento") {
     return scrapeMagentoVendor(vendor, supabase);
+  }
+  if (vendor.platform === "woocommerce") {
+    return scrapeWooCommerceVendor(vendor, supabase);
   }
   return scrapeShopifyVendor(vendor, includefish, supabase);
 }
