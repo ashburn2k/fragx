@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, Activity } from 'lucide-react';
 import UserControlPanel from '../components/admin/UserControlPanel';
 import TradeModPanel from '../components/admin/TradeModPanel';
 import ListingsPanel from '../components/admin/ListingsPanel';
+import ScrapeReportPanel from '../components/admin/ScrapeReportPanel';
 
 interface FlaggedItem {
   id: string;
@@ -28,7 +29,7 @@ export default function AdminPage() {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState<AdminStats>({ totalListings: 0, activeListings: 0, totalUsers: 0, openFlags: 0 });
   const [flags, setFlags] = useState<FlaggedItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'users' | 'tools'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'flags' | 'listings' | 'users' | 'tools' | 'reports'>('overview');
   const [listingSubTab, setListingSubTab] = useState<'trade-listings' | 'have-want'>('trade-listings');
   const [loading, setLoading] = useState(true);
   const [cacheRunning, setCacheRunning] = useState(false);
@@ -118,6 +119,7 @@ export default function AdminPage() {
           { id: 'flags' as const, label: 'Flags', count: stats.openFlags },
           { id: 'listings' as const, label: 'Listings' },
           { id: 'users' as const, label: 'Users' },
+          { id: 'reports' as const, label: 'Reports' },
           { id: 'tools' as const, label: 'Tools' },
         ].map(tab => (
           <button
@@ -257,6 +259,20 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'users' && <UserControlPanel />}
+
+          {activeTab === 'reports' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <Activity size={15} className="text-cyan-400" />
+                </div>
+                <div>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">Daily store scan activity, new items discovered, and any scrape errors</p>
+                </div>
+              </div>
+              <ScrapeReportPanel />
+            </div>
+          )}
 
           {activeTab === 'tools' && (
             <div className="space-y-4">
