@@ -1307,17 +1307,19 @@ export default function VendorPricesPage() {
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500 dark:text-slate-400">
-                  {filtered.length.toLocaleString()} products
+                  {selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters && totalDbCount !== null
+                    ? `${totalDbCount.toLocaleString()} products`
+                    : `${filtered.length.toLocaleString()} products`}
                   {hasActiveFilters && <span className="text-slate-400 dark:text-slate-500"> (filtered)</span>}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400 dark:text-slate-500 text-xs hidden sm:inline">
-                    {selectedVendor === ALL_VENDORS_SLUG
-                      ? totalDbCount !== null
+                  {!(selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters) && (
+                    <span className="text-slate-400 dark:text-slate-500 text-xs hidden sm:inline">
+                      {selectedVendor === ALL_VENDORS_SLUG && totalDbCount !== null
                         ? `${totalDbCount.toLocaleString()} total in catalog`
-                        : 'Loading...'
-                      : `${catalogCount.toLocaleString()} total in catalog`}
-                  </span>
+                        : `${catalogCount.toLocaleString()} total in catalog`}
+                    </span>
+                  )}
                   <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 transition-colors duration-200">
                     {([50, 100, 200] as PageSize[]).map(size => (
                       <button
