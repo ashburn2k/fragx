@@ -4,12 +4,15 @@ import { supabase, CoralSpecies, CoralMorph, HaveListItem, WantListItem, TradeMa
 import { useAuth } from '../context/AuthContext';
 import RarityBadge from '../components/ui/RarityBadge';
 import TradeSidebar from '../components/trades/TradeSidebar';
+import ImageUpload from '../components/trades/ImageUpload';
 
 type TradeTab = 'have' | 'want' | 'matches' | 'messages';
 
 interface CoralAddFormProps {
   addForm: { species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string };
   setAddForm: React.Dispatch<React.SetStateAction<{ species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string }>>;
+  imageUrl: string | null;
+  setImageUrl: (url: string | null) => void;
   species: CoralSpecies[];
   morphs: CoralMorph[];
   submitting: boolean;
@@ -18,7 +21,7 @@ interface CoralAddFormProps {
   isWant?: boolean;
 }
 
-function CoralAddForm({ addForm, setAddForm, species, morphs, submitting, onSubmit, onCancel, isWant }: CoralAddFormProps) {
+function CoralAddForm({ addForm, setAddForm, imageUrl, setImageUrl, species, morphs, submitting, onSubmit, onCancel, isWant }: CoralAddFormProps) {
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
       <h3 className="text-slate-900 dark:text-white font-semibold">{isWant ? 'Add to Want List' : 'Add to Have List'}</h3>
@@ -85,6 +88,7 @@ function CoralAddForm({ addForm, setAddForm, species, morphs, submitting, onSubm
         placeholder="Notes (optional)"
         className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
       />
+      <ImageUpload value={imageUrl} onChange={setImageUrl} />
       <div className="flex gap-3">
         <button onClick={onCancel} className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white py-3 rounded-xl transition-colors text-sm">
           Cancel
@@ -118,6 +122,7 @@ export default function TradesPage() {
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -202,10 +207,12 @@ export default function TradesPage() {
       notes: addForm.notes || null,
       quantity: parseInt(addForm.quantity) || 1,
       asking_price: addForm.asking_price ? parseFloat(addForm.asking_price) : null,
+      image_url: imageUrl,
     });
     setSubmitting(false);
     setShowAddHave(false);
     setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+    setImageUrl(null);
     loadAll();
   }
 
@@ -218,10 +225,12 @@ export default function TradesPage() {
       morph_id: addForm.morph_id || null,
       notes: addForm.notes || null,
       max_price: addForm.max_price ? parseFloat(addForm.max_price) : null,
+      image_url: imageUrl,
     });
     setSubmitting(false);
     setShowAddWant(false);
     setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+    setImageUrl(null);
     loadAll();
   }
 
@@ -306,7 +315,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddHave && <CoralAddForm addForm={addForm} setAddForm={setAddForm} species={species} morphs={morphs} submitting={submitting} onSubmit={addToHave} onCancel={() => setShowAddHave(false)} />}
+              {showAddHave && <CoralAddForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToHave} onCancel={() => { setShowAddHave(false); setImageUrl(null); }} />}
 
               {haveList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -316,9 +325,16 @@ export default function TradesPage() {
                 </div>
               ) : haveList.map(item => (
                 <div key={item.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <div className="text-slate-900 dark:text-white font-medium text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt="coral"
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
                         {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
                         {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
                       </div>
@@ -330,7 +346,7 @@ export default function TradesPage() {
                     </div>
                     {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
                   </div>
-                  <button onClick={() => removeFromHave(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1">
+                  <button onClick={() => removeFromHave(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1 flex-shrink-0">
                     <X size={16} />
                   </button>
                 </div>
@@ -352,7 +368,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddWant && <CoralAddForm addForm={addForm} setAddForm={setAddForm} species={species} morphs={morphs} submitting={submitting} onSubmit={addToWant} onCancel={() => setShowAddWant(false)} isWant />}
+              {showAddWant && <CoralAddForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToWant} onCancel={() => { setShowAddWant(false); setImageUrl(null); }} isWant />}
 
               {wantList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -362,9 +378,16 @@ export default function TradesPage() {
                 </div>
               ) : wantList.map(item => (
                 <div key={item.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <div className="text-slate-900 dark:text-white font-medium text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt="coral"
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
                         {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
                         {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
                       </div>
@@ -375,7 +398,7 @@ export default function TradesPage() {
                     </div>
                     {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
                   </div>
-                  <button onClick={() => removeFromWant(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1">
+                  <button onClick={() => removeFromWant(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1 flex-shrink-0">
                     <X size={16} />
                   </button>
                 </div>

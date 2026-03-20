@@ -111,6 +111,7 @@ export interface HaveListItem {
   notes: string | null;
   quantity: number;
   asking_price: number | null;
+  image_url: string | null;
   is_active: boolean;
   coral_species?: CoralSpecies;
   coral_morphs?: CoralMorph;
@@ -124,6 +125,7 @@ export interface WantListItem {
   morph_id: string | null;
   max_price: number | null;
   notes: string | null;
+  image_url: string | null;
   is_active: boolean;
   coral_species?: CoralSpecies;
   coral_morphs?: CoralMorph;
