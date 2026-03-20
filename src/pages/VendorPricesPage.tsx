@@ -208,6 +208,9 @@ const VENDOR_HIDE_RULES: Record<string, { collections?: RegExp[]; titlePatterns?
     titlePatterns: [/\blocals?\s+only\b/i],
     tags: [/^locals?\s*only$/i],
   },
+  'living-reef-orlando': {
+    collections: [/^all$/i, /^foods?-?(&|-and-)?-?maintenance$/i, /^shipping-?module$/i],
+  },
 };
 
 function shouldHideProduct(tags: string[], collection: string, title = '', productType = '', vendorSlug = ''): boolean {
