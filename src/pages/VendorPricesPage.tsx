@@ -97,7 +97,7 @@ const HIDDEN_TITLE_PATTERNS = [
 
 const HIDDEN_COLLECTIONS = new Set([
   'reef-stock', 'heater', 'subscriptions', 'service', 'box-fee', 'shipping',
-  'aquarium-services', 'aquarium-water', 'reef-wear', 'dry-goods', 'drygoods',
+  'aquarium-services', 'aquarium-water', 'reef-wear', 'dry-goods', 'drygoods', 'dry-good',
   'freshwater-fish', 'freshwater-&-planted', 'freshwater-invert', 'aquatic-plant',
   'frozen-food', 'aquarium', 'neptune-systems', 'aquarium-supplies-and-accessories',
   'aquariums-&-sumps', 'aquarium-furniture', 'aquariums,-tanks-and-bowls',
@@ -113,6 +113,21 @@ const HIDDEN_COLLECTIONS = new Set([
   'animals-&-pet-supplies', 'aquarium-lighting', 'aquarium-pumps', 'filtration-bundle-pack',
   'fish-supplies', 'guard', 'home-&-garden', 'led-light', 'mount', 'protein-skimmer',
   'sea-urchin-hats', 'show', 'zooplankton', 'clothing',
+  'equipment', 'aquarium-supplies', 'supplements', 'testing', 'dosing',
+  'merch', 'apparel', 'fragging', 'salt', 'ro-di', 'lighting',
+  'nugget_giftcard', 'gift-card', 'gift-cards', 'gift-certificates',
+  'freshwater', 'pond', 'terrarium', 'reptile',
+]);
+
+const HIDDEN_PRODUCT_TYPES = new Set([
+  'dry goods', 'dry good', 'drygoods', 'equipment', 'aquarium supplies',
+  'shopkeep', 'product', 'additives', 'food', 'reef wear',
+  'water care and testing', 'freshwater fish', 'freshwater',
+  'supplements', 'merch', 'apparel', 'clothing',
+  'salt', 'salt mix', 'ro/di', 'lighting', 'pump', 'heater', 'filter',
+  'fragging supplies', 'testing', 'dosing', 'skimmer',
+  'aquarium', 'aquarium furniture', 'aquarium supplies and accessories',
+  'controller', 'powerhead', 'auto top off', 'ato',
 ]);
 
 const HIDDEN_TAG_PATTERNS = [
@@ -124,8 +139,9 @@ const HIDDEN_TAG_PATTERNS = [
   /^shipping/i,
 ];
 
-function shouldHideProduct(tags: string[], collection: string, title = ''): boolean {
+function shouldHideProduct(tags: string[], collection: string, title = '', productType = ''): boolean {
   if (HIDDEN_COLLECTIONS.has(collection.toLowerCase().trim())) return true;
+  if (productType && HIDDEN_PRODUCT_TYPES.has(productType.toLowerCase().trim())) return true;
   if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return true;
   if (tags.some(t => HIDDEN_TAG_PATTERNS.some(p => p.test(t.trim())))) return true;
   if (title && HIDDEN_TITLE_PATTERNS.some(p => p.test(title))) return true;
@@ -138,7 +154,7 @@ type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'title_asc' | 'random'
 type PageSize = 50 | 100 | 200;
 const ALL_VENDORS_SLUG = '__all__';
 
-const PRODUCT_SELECT_COLUMNS = 'id,vendor_slug,title,handle,collection,tags,price,compare_at_price,image_url,is_available,scraped_at';
+const PRODUCT_SELECT_COLUMNS = 'id,vendor_slug,title,handle,collection,product_type,tags,price,compare_at_price,image_url,is_available,scraped_at';
 
 const COLLECTION_LABEL_MAP: Record<string, string> = {
   'acropora': 'Acropora',
@@ -426,7 +442,7 @@ export default function VendorPricesPage() {
       let query = supabase
         .from('vendor_products')
         .select(PRODUCT_SELECT_COLUMNS)
-        .not('collection', 'in', '("dry-goods","drygoods","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei")')
+        .not('collection', 'in', '("dry-goods","drygoods","dry-good","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei","equipment","aquarium-supplies","supplements","testing","dosing","merch","apparel","fragging","salt","ro-di","lighting","nugget_giftcard","gift-card","gift-cards","gift-certificates","freshwater","pond","terrarium","reptile")')
         .order('scraped_at', { ascending: false })
         .range(from, from + PAGE - 1);
 
@@ -496,7 +512,7 @@ export default function VendorPricesPage() {
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title))) {
+    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type))) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -508,7 +524,7 @@ export default function VendorPricesPage() {
   }, [products]);
 
   const applyFilters = useCallback(() => {
-    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title));
+    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type));
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
