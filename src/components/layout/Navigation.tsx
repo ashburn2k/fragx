@@ -52,7 +52,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 {label}
               </button>
             ))}
-            {user && (
+            {profile?.username === 'hui' && (
               <button
                 onClick={() => onNavigate('admin')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -131,27 +131,27 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 {label}
               </button>
             ))}
+            {profile?.username === 'hui' && (
+              <button
+                onClick={() => { onNavigate('admin'); setMenuOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  currentPage === 'admin'
+                    ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Shield size={18} />
+                Admin
+              </button>
+            )}
             {user && (
-              <>
-                <button
-                  onClick={() => { onNavigate('admin'); setMenuOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    currentPage === 'admin'
-                      ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Shield size={18} />
-                  Admin
-                </button>
-                <button
-                  onClick={signOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors mt-1"
-                >
-                  <LogOut size={18} />
-                  Sign Out
-                </button>
-              </>
+              <button
+                onClick={signOut}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors mt-1"
+              >
+                <LogOut size={18} />
+                Sign Out
+              </button>
             )}
           </div>
         )}

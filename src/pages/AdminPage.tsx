@@ -22,7 +22,7 @@ interface AdminStats {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState<AdminStats>({ totalListings: 0, activeListings: 0, totalUsers: 0, openFlags: 0 });
   const [flags, setFlags] = useState<FlaggedItem[]>([]);
   const [listings, setListings] = useState<{ id: string; title: string; status: string; seller?: { username: string }; created_at: string }[]>([]);
@@ -32,9 +32,9 @@ export default function AdminPage() {
   const [cacheResult, setCacheResult] = useState<{ enriched?: number; cached?: number; remaining?: number } | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || profile?.username !== 'hui') return;
     loadAdmin();
-  }, [user]);
+  }, [user, profile]);
 
   async function loadAdmin() {
     setLoading(true);
@@ -99,7 +99,7 @@ export default function AdminPage() {
     }
   }
 
-  if (!user) return null;
+  if (!user || profile?.username !== 'hui') return null;
 
   return (
     <div className="space-y-5">
