@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Search, RefreshCw,
-  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal
+  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff
 } from 'lucide-react';
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
@@ -867,6 +867,18 @@ export default function VendorPricesPage() {
                     </button>
                   )}
                 </div>
+                <button
+                  onClick={() => setHideSoldOut(s => !s)}
+                  className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                    hideSoldOut
+                      ? 'border-cyan-500 text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20'
+                      : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <EyeOff size={15} />
+                  <span className="hidden sm:inline">Hide Sold</span>
+                  {hideSoldOut && <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />}
+                </button>
                 <button
                   onClick={() => setShowFilters(s => !s)}
                   className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
