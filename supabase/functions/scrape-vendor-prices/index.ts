@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+const BUCKET = "vendor-images";
+
 interface ShopifyProduct {
   id: number;
   title: string;
@@ -50,6 +52,50 @@ interface ExistingProduct {
   price: number;
   handle: string;
   title: string;
+  image_url: string | null;
+}
+
+async function cacheImage(
+  supabase: ReturnType<typeof createClient>,
+  externalUrl: string,
+  path: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(externalUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; coral-price-tracker/1.0)" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    const contentType = res.headers.get("content-type") ?? "image/jpeg";
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, buffer, { contentType, upsert: false });
+    if (error && !error.message.toLowerCase().includes("already exists")) return null;
+    return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveImageUrls(
+  supabase: ReturnType<typeof createClient>,
+  allRecords: Map<number, object>,
+  existingMap: Map<number, ExistingProduct>,
+  storagePrefix: string,
+  vendorSlug: string
+): Promise<void> {
+  for (const [shopifyId, record] of allRecords) {
+    const rec = record as Record<string, unknown>;
+    const existing = existingMap.get(shopifyId);
+    if (typeof existing?.image_url === "string" && existing.image_url.startsWith(storagePrefix)) {
+      rec.image_url = existing.image_url;
+    } else if (typeof rec.image_url === "string" && rec.image_url) {
+      const path = `${vendorSlug}/${shopifyId}`;
+      const cached = await cacheImage(supabase, rec.image_url, path);
+      if (cached) rec.image_url = cached;
+    }
+  }
 }
 
 function hashStringToBigint(str: string): number {
@@ -159,13 +205,16 @@ async function scrapeVenderUpVendor(
 
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title")
+    .select("shopify_id, price, handle, title, image_url")
     .eq("vendor_slug", vendor.slug);
 
   const existingMap = new Map<number, ExistingProduct>();
   for (const p of (existingRaw ?? [])) {
     existingMap.set(p.shopify_id, p);
   }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
   let venderupData: VenderUpResponse | null = null;
   try {
@@ -232,6 +281,8 @@ async function scrapeVenderUpVendor(
     }
   }
 
+  await resolveImageUrls(supabase, allRecords, existingMap, storagePrefix, vendor.slug);
+
   let totalFound = 0;
   let errors = 0;
   const recordsArr = Array.from(allRecords.values());
@@ -288,13 +339,16 @@ async function scrapeShopifyVendor(
 ): Promise<{ found: number; priceChanges: number; errors: number }> {
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title")
+    .select("shopify_id, price, handle, title, image_url")
     .eq("vendor_slug", vendor.slug);
 
   const existingMap = new Map<number, ExistingProduct>();
   for (const p of (existingRaw ?? [])) {
     existingMap.set(p.shopify_id, p);
   }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
   const seenIds = new Set<number>();
   const allRecords = new Map<number, object>();
@@ -374,6 +428,8 @@ async function scrapeShopifyVendor(
       });
     }
   }
+
+  await resolveImageUrls(supabase, allRecords, existingMap, storagePrefix, vendor.slug);
 
   let totalFound = 0;
   let errors = 0;

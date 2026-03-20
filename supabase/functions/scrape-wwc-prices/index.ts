@@ -6,6 +6,31 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+const BUCKET = "vendor-images";
+
+async function cacheImage(
+  supabase: ReturnType<typeof createClient>,
+  externalUrl: string,
+  path: string
+): Promise<string | null> {
+  try {
+    const res = await fetch(externalUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; coral-price-tracker/1.0)" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    const contentType = res.headers.get("content-type") ?? "image/jpeg";
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, buffer, { contentType, upsert: false });
+    if (error && !error.message.toLowerCase().includes("already exists")) return null;
+    return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
 const CORAL_COLLECTIONS = [
   "acropora", "montipora", "pocillopora", "stylophora", "birdsnest",
   "torch-coral", "hammer-and-frogspawn", "hammer-coral", "candy-cane-corals",
@@ -52,7 +77,8 @@ async function fetchCollection(collection: string, page: number): Promise<Shopif
 
 async function scrapeCollection(
   collection: string,
-  supabase: ReturnType<typeof createClient>
+  supabase: ReturnType<typeof createClient>,
+  storagePrefix: string
 ): Promise<{ inserted: number; updated: number; found: number }> {
   let page = 1;
   let allProducts: ShopifyProduct[] = [];
@@ -77,8 +103,14 @@ async function scrapeCollection(
     if (isNaN(price) || price <= 0) continue;
 
     const compareAtPrice = variant.compare_at_price ? parseFloat(variant.compare_at_price) : null;
-    const imageUrl = product.images?.[0]?.src ?? null;
     const tags = Array.isArray(product.tags) ? product.tags : [];
+
+    const externalImageUrl = product.images?.[0]?.src ?? null;
+    let imageUrl = externalImageUrl;
+    if (externalImageUrl && !externalImageUrl.startsWith(storagePrefix)) {
+      const cached = await cacheImage(supabase, externalImageUrl, `wwc/${product.id}`);
+      if (cached) imageUrl = cached;
+    }
 
     const record = {
       shopify_id: product.id,
@@ -128,6 +160,9 @@ Deno.serve(async (req: Request) => {
     const collectionsParam: string[] | undefined = body.collections;
     const includefish: boolean = body.include_fish ?? false;
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
+
     let targetCollections = collectionsParam ?? CORAL_COLLECTIONS;
     if (includefish) targetCollections = [...targetCollections, ...FISH_COLLECTIONS];
 
@@ -149,7 +184,7 @@ Deno.serve(async (req: Request) => {
 
     for (const collection of targetCollections) {
       try {
-        const result = await scrapeCollection(collection, supabase);
+        const result = await scrapeCollection(collection, supabase, storagePrefix);
         totalFound += result.found;
         totalInserted += result.inserted;
         totalUpdated += result.updated;
