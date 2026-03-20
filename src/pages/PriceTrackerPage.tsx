@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react';
-import { Search, ExternalLink, SlidersHorizontal, X, ChevronDown, Tag, Store, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, ExternalLink, SlidersHorizontal, X, ChevronDown, Tag, Store, ArrowUpDown, ArrowUp, ArrowDown, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface CoralProduct {
@@ -13,6 +13,7 @@ interface CoralProduct {
   handle: string;
   collection: string;
   tags: string[];
+  is_available: boolean;
   scraped_at: string;
   product_url: string;
 }
@@ -62,6 +63,7 @@ export default function PriceTrackerPage() {
   const [sortBy, setSortBy] = useState<'scraped_at' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc'>('scraped_at');
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [hideSold, setHideSold] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [vendorOpen, setVendorOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -86,6 +88,9 @@ export default function PriceTrackerPage() {
     if (vendorFilter !== 'All') {
       query = query.eq('vendor_name', vendorFilter);
     }
+    if (hideSold) {
+      query = query.eq('is_available', true);
+    }
     query = query.gte('price', range.min);
     if (range.max !== Infinity) query = query.lte('price', range.max);
 
@@ -107,11 +112,11 @@ export default function PriceTrackerPage() {
     setProducts(results as CoralProduct[]);
     setTotalCount(count ?? 0);
     setLoading(false);
-  }, [debouncedSearch, group, priceRange, vendorFilter, sortBy, page]);
+  }, [debouncedSearch, group, priceRange, vendorFilter, sortBy, page, hideSold]);
 
   useEffect(() => {
     setPage(0);
-  }, [debouncedSearch, group, priceRange, vendorFilter, sortBy]);
+  }, [debouncedSearch, group, priceRange, vendorFilter, sortBy, hideSold]);
 
   useEffect(() => {
     loadProducts();
@@ -161,6 +166,18 @@ export default function PriceTrackerPage() {
             </button>
           )}
         </div>
+        <button
+          onClick={() => setHideSold(s => !s)}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all whitespace-nowrap ${
+            hideSold
+              ? 'border-cyan-500 text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20'
+              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500'
+          }`}
+        >
+          <EyeOff size={15} />
+          <span className="hidden sm:inline">Hide Sold</span>
+          {hideSold && <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />}
+        </button>
         <button
           onClick={() => setShowFilters(f => !f)}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
@@ -384,13 +401,18 @@ export default function PriceTrackerPage() {
 
                 {/* Price + discount + link */}
                 <div className="flex items-center gap-3 shrink-0">
-                  {discount && (
+                  {!p.is_available && (
+                    <span className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-semibold px-2 py-0.5 rounded-md">
+                      Sold Out
+                    </span>
+                  )}
+                  {p.is_available && discount && (
                     <span className="bg-red-500/15 text-red-400 text-xs font-semibold px-2 py-0.5 rounded-md">
                       -{discount}%
                     </span>
                   )}
                   <div className="text-right">
-                    <div className="text-slate-900 dark:text-white font-bold text-sm">${Number(p.price).toFixed(2)}</div>
+                    <div className={`font-bold text-sm ${p.is_available ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>${Number(p.price).toFixed(2)}</div>
                     {p.compare_at_price && Number(p.compare_at_price) > Number(p.price) && (
                       <div className="text-slate-400 dark:text-slate-500 text-xs line-through">${Number(p.compare_at_price).toFixed(2)}</div>
                     )}
