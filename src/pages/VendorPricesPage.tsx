@@ -549,10 +549,28 @@ export default function VendorPricesPage() {
         body: JSON.stringify({ vendor_slug: selectedVendor, include_fish: true, force: true }),
       });
       const data = await res.json();
-      if (data.success) {
-        await loadProducts(selectedVendor);
-      } else {
+      if (!data.success) {
         setScrapeError(data.error ?? 'Scrape failed');
+        setScraping(false);
+        return;
+      }
+      const maxAttempts = 150;
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const { data: runData } = await supabase
+          .from('vendor_scrape_runs')
+          .select('status, error_message')
+          .eq('vendor_slug', selectedVendor)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (runData?.status === 'completed') {
+          await loadProducts(selectedVendor);
+          break;
+        } else if (runData?.status === 'failed') {
+          setScrapeError(runData.error_message ?? 'Scrape failed');
+          break;
+        }
       }
     } catch (err) {
       setScrapeError(err instanceof Error ? err.message : 'Unknown error');
