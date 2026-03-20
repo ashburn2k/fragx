@@ -235,6 +235,7 @@ type PageSize = 50 | 100 | 200;
 const ALL_VENDORS_SLUG = '__all__';
 
 const PRODUCT_SELECT_COLUMNS = 'id,vendor_slug,title,handle,collection,product_type,tags,price,compare_at_price,image_url,is_available,scraped_at';
+const COLLECTION_BLOCK_LIST = '("dry-goods","drygoods","dry-good","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei","equipment","aquarium-supplies","supplements","testing","dosing","merch","apparel","fragging","salt","ro-di","lighting","nugget_giftcard","gift-card","gift-cards","gift-certificates","freshwater","pond","terrarium","reptile","medication","medications","fish-medication","fish-health","disease-treatment","treatments","ich-treatment","parasite-treatment","fish-treatments","shipping-upgrade","shipping-insurance","shipping-protection","shipping-fee","overnight-shipping","flat-rate-shipping","live-arrival","maintenance","water-maintenance","water-care","tank-maintenance","algae-control","algae-scrapers","cleaning","coral-food","reef-food","frozen-foods","live-food","dry-food","food-and-supplements")';
 
 const COLLECTION_LABEL_MAP: Record<string, string> = {
   'acropora': 'Acropora',
@@ -515,31 +516,36 @@ export default function VendorPricesPage() {
     }
   }
 
-  async function fetchAllProducts(filters: { vendor_slug?: string }): Promise<VendorProduct[]> {
-    const PAGE = 1000;
+  function buildBaseQuery(vendorSlug?: string) {
+    let q = supabase
+      .from('vendor_products')
+      .select(PRODUCT_SELECT_COLUMNS)
+      .not('collection', 'in', COLLECTION_BLOCK_LIST);
+    if (vendorSlug) q = q.eq('vendor_slug', vendorSlug);
+    return q;
+  }
+
+  async function fetchAllProducts(vendorSlug: string): Promise<VendorProduct[]> {
+    const CHUNK = 5000;
     let all: VendorProduct[] = [];
     let from = 0;
-
     while (true) {
-      let query = supabase
-        .from('vendor_products')
-        .select(PRODUCT_SELECT_COLUMNS)
-        .not('collection', 'in', '("dry-goods","drygoods","dry-good","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei","equipment","aquarium-supplies","supplements","testing","dosing","merch","apparel","fragging","salt","ro-di","lighting","nugget_giftcard","gift-card","gift-cards","gift-certificates","freshwater","pond","terrarium","reptile","medication","medications","fish-medication","fish-health","disease-treatment","treatments","ich-treatment","parasite-treatment","fish-treatments","shipping-upgrade","shipping-insurance","shipping-protection","shipping-fee","overnight-shipping","flat-rate-shipping","live-arrival","maintenance","water-maintenance","water-care","tank-maintenance","algae-control","algae-scrapers","cleaning","coral-food","reef-food","frozen-foods","live-food","dry-food","food-and-supplements")')
+      const { data, error } = await buildBaseQuery(vendorSlug)
         .order('scraped_at', { ascending: false })
-        .range(from, from + PAGE - 1);
-
-      if (filters.vendor_slug) {
-        query = query.eq('vendor_slug', filters.vendor_slug);
-      }
-
-      const { data, error } = await query;
+        .range(from, from + CHUNK - 1);
       if (error || !data || data.length === 0) break;
       all = all.concat(data as VendorProduct[]);
-      if (data.length < PAGE) break;
-      from += PAGE;
+      if (data.length < CHUNK) break;
+      from += CHUNK;
     }
-
     return all;
+  }
+
+  async function fetchAllVendorsPage(): Promise<VendorProduct[]> {
+    const { data } = await buildBaseQuery()
+      .order('scraped_at', { ascending: false })
+      .limit(1200);
+    return (data as VendorProduct[]) ?? [];
   }
 
   async function loadProducts(vendorSlug: string) {
@@ -552,7 +558,7 @@ export default function VendorPricesPage() {
 
     try {
       if (vendorSlug === ALL_VENDORS_SLUG) {
-        const data = await fetchAllProducts({});
+        const data = await fetchAllVendorsPage();
         for (let i = data.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [data[i], data[j]] = [data[j], data[i]];
@@ -565,8 +571,7 @@ export default function VendorPricesPage() {
         return;
       }
 
-      const [data, runRes] = await Promise.all([
-        fetchAllProducts({ vendor_slug: vendorSlug }),
+      const [runRes, firstChunk] = await Promise.all([
         supabase
           .from('vendor_scrape_runs')
           .select('*')
@@ -575,14 +580,29 @@ export default function VendorPricesPage() {
           .order('completed_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
+        buildBaseQuery(vendorSlug)
+          .order('scraped_at', { ascending: false })
+          .range(0, 4999),
       ]);
+
+      const firstBatch = (firstChunk.data as VendorProduct[]) ?? [];
+
       if (isMountedRef.current && requestId === loadRequestIdRef.current) {
-        setProducts(data);
+        setProducts(firstBatch);
         setLastRun(runRes.data);
+        setLoading(false);
+      }
+
+      if (firstBatch.length === 5000) {
+        const rest = await fetchAllProducts(vendorSlug);
+        if (isMountedRef.current && requestId === loadRequestIdRef.current) {
+          setProducts(rest);
+        }
       }
     } catch (err) {
       if (isMountedRef.current && requestId === loadRequestIdRef.current) {
         setScrapeError(err instanceof Error ? err.message : 'Failed to load products');
+        setLoading(false);
       }
     } finally {
       if (isMountedRef.current && requestId === loadRequestIdRef.current) {

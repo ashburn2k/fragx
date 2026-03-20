@@ -59,9 +59,12 @@ export default function ImageCacheProgressBanner() {
   }
 
   useEffect(() => {
-    fetchStats();
-    pollRef.current = setInterval(fetchStats, 15000);
+    const initTimer = setTimeout(() => {
+      fetchStats();
+      pollRef.current = setInterval(fetchStats, 60000);
+    }, 6000);
     return () => {
+      clearTimeout(initTimer);
       if (pollRef.current) clearInterval(pollRef.current);
       if (completedTimerRef.current) clearTimeout(completedTimerRef.current);
     };
