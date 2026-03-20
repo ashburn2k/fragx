@@ -308,8 +308,10 @@ export default function VendorPricesPage() {
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
   const [collectionOverflowOpen, setCollectionOverflowOpen] = useState(false);
+  const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
 
   const MAX_VISIBLE_TABS = 6;
+  const MAX_VISIBLE_VENDORS = 8;
 
   useEffect(() => {
     loadVendors();
@@ -628,7 +630,7 @@ export default function VendorPricesPage() {
             </div>
 
             {/* Desktop: pill tabs */}
-            <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
+            <div className="hidden sm:flex items-center justify-between gap-4">
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedVendor(ALL_VENDORS_SLUG)}
@@ -640,7 +642,7 @@ export default function VendorPricesPage() {
                 >
                   All Vendors
                 </button>
-                {vendors.map(v => (
+                {vendors.slice(0, MAX_VISIBLE_VENDORS).map(v => (
                   <button
                     key={v.slug}
                     onClick={() => setSelectedVendor(v.slug)}
@@ -653,6 +655,47 @@ export default function VendorPricesPage() {
                     {v.name}
                   </button>
                 ))}
+                {vendors.length > MAX_VISIBLE_VENDORS && (() => {
+                  const overflowVendors = vendors.slice(MAX_VISIBLE_VENDORS);
+                  const overflowActive = overflowVendors.some(v => v.slug === selectedVendor);
+                  return (
+                    <div className="relative">
+                      <button
+                        onClick={() => setVendorOverflowOpen(o => !o)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          overflowActive
+                            ? 'bg-cyan-500 text-white'
+                            : vendorOverflowOpen
+                              ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <MoreHorizontal size={14} />
+                        {overflowActive
+                          ? vendors.find(v => v.slug === selectedVendor)?.name
+                          : `${overflowVendors.length} more`}
+                        <ChevronDown size={12} className={`transition-transform ${vendorOverflowOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {vendorOverflowOpen && (
+                        <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden z-30 shadow-xl min-w-48">
+                          {overflowVendors.map(v => (
+                            <button
+                              key={v.slug}
+                              onClick={() => { setSelectedVendor(v.slug); setVendorOverflowOpen(false); }}
+                              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                                selectedVendor === v.slug
+                                  ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-medium'
+                                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                              }`}
+                            >
+                              {v.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               {selectedVendor !== ALL_VENDORS_SLUG && (
                 <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 w-fit shrink-0">
