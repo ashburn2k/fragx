@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Search, RefreshCw,
-  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff
+  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff, Shield
 } from 'lucide-react';
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
@@ -469,6 +469,8 @@ export default function VendorPricesPage() {
   const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
   const [collectionOverflowOpen, setCollectionOverflowOpen] = useState(false);
   const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
+
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const isMountedRef = useRef(true);
   const scrapeAbortRef = useRef(false);
@@ -961,8 +963,6 @@ export default function VendorPricesPage() {
           </div>
 
 
-          <ImageCacheProgressBanner />
-
           {scraping && currentVendor && (
             <ScrapeProgressBar
               vendorSlug={selectedVendor}
@@ -1352,6 +1352,83 @@ export default function VendorPricesPage() {
             </>
           )}
         </>
+      )}
+
+      <ImageCacheProgressBanner />
+
+      <footer className="border-t border-slate-200 dark:border-slate-800 pt-5 mt-2 transition-colors duration-200">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Product listings, prices, and images displayed on this page are sourced from publicly accessible online coral vendors for informational and price-comparison purposes only. FragX does not claim ownership of any vendor product data, product images, or trademarks. All content remains the property of the respective vendors.{' '}
+          <button
+            onClick={() => setShowDisclaimer(true)}
+            className="text-cyan-600 dark:text-cyan-400 hover:underline transition-colors"
+          >
+            Full Disclaimer
+          </button>
+        </p>
+      </footer>
+
+      {showDisclaimer && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+          onClick={() => setShowDisclaimer(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center gap-2.5">
+                <Shield size={16} className="text-slate-500 dark:text-slate-400" />
+                <h2 className="font-semibold text-slate-900 dark:text-white text-base">Disclaimer</h2>
+              </div>
+              <button
+                onClick={() => setShowDisclaimer(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <section>
+                <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">Informational Use Only</h3>
+                <p>
+                  FragX is an independent price-comparison and community tool for reef aquarium hobbyists. All vendor product listings, pricing data, and product images displayed on this site are retrieved from publicly accessible endpoints on vendor websites solely for informational and non-commercial price-comparison purposes.
+                </p>
+              </section>
+              <section>
+                <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">No Ownership Claimed</h3>
+                <p>
+                  FragX does not claim ownership of any product data, product descriptions, pricing information, product images, brand names, or trademarks belonging to any vendor. All such content remains the sole property of the respective vendors and is reproduced here solely as a reference for users comparing prices across stores.
+                </p>
+              </section>
+              <section>
+                <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">No Affiliation or Endorsement</h3>
+                <p>
+                  FragX is not affiliated with, endorsed by, sponsored by, or in any way officially connected to any of the vendors listed on this site. Vendor names, logos, and product images are the property of their respective owners. The appearance of a vendor on this site does not imply any partnership or endorsement.
+                </p>
+              </section>
+              <section>
+                <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">Accuracy and Availability</h3>
+                <p>
+                  Price data is updated periodically and may not reflect current pricing. Products shown as available may have since sold out. FragX makes no warranties, express or implied, regarding the completeness, accuracy, timeliness, or availability of any listed product or price. Always verify current pricing and availability directly with the vendor before making a purchasing decision.
+                </p>
+              </section>
+              <section>
+                <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">Image Usage</h3>
+                <p>
+                  Product images are sourced from vendor websites and are the property of their respective owners. FragX temporarily caches images solely to improve page load performance for users and does not use vendor images for any commercial or promotional purpose. If you are a vendor and wish to have your content removed, please contact us.
+                </p>
+              </section>
+              <section>
+                <h3 className="text-slate-900 dark:text-white font-semibold text-sm mb-2">Limitation of Liability</h3>
+                <p>
+                  FragX shall not be liable for any direct, indirect, incidental, or consequential damages arising from the use of or reliance on information provided on this site, including but not limited to purchasing decisions made based on displayed prices or availability.
+                </p>
+              </section>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
