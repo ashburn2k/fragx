@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil } from 'lucide-react';
-import { supabase, CoralSpecies, CoralMorph, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
+import { supabase, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import RarityBadge from '../components/ui/RarityBadge';
 import TradeSidebar from '../components/trades/TradeSidebar';
 import ImageUpload from '../components/trades/ImageUpload';
 
+const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Zoanthids', 'Mushrooms', 'Frag Pack', 'Other'];
+
 type TradeTab = 'have' | 'want' | 'matches' | 'messages';
 
+type TradeForm = { coral_type: string; notes: string; quantity: string; max_price: string; asking_price: string };
+
 interface CoralFormProps {
-  addForm: { species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string };
-  setAddForm: React.Dispatch<React.SetStateAction<{ species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string }>>;
+  addForm: TradeForm;
+  setAddForm: React.Dispatch<React.SetStateAction<TradeForm>>;
   imageUrl: string | null;
   setImageUrl: (url: string | null) => void;
-  species: CoralSpecies[];
-  morphs: CoralMorph[];
   submitting: boolean;
   onSubmit: () => void;
   onCancel: () => void;
@@ -22,39 +23,21 @@ interface CoralFormProps {
   isEdit?: boolean;
 }
 
-function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, species, morphs, submitting, onSubmit, onCancel, isWant, isEdit }: CoralFormProps) {
+function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onSubmit, onCancel, isWant, isEdit }: CoralFormProps) {
   const title = isEdit
     ? (isWant ? 'Edit Want Entry' : 'Edit Have Entry')
     : (isWant ? 'Add to Want List' : 'Add to Have List');
   return (
     <div className="bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
       <h3 className="text-slate-900 dark:text-white font-semibold">{title}</h3>
-      <div className="grid sm:grid-cols-2 gap-3">
-        <select
-          value={addForm.species_id}
-          onChange={e => setAddForm(f => ({ ...f, species_id: e.target.value, morph_id: '' }))}
-          className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
-        >
-          <option value="">Select species...</option>
-          {['SPS', 'LPS', 'Soft Coral'].map(g => (
-            <optgroup key={g} label={g} className="bg-slate-100 dark:bg-slate-800">
-              {species.filter(s => s.coral_group === g).map(s => (
-                <option key={s.id} value={s.id}>{s.genus} {s.species}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        {morphs.length > 0 && (
-          <select
-            value={addForm.morph_id}
-            onChange={e => setAddForm(f => ({ ...f, morph_id: e.target.value }))}
-            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
-          >
-            <option value="">Any morph</option>
-            {morphs.map(m => <option key={m.id} value={m.id}>{m.morph_name}</option>)}
-          </select>
-        )}
-      </div>
+      <select
+        value={addForm.coral_type}
+        onChange={e => setAddForm(f => ({ ...f, coral_type: e.target.value }))}
+        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
+      >
+        <option value="">Select coral type...</option>
+        {CORAL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+      </select>
       {isWant ? (
         <input
           value={addForm.max_price}
@@ -99,7 +82,7 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, species, morphs
         </button>
         <button
           onClick={onSubmit}
-          disabled={submitting || !addForm.species_id}
+          disabled={submitting || !addForm.coral_type}
           className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
         >
           {submitting ? (isEdit ? 'Saving...' : 'Adding...') : (isEdit ? 'Save Changes' : 'Add')}
@@ -116,14 +99,12 @@ export default function TradesPage() {
   const [wantList, setWantList] = useState<WantListItem[]>([]);
   const [matches, setMatches] = useState<TradeMatch[]>([]);
   const [conversations, setConversations] = useState<{ partnerId: string; partnerName: string; lastMsg: string; unread: number }[]>([]);
-  const [species, setSpecies] = useState<CoralSpecies[]>([]);
-  const [morphs, setMorphs] = useState<CoralMorph[]>([]);
   const [showAddHave, setShowAddHave] = useState(false);
   const [showAddWant, setShowAddWant] = useState(false);
-  const [addForm, setAddForm] = useState({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+  const [addForm, setAddForm] = useState<TradeForm>({ coral_type: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
   const [editingHaveId, setEditingHaveId] = useState<string | null>(null);
   const [editingWantId, setEditingWantId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+  const [editForm, setEditForm] = useState<TradeForm>({ coral_type: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
   const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ id: string; sender_id: string; content: string; created_at: string; sender?: { username: string } }[]>([]);
@@ -135,14 +116,7 @@ export default function TradesPage() {
   useEffect(() => {
     if (!user) return;
     loadAll();
-    supabase.from('coral_species').select('*').order('genus').then(({ data }) => setSpecies(data ?? []));
   }, [user]);
-
-  useEffect(() => {
-    if (addForm.species_id) {
-      supabase.from('coral_morphs').select('*').eq('species_id', addForm.species_id).then(({ data }) => setMorphs(data ?? []));
-    }
-  }, [addForm.species_id]);
 
   useEffect(() => {
     if (!user) return;
@@ -157,8 +131,8 @@ export default function TradesPage() {
     if (!user) return;
     setLoading(true);
     const [haveRes, wantRes, matchRes, msgRes] = await Promise.all([
-      supabase.from('have_list').select('*, coral_species(*), coral_morphs(*)').eq('user_id', user.id).eq('is_active', true),
-      supabase.from('want_list').select('*, coral_species(*), coral_morphs(*)').eq('user_id', user.id).eq('is_active', true),
+      supabase.from('have_list').select('*').eq('user_id', user.id).eq('is_active', true),
+      supabase.from('want_list').select('*').eq('user_id', user.id).eq('is_active', true),
       supabase.from('trade_matches').select('*, user_a:user_a_id(username, display_name, reputation_score, total_reviews), user_b:user_b_id(username, display_name, reputation_score, total_reviews)').or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`).order('created_at', { ascending: false }),
       supabase.from('messages').select('*, sender:sender_id(username)').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at', { ascending: false }),
     ]);
@@ -210,8 +184,7 @@ export default function TradesPage() {
     setSubmitting(true);
     await supabase.from('have_list').insert({
       user_id: user.id,
-      species_id: addForm.species_id || null,
-      morph_id: addForm.morph_id || null,
+      coral_type: addForm.coral_type || null,
       notes: addForm.notes || null,
       quantity: parseInt(addForm.quantity) || 1,
       asking_price: addForm.asking_price ? parseFloat(addForm.asking_price) : null,
@@ -219,7 +192,7 @@ export default function TradesPage() {
     });
     setSubmitting(false);
     setShowAddHave(false);
-    setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+    setAddForm({ coral_type: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
     setImageUrl(null);
     loadAll();
   }
@@ -229,15 +202,14 @@ export default function TradesPage() {
     setSubmitting(true);
     await supabase.from('want_list').insert({
       user_id: user.id,
-      species_id: addForm.species_id || null,
-      morph_id: addForm.morph_id || null,
+      coral_type: addForm.coral_type || null,
       notes: addForm.notes || null,
       max_price: addForm.max_price ? parseFloat(addForm.max_price) : null,
       image_url: imageUrl,
     });
     setSubmitting(false);
     setShowAddWant(false);
-    setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+    setAddForm({ coral_type: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
     setImageUrl(null);
     loadAll();
   }
@@ -257,16 +229,12 @@ export default function TradesPage() {
     setEditingWantId(null);
     setEditImageUrl(item.image_url ?? null);
     setEditForm({
-      species_id: item.species_id ?? '',
-      morph_id: item.morph_id ?? '',
+      coral_type: item.coral_type ?? '',
       notes: item.notes ?? '',
       quantity: String(item.quantity ?? 1),
       max_price: '',
       asking_price: item.asking_price != null ? String(item.asking_price) : '',
     });
-    if (item.species_id) {
-      supabase.from('coral_morphs').select('*').eq('species_id', item.species_id).then(({ data }) => setMorphs(data ?? []));
-    }
   }
 
   function startEditWant(item: WantListItem) {
@@ -274,24 +242,19 @@ export default function TradesPage() {
     setEditingHaveId(null);
     setEditImageUrl(item.image_url ?? null);
     setEditForm({
-      species_id: item.species_id ?? '',
-      morph_id: item.morph_id ?? '',
+      coral_type: item.coral_type ?? '',
       notes: item.notes ?? '',
       quantity: '1',
       max_price: item.max_price != null ? String(item.max_price) : '',
       asking_price: '',
     });
-    if (item.species_id) {
-      supabase.from('coral_morphs').select('*').eq('species_id', item.species_id).then(({ data }) => setMorphs(data ?? []));
-    }
   }
 
   async function saveEditHave() {
     if (!editingHaveId) return;
     setSubmitting(true);
     await supabase.from('have_list').update({
-      species_id: editForm.species_id || null,
-      morph_id: editForm.morph_id || null,
+      coral_type: editForm.coral_type || null,
       notes: editForm.notes || null,
       quantity: parseInt(editForm.quantity) || 1,
       asking_price: editForm.asking_price ? parseFloat(editForm.asking_price) : null,
@@ -306,8 +269,7 @@ export default function TradesPage() {
     if (!editingWantId) return;
     setSubmitting(true);
     await supabase.from('want_list').update({
-      species_id: editForm.species_id || null,
-      morph_id: editForm.morph_id || null,
+      coral_type: editForm.coral_type || null,
       notes: editForm.notes || null,
       max_price: editForm.max_price ? parseFloat(editForm.max_price) : null,
       image_url: editImageUrl,
@@ -388,7 +350,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddHave && <CoralForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToHave} onCancel={() => { setShowAddHave(false); setImageUrl(null); }} />}
+              {showAddHave && <CoralForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} submitting={submitting} onSubmit={addToHave} onCancel={() => { setShowAddHave(false); setImageUrl(null); }} />}
 
               {haveList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -404,8 +366,6 @@ export default function TradesPage() {
                       setAddForm={setEditForm}
                       imageUrl={editImageUrl}
                       setImageUrl={setEditImageUrl}
-                      species={species}
-                      morphs={morphs}
                       submitting={submitting}
                       onSubmit={saveEditHave}
                       onCancel={() => setEditingHaveId(null)}
@@ -423,8 +383,7 @@ export default function TradesPage() {
                         )}
                         <div className="min-w-0">
                           <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
-                            {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
-                            {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
+                            {item.coral_type ?? 'Unknown'}
                           </div>
                           <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
                             Qty: {item.quantity}
@@ -432,7 +391,6 @@ export default function TradesPage() {
                             {item.notes ? ` · ${item.notes}` : ''}
                           </div>
                         </div>
-                        {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button onClick={() => startEditHave(item)} className="text-slate-400 hover:text-cyan-400 transition-colors p-1">
@@ -463,7 +421,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddWant && <CoralForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToWant} onCancel={() => { setShowAddWant(false); setImageUrl(null); }} isWant />}
+              {showAddWant && <CoralForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} submitting={submitting} onSubmit={addToWant} onCancel={() => { setShowAddWant(false); setImageUrl(null); }} isWant />}
 
               {wantList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -479,8 +437,6 @@ export default function TradesPage() {
                       setAddForm={setEditForm}
                       imageUrl={editImageUrl}
                       setImageUrl={setEditImageUrl}
-                      species={species}
-                      morphs={morphs}
                       submitting={submitting}
                       onSubmit={saveEditWant}
                       onCancel={() => setEditingWantId(null)}
@@ -499,15 +455,13 @@ export default function TradesPage() {
                         )}
                         <div className="min-w-0">
                           <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
-                            {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
-                            {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
+                            {item.coral_type ?? 'Unknown'}
                           </div>
                           <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
                             {item.max_price ? `Max: $${item.max_price}` : 'No max price'}
                             {item.notes ? ` · ${item.notes}` : ''}
                           </div>
                         </div>
-                        {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button onClick={() => startEditWant(item)} className="text-slate-400 hover:text-cyan-400 transition-colors p-1">

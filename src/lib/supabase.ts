@@ -106,6 +106,7 @@ export interface PriceHistory {
 export interface HaveListItem {
   id: string;
   user_id: string;
+  coral_type: string | null;
   species_id: string | null;
   morph_id: string | null;
   notes: string | null;
@@ -121,6 +122,7 @@ export interface HaveListItem {
 export interface WantListItem {
   id: string;
   user_id: string;
+  coral_type: string | null;
   species_id: string | null;
   morph_id: string | null;
   max_price: number | null;
