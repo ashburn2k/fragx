@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Users, Circle, ArrowLeftRight, Heart, Inbox, TrendingUp } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 interface SidebarStats {
   totalMembers: number;
@@ -11,6 +12,7 @@ interface SidebarStats {
 }
 
 export default function TradeSidebar() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<SidebarStats>({
     totalMembers: 0,
     onlineMembers: [],
@@ -24,9 +26,12 @@ export default function TradeSidebar() {
     loadStats();
     const interval = setInterval(loadStats, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   async function loadStats() {
+    if (user) {
+      await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
+    }
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     const [membersRes, onlineRes, haveRes, wantRes, tradesRes] = await Promise.all([
