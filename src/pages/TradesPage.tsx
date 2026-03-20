@@ -3,12 +3,13 @@ import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCir
 import { supabase, CoralSpecies, CoralMorph, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import RarityBadge from '../components/ui/RarityBadge';
+import TradeSidebar from '../components/trades/TradeSidebar';
 
 type TradeTab = 'have' | 'want' | 'matches' | 'messages';
 
 interface CoralAddFormProps {
-  addForm: { species_id: string; morph_id: string; notes: string; quantity: string; max_price: string };
-  setAddForm: React.Dispatch<React.SetStateAction<{ species_id: string; morph_id: string; notes: string; quantity: string; max_price: string }>>;
+  addForm: { species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string };
+  setAddForm: React.Dispatch<React.SetStateAction<{ species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string }>>;
   species: CoralSpecies[];
   morphs: CoralMorph[];
   submitting: boolean;
@@ -56,14 +57,27 @@ function CoralAddForm({ addForm, setAddForm, species, morphs, submitting, onSubm
           className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
         />
       ) : (
-        <input
-          value={addForm.quantity}
-          onChange={e => setAddForm(f => ({ ...f, quantity: e.target.value }))}
-          type="number"
-          min="1"
-          placeholder="Quantity available"
-          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-        />
+        <div className="grid sm:grid-cols-2 gap-3">
+          <input
+            value={addForm.quantity}
+            onChange={e => setAddForm(f => ({ ...f, quantity: e.target.value }))}
+            type="number"
+            min="1"
+            placeholder="Quantity available"
+            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+          />
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm pointer-events-none">$</span>
+            <input
+              value={addForm.asking_price}
+              onChange={e => setAddForm(f => ({ ...f, asking_price: e.target.value }))}
+              type="number"
+              min="0"
+              placeholder="Asking price (optional)"
+              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-8 pr-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+        </div>
       )}
       <input
         value={addForm.notes}
@@ -98,7 +112,7 @@ export default function TradesPage() {
   const [morphs, setMorphs] = useState<CoralMorph[]>([]);
   const [showAddHave, setShowAddHave] = useState(false);
   const [showAddWant, setShowAddWant] = useState(false);
-  const [addForm, setAddForm] = useState({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '' });
+  const [addForm, setAddForm] = useState({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ id: string; sender_id: string; content: string; created_at: string; sender?: { username: string } }[]>([]);
   const [newMsg, setNewMsg] = useState('');
@@ -116,6 +130,15 @@ export default function TradesPage() {
       supabase.from('coral_morphs').select('*').eq('species_id', addForm.species_id).then(({ data }) => setMorphs(data ?? []));
     }
   }, [addForm.species_id]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
+    const interval = setInterval(() => {
+      supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   async function loadAll() {
     if (!user) return;
@@ -178,10 +201,11 @@ export default function TradesPage() {
       morph_id: addForm.morph_id || null,
       notes: addForm.notes || null,
       quantity: parseInt(addForm.quantity) || 1,
+      asking_price: addForm.asking_price ? parseFloat(addForm.asking_price) : null,
     });
     setSubmitting(false);
     setShowAddHave(false);
-    setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '' });
+    setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
     loadAll();
   }
 
@@ -197,7 +221,7 @@ export default function TradesPage() {
     });
     setSubmitting(false);
     setShowAddWant(false);
-    setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '' });
+    setAddForm({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
     loadAll();
   }
 
@@ -233,7 +257,8 @@ export default function TradesPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="flex gap-6 items-start">
+      <div className="flex-1 min-w-0 space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Trade Network</h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Smart matchmaking for reef hobbyists</p>
@@ -299,6 +324,7 @@ export default function TradesPage() {
                       </div>
                       <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
                         Qty: {item.quantity}
+                        {item.asking_price ? ` · $${item.asking_price}` : ''}
                         {item.notes ? ` · ${item.notes}` : ''}
                       </div>
                     </div>
@@ -499,6 +525,11 @@ export default function TradesPage() {
           )}
         </>
       )}
+      </div>
+
+      <div className="hidden lg:block w-72 flex-shrink-0 sticky top-20">
+        <TradeSidebar />
+      </div>
     </div>
   );
 }

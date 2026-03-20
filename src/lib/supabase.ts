@@ -110,6 +110,7 @@ export interface HaveListItem {
   morph_id: string | null;
   notes: string | null;
   quantity: number;
+  asking_price: number | null;
   is_active: boolean;
   coral_species?: CoralSpecies;
   coral_morphs?: CoralMorph;
