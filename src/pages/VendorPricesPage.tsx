@@ -6,6 +6,7 @@ import {
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
 import PriceChangesPanel from '../components/vendor-prices/PriceChangesPanel';
+import ScrapeProgressBar from '../components/vendor-prices/ScrapeProgressBar';
 import { buildTagFilterOptions, productMatchesTagFilter, getSmallTagLabels, NormalizedTag } from '../lib/tagNormalizer';
 
 const EQUIPMENT_TAGS = new Set([
@@ -723,18 +724,11 @@ export default function VendorPricesPage() {
           </div>
 
 
-          {scraping && (
-            <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-700/40 rounded-xl p-4 flex items-center gap-3">
-              <RefreshCw size={15} className="animate-spin text-cyan-600 dark:text-cyan-400 shrink-0" />
-              <div>
-                <p className="text-cyan-700 dark:text-cyan-300 text-sm font-medium">
-                  Scraping {currentVendor?.name} catalog...
-                </p>
-                <p className="text-cyan-600 dark:text-cyan-500 text-xs mt-0.5">
-                  Fetching products from all collections. This may take a minute.
-                </p>
-              </div>
-            </div>
+          {scraping && currentVendor && (
+            <ScrapeProgressBar
+              vendorSlug={selectedVendor}
+              vendorName={currentVendor.name}
+            />
           )}
 
           {scrapeError && (
