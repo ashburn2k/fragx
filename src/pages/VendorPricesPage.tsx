@@ -311,7 +311,7 @@ export default function VendorPricesPage() {
   const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
 
   const MAX_VISIBLE_TABS = 6;
-  const MAX_VISIBLE_VENDORS = 8;
+  const MAX_VISIBLE_VENDORS = 5;
 
   useEffect(() => {
     loadVendors();
