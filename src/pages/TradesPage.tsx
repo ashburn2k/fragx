@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import { supabase, CoralSpecies, CoralMorph, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import RarityBadge from '../components/ui/RarityBadge';
@@ -8,7 +8,7 @@ import ImageUpload from '../components/trades/ImageUpload';
 
 type TradeTab = 'have' | 'want' | 'matches' | 'messages';
 
-interface CoralAddFormProps {
+interface CoralFormProps {
   addForm: { species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string };
   setAddForm: React.Dispatch<React.SetStateAction<{ species_id: string; morph_id: string; notes: string; quantity: string; max_price: string; asking_price: string }>>;
   imageUrl: string | null;
@@ -19,12 +19,16 @@ interface CoralAddFormProps {
   onSubmit: () => void;
   onCancel: () => void;
   isWant?: boolean;
+  isEdit?: boolean;
 }
 
-function CoralAddForm({ addForm, setAddForm, imageUrl, setImageUrl, species, morphs, submitting, onSubmit, onCancel, isWant }: CoralAddFormProps) {
+function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, species, morphs, submitting, onSubmit, onCancel, isWant, isEdit }: CoralFormProps) {
+  const title = isEdit
+    ? (isWant ? 'Edit Want Entry' : 'Edit Have Entry')
+    : (isWant ? 'Add to Want List' : 'Add to Have List');
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
-      <h3 className="text-slate-900 dark:text-white font-semibold">{isWant ? 'Add to Want List' : 'Add to Have List'}</h3>
+    <div className="bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded-2xl p-5 space-y-4 transition-colors duration-200">
+      <h3 className="text-slate-900 dark:text-white font-semibold">{title}</h3>
       <div className="grid sm:grid-cols-2 gap-3">
         <select
           value={addForm.species_id}
@@ -98,7 +102,7 @@ function CoralAddForm({ addForm, setAddForm, imageUrl, setImageUrl, species, mor
           disabled={submitting || !addForm.species_id}
           className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
         >
-          {submitting ? 'Adding...' : 'Add'}
+          {submitting ? (isEdit ? 'Saving...' : 'Adding...') : (isEdit ? 'Save Changes' : 'Add')}
         </button>
       </div>
     </div>
@@ -117,6 +121,10 @@ export default function TradesPage() {
   const [showAddHave, setShowAddHave] = useState(false);
   const [showAddWant, setShowAddWant] = useState(false);
   const [addForm, setAddForm] = useState({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+  const [editingHaveId, setEditingHaveId] = useState<string | null>(null);
+  const [editingWantId, setEditingWantId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ species_id: '', morph_id: '', notes: '', quantity: '1', max_price: '', asking_price: '' });
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ id: string; sender_id: string; content: string; created_at: string; sender?: { username: string } }[]>([]);
   const [newMsg, setNewMsg] = useState('');
@@ -244,6 +252,71 @@ export default function TradesPage() {
     loadAll();
   }
 
+  function startEditHave(item: HaveListItem) {
+    setEditingHaveId(item.id);
+    setEditingWantId(null);
+    setEditImageUrl(item.image_url ?? null);
+    setEditForm({
+      species_id: item.species_id ?? '',
+      morph_id: item.morph_id ?? '',
+      notes: item.notes ?? '',
+      quantity: String(item.quantity ?? 1),
+      max_price: '',
+      asking_price: item.asking_price != null ? String(item.asking_price) : '',
+    });
+    if (item.species_id) {
+      supabase.from('coral_morphs').select('*').eq('species_id', item.species_id).then(({ data }) => setMorphs(data ?? []));
+    }
+  }
+
+  function startEditWant(item: WantListItem) {
+    setEditingWantId(item.id);
+    setEditingHaveId(null);
+    setEditImageUrl(item.image_url ?? null);
+    setEditForm({
+      species_id: item.species_id ?? '',
+      morph_id: item.morph_id ?? '',
+      notes: item.notes ?? '',
+      quantity: '1',
+      max_price: item.max_price != null ? String(item.max_price) : '',
+      asking_price: '',
+    });
+    if (item.species_id) {
+      supabase.from('coral_morphs').select('*').eq('species_id', item.species_id).then(({ data }) => setMorphs(data ?? []));
+    }
+  }
+
+  async function saveEditHave() {
+    if (!editingHaveId) return;
+    setSubmitting(true);
+    await supabase.from('have_list').update({
+      species_id: editForm.species_id || null,
+      morph_id: editForm.morph_id || null,
+      notes: editForm.notes || null,
+      quantity: parseInt(editForm.quantity) || 1,
+      asking_price: editForm.asking_price ? parseFloat(editForm.asking_price) : null,
+      image_url: editImageUrl,
+    }).eq('id', editingHaveId);
+    setSubmitting(false);
+    setEditingHaveId(null);
+    loadAll();
+  }
+
+  async function saveEditWant() {
+    if (!editingWantId) return;
+    setSubmitting(true);
+    await supabase.from('want_list').update({
+      species_id: editForm.species_id || null,
+      morph_id: editForm.morph_id || null,
+      notes: editForm.notes || null,
+      max_price: editForm.max_price ? parseFloat(editForm.max_price) : null,
+      image_url: editImageUrl,
+    }).eq('id', editingWantId);
+    setSubmitting(false);
+    setEditingWantId(null);
+    loadAll();
+  }
+
   async function updateMatchStatus(id: string, status: 'contacted' | 'completed' | 'declined') {
     await supabase.from('trade_matches').update({ status }).eq('id', id);
     loadAll();
@@ -315,7 +388,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddHave && <CoralAddForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToHave} onCancel={() => { setShowAddHave(false); setImageUrl(null); }} />}
+              {showAddHave && <CoralForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToHave} onCancel={() => { setShowAddHave(false); setImageUrl(null); }} />}
 
               {haveList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -324,32 +397,54 @@ export default function TradesPage() {
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Add corals you're willing to trade</p>
                 </div>
               ) : haveList.map(item => (
-                <div key={item.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {item.image_url && (
-                      <img
-                        src={item.image_url}
-                        alt="coral"
-                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
-                        {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
-                        {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
+                <React.Fragment key={item.id}>
+                  {editingHaveId === item.id ? (
+                    <CoralForm
+                      addForm={editForm}
+                      setAddForm={setEditForm}
+                      imageUrl={editImageUrl}
+                      setImageUrl={setEditImageUrl}
+                      species={species}
+                      morphs={morphs}
+                      submitting={submitting}
+                      onSubmit={saveEditHave}
+                      onCancel={() => setEditingHaveId(null)}
+                      isEdit
+                    />
+                  ) : (
+                    <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {item.image_url && (
+                          <img
+                            src={item.image_url}
+                            alt="coral"
+                            className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
+                            {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
+                            {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
+                          </div>
+                          <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
+                            Qty: {item.quantity}
+                            {item.asking_price ? ` · $${item.asking_price}` : ''}
+                            {item.notes ? ` · ${item.notes}` : ''}
+                          </div>
+                        </div>
+                        {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
                       </div>
-                      <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
-                        Qty: {item.quantity}
-                        {item.asking_price ? ` · $${item.asking_price}` : ''}
-                        {item.notes ? ` · ${item.notes}` : ''}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={() => startEditHave(item)} className="text-slate-400 hover:text-cyan-400 transition-colors p-1">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => removeFromHave(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1">
+                          <X size={16} />
+                        </button>
                       </div>
                     </div>
-                    {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
-                  </div>
-                  <button onClick={() => removeFromHave(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1 flex-shrink-0">
-                    <X size={16} />
-                  </button>
-                </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}
@@ -368,7 +463,7 @@ export default function TradesPage() {
                 </button>
               </div>
 
-              {showAddWant && <CoralAddForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToWant} onCancel={() => { setShowAddWant(false); setImageUrl(null); }} isWant />}
+              {showAddWant && <CoralForm addForm={addForm} setAddForm={setAddForm} imageUrl={imageUrl} setImageUrl={setImageUrl} species={species} morphs={morphs} submitting={submitting} onSubmit={addToWant} onCancel={() => { setShowAddWant(false); setImageUrl(null); }} isWant />}
 
               {wantList.length === 0 ? (
                 <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
@@ -377,31 +472,54 @@ export default function TradesPage() {
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Add corals you're looking for to get matched</p>
                 </div>
               ) : wantList.map(item => (
-                <div key={item.id} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
-                  <div className="flex items-center gap-3 min-w-0">
-                    {item.image_url && (
-                      <img
-                        src={item.image_url}
-                        alt="coral"
-                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
-                        {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
-                        {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
+                <React.Fragment key={item.id}>
+                  {editingWantId === item.id ? (
+                    <CoralForm
+                      addForm={editForm}
+                      setAddForm={setEditForm}
+                      imageUrl={editImageUrl}
+                      setImageUrl={setEditImageUrl}
+                      species={species}
+                      morphs={morphs}
+                      submitting={submitting}
+                      onSubmit={saveEditWant}
+                      onCancel={() => setEditingWantId(null)}
+                      isWant
+                      isEdit
+                    />
+                  ) : (
+                    <div className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 transition-colors duration-200">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {item.image_url && (
+                          <img
+                            src={item.image_url}
+                            alt="coral"
+                            className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-slate-900 dark:text-white font-medium text-sm truncate">
+                            {item.coral_morphs ? `${(item.coral_morphs as CoralMorph).morph_name} — ` : ''}
+                            {item.coral_species ? `${(item.coral_species as CoralSpecies).genus} ${(item.coral_species as CoralSpecies).species}` : 'Unknown'}
+                          </div>
+                          <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
+                            {item.max_price ? `Max: $${item.max_price}` : 'No max price'}
+                            {item.notes ? ` · ${item.notes}` : ''}
+                          </div>
+                        </div>
+                        {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
                       </div>
-                      <div className="text-slate-400 dark:text-slate-500 text-xs mt-0.5">
-                        {item.max_price ? `Max: $${item.max_price}` : 'No max price'}
-                        {item.notes ? ` · ${item.notes}` : ''}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={() => startEditWant(item)} className="text-slate-400 hover:text-cyan-400 transition-colors p-1">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => removeFromWant(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1">
+                          <X size={16} />
+                        </button>
                       </div>
                     </div>
-                    {item.coral_species && <RarityBadge tier={(item.coral_species as CoralSpecies).rarity_tier} />}
-                  </div>
-                  <button onClick={() => removeFromWant(item.id)} className="text-slate-500 hover:text-red-400 transition-colors p-1 flex-shrink-0">
-                    <X size={16} />
-                  </button>
-                </div>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}
