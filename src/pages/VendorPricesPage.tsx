@@ -472,6 +472,7 @@ export default function VendorPricesPage() {
   const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [totalDbCount, setTotalDbCount] = useState<number | null>(null);
 
   const isMountedRef = useRef(true);
   const scrapeAbortRef = useRef(false);
@@ -490,6 +491,13 @@ export default function VendorPricesPage() {
 
   useEffect(() => {
     loadVendors();
+    supabase
+      .from('vendor_products')
+      .select('*', { count: 'exact', head: true })
+      .not('collection', 'in', COLLECTION_BLOCK_LIST)
+      .then(({ count }) => {
+        if (count !== null) setTotalDbCount(count);
+      });
   }, []);
 
   useEffect(() => {
@@ -1304,7 +1312,11 @@ export default function VendorPricesPage() {
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 dark:text-slate-500 text-xs hidden sm:inline">
-                    {catalogCount.toLocaleString()} total in catalog
+                    {selectedVendor === ALL_VENDORS_SLUG
+                      ? totalDbCount !== null
+                        ? `${totalDbCount.toLocaleString()} total in catalog`
+                        : 'Loading...'
+                      : `${catalogCount.toLocaleString()} total in catalog`}
                   </span>
                   <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 transition-colors duration-200">
                     {([50, 100, 200] as PageSize[]).map(size => (
