@@ -13,6 +13,9 @@ const EQUIPMENT_TAGS = new Set([
   'pump', 'rock', 'maintenance', 'powerhead', 'heater', 'salt', 'ato', 'merch',
   'bacteria', 'lighting', 'equipment', 'plumbing', 'sand',
   'reef stock', 'subscriptions', 'service', 'box fee', 'shipping',
+  'replacement blades', 'power supply holder', 'light shade', 'aquarium viewer',
+  'bracket', '3d printing', 'flipper accessories', 'aquarium cleaning supplies',
+  'scrubber', 'phytoplankton', 'lighting bundle pack', 'hand held scraper',
 ]);
 
 const HIDDEN_COLLECTIONS = new Set([
