@@ -15,17 +15,24 @@ async function cacheImage(
 ): Promise<string | null> {
   try {
     const res = await fetch(externalUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; coral-price-tracker/1.0)" },
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Referer": new URL(externalUrl).origin + "/",
+      },
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;
 
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.startsWith("image/")) return null;
+
     const buffer = await res.arrayBuffer();
-    const contentType = res.headers.get("content-type") ?? "image/jpeg";
+    if (buffer.byteLength < 512) return null;
 
     const { error } = await supabase.storage
       .from(BUCKET)
-      .upload(path, buffer, { contentType, upsert: false });
+      .upload(path, buffer, { contentType, upsert: true });
 
     if (error && !error.message.toLowerCase().includes("already exists")) {
       return null;
