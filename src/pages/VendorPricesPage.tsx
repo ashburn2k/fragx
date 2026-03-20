@@ -20,6 +20,8 @@ const EQUIPMENT_TAGS = new Set([
   'printed reef', 'flipper aquarium products', 'reefbreeders.com',
   'dalua international llc', 'pod your reef', 'nature dimensions',
   'sticker', 'decal', 'additive', 'supplement', 'chemical', 'treatment',
+  'food', 'coral food', 'reef food', 'fish food', 'frozen food', 'phytoplankton', 'zooplankton',
+  'copepods', 'rotifers', 'mysis', 'brine shrimp', 'flake', 'pellet',
 ]);
 
 const HIDDEN_TITLE_PATTERNS = [
@@ -72,6 +74,24 @@ const HIDDEN_TITLE_PATTERNS = [
   /\bhoodie\b/i,
   /\bsweatshirt\b/i,
   /\btank\s+top\b/i,
+  /\bflake(s|d)?\s+food\b|\bfish\s+flake/i,
+  /\bpellet(s)?\s+food\b|\bfish\s+pellet/i,
+  /\bfrozen\s+food\b/i,
+  /\bcoral\s+food\b/i,
+  /\breef\s+food\b/i,
+  /\bphyto(plankton)?\b/i,
+  /\bzoo?plankton\b/i,
+  /\bmysis\s+shrimp\b/i,
+  /\bbrine\s+shrimp\b/i,
+  /\bcopepod/i,
+  /\broti(fer)?/i,
+  /\bnori\b/i,
+  /\bseaweed\s+(select|sheet|clip)/i,
+  /\bfeed(ing)?\s+(block|station|ring)\b/i,
+  /\breef.?roid/i,
+  /\bpoly.?lab\b/i,
+  /\bbenny.?stick/i,
+  /\bfrag.?biotic/i,
 ];
 
 const HIDDEN_COLLECTIONS = new Set([
