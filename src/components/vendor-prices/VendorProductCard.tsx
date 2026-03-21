@@ -50,7 +50,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
       }`}
     >
-      <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
+      <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden rounded-t-xl">
         {product.image_url && !imgError ? (
           <img
             src={product.image_url}

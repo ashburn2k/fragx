@@ -595,9 +595,11 @@ export default function VendorPricesPage() {
     setSelectedCollection('all');
     setSelectedTags(new Set());
     setCollectionOverflowOpen(false);
+    if (vendorSlug !== ALL_VENDORS_SLUG) setSortBy('newest');
 
     try {
       if (vendorSlug === ALL_VENDORS_SLUG) {
+        setSortBy('random');
         const data = await fetchAllVendorsPage();
         for (let i = data.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -605,7 +607,6 @@ export default function VendorPricesPage() {
         }
         if (isMountedRef.current && requestId === loadRequestIdRef.current) {
           setProducts(data);
-          setSortBy('random');
           setLastRun(null);
         }
         return;
