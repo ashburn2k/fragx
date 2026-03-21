@@ -50,12 +50,12 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
           : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
       }`}
     >
-      <div className="relative aspect-square bg-white dark:bg-slate-900 overflow-hidden">
+      <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
         {product.image_url && !imgError ? (
           <img
             src={product.image_url}
             alt={product.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover scale-[1.06] group-hover:scale-110 transition-transform duration-300"
             loading="lazy"
             onError={() => setImgError(true)}
           />
