@@ -338,6 +338,64 @@ async function scrapeWooCommerceVendor(
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }
 
+async function discoverMagentoProductUrls(
+  baseUrl: string,
+  knownHandles: Set<string>
+): Promise<string[]> {
+  const domain = new URL(baseUrl).hostname;
+  const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${domain}/stock-*&output=json&fl=original&collapse=urlkey&matchType=prefix&limit=3000&filter=statuscode:200`;
+  try {
+    const res = await fetch(cdxUrl, { signal: AbortSignal.timeout(30000), headers: { "User-Agent": "coral-price-tracker/1.0" } });
+    if (!res.ok) return [];
+    const rows: string[][] = await res.json();
+    const found: string[] = [];
+    for (const row of rows.slice(1)) {
+      const url = row[0];
+      if (!url || !url.endsWith(".html")) continue;
+      const m = url.match(/\/([^/?#]+\.html)$/);
+      if (!m) continue;
+      const handle = m[1];
+      if (!knownHandles.has(handle)) found.push(handle);
+    }
+    return [...new Set(found)];
+  } catch {
+    return [];
+  }
+}
+
+async function scrapeMagentoProductPage(
+  baseUrl: string,
+  handle: string
+): Promise<{ id: number; title: string; price: number; image_url: string | null; collection: string; is_available: boolean } | null> {
+  const html = await fetchHtmlPage(`${baseUrl}/${handle}`);
+  if (!html) return null;
+  const ldBlocks = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g) ?? [];
+  let productLd: Record<string, unknown> | null = null;
+  for (const block of ldBlocks) {
+    const content = block.replace(/<script[^>]*>/, "").replace(/<\/script>/, "");
+    try {
+      const obj = JSON.parse(content);
+      if (obj["@type"] === "Product") { productLd = obj; break; }
+    } catch { /* skip */ }
+  }
+  if (!productLd) return null;
+  const idMatch = html.match(/"item_id"\s*:\s*"?(\d+)"?/) ?? html.match(/"productId"\s*:\s*"?(\d+)"?/);
+  if (!idMatch) return null;
+  const id = parseInt(idMatch[1]);
+  if (!id) return null;
+  const offer = Array.isArray(productLd.offers) ? (productLd.offers as Record<string, unknown>[])[0] : productLd.offers as Record<string, unknown>;
+  if (!offer) return null;
+  const price = parseFloat((offer.price ?? offer.lowPrice ?? 0) as string);
+  if (!price || price <= 0) return null;
+  const isAvailable = String(offer.availability ?? "").includes("InStock");
+  const catMatch = html.match(/"item_category"\s*:\s*"([^"]+)"/);
+  const collection = catMatch ? catMatch[1].toLowerCase().replace(/\s+/g, "-") : "corals";
+  const img = typeof productLd.image === "string" ? productLd.image
+    : Array.isArray(productLd.image) ? (productLd.image as string[])[0]
+    : (productLd.image as Record<string, string> | null)?.url ?? null;
+  return { id, title: productLd.name as string, price, image_url: img ? (img as string).split("?")[0] : null, collection, is_available: isAvailable };
+}
+
 interface MagentoGraphQLProduct {
   id: number;
   name: string;
@@ -550,6 +608,39 @@ async function scrapeMagentoVendor(
       seenIds.add(gp.id);
     }
     await new Promise(r => setTimeout(r, 300));
+  }
+
+  const seenHandles = new Set<string>();
+  for (const r of allRecords.values()) seenHandles.add((r as { handle: string }).handle);
+  for (const r of existingMap.values()) seenHandles.add(r.handle);
+  const newHandles = await discoverMagentoProductUrls(vendor.base_url, seenHandles);
+  console.log(`[${vendor.slug}] CDX discovery: ${newHandles.length} new handles`);
+  const CDX_BATCH = 10;
+  for (let i = 0; i < Math.min(newHandles.length, 200); i += CDX_BATCH) {
+    const batch = newHandles.slice(i, i + CDX_BATCH);
+    const results = await Promise.all(batch.map(h => scrapeMagentoProductPage(vendor.base_url, h)));
+    for (let j = 0; j < results.length; j++) {
+      const product = results[j];
+      const handle = batch[j];
+      if (!product || seenIds.has(product.id)) continue;
+      allRecords.set(product.id, {
+        vendor_slug: vendor.slug,
+        shopify_id: product.id,
+        handle,
+        title: product.title,
+        product_type: product.collection,
+        collection: product.collection,
+        price: product.price,
+        compare_at_price: null,
+        image_url: product.image_url,
+        tags: [],
+        description: null,
+        scraped_at: new Date().toISOString(),
+        is_available: product.is_available,
+      });
+      seenIds.add(product.id);
+    }
+    if (i + CDX_BATCH < newHandles.length) await new Promise(r => setTimeout(r, 200));
   }
 
   const historyRecords: object[] = [];
