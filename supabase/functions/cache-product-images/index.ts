@@ -8,6 +8,27 @@ const corsHeaders = {
 
 const BUCKET = "vendor-images";
 
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let index = 0;
+
+  async function worker() {
+    while (index < items.length) {
+      const i = index++;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, worker)
+  );
+  return results;
+}
+
 async function cacheImage(
   supabase: ReturnType<typeof createClient>,
   externalUrl: string,
@@ -45,14 +66,52 @@ async function cacheImage(
 }
 
 function extractOgImage(html: string): string | null {
-  const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-    ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+  const ogMatch =
+    html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ??
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
   if (ogMatch) return ogMatch[1];
 
   const ldMatch = html.match(/"image"\s*:\s*"([^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i);
   if (ldMatch) return ldMatch[1];
 
   return null;
+}
+
+async function enrichSingleProduct(
+  supabase: ReturnType<typeof createClient>,
+  vendor: { slug: string; base_url: string },
+  product: { id: string; handle: string; shopify_id: string }
+): Promise<"enriched" | "failed"> {
+  const productUrl = product.handle.endsWith(".html")
+    ? `${vendor.base_url}/${product.handle}`
+    : `${vendor.base_url}/products/${product.handle}`;
+
+  try {
+    const res = await fetch(productUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (!res.ok) return "failed";
+
+    const html = await res.text();
+    const imageUrl = extractOgImage(html);
+    if (!imageUrl) return "failed";
+
+    const path = `${vendor.slug}/${product.shopify_id}`;
+    const cachedUrl = await cacheImage(supabase, imageUrl, path);
+    await supabase
+      .from("vendor_products")
+      .update({ image_url: cachedUrl ?? imageUrl })
+      .eq("id", product.id);
+
+    return "enriched";
+  } catch {
+    return "failed";
+  }
 }
 
 async function enrichNullImageProducts(
@@ -65,69 +124,35 @@ async function enrichNullImageProducts(
     .eq("is_active", true)
     .not("platform", "eq", "venderup");
 
-  if (!vendors || vendors.length === 0) {
-    return { enriched: 0, failed: 0 };
-  }
+  if (!vendors || vendors.length === 0) return { enriched: 0, failed: 0 };
 
-  let enriched = 0;
-  let failed = 0;
+  const perVendor = Math.max(5, Math.ceil(enrichLimit / vendors.length));
 
-  for (const vendor of vendors) {
-    const remaining = enrichLimit - enriched - failed;
-    if (remaining <= 0) break;
-
+  const vendorResults = await runWithConcurrency(vendors, 4, async (vendor) => {
     const { data: products } = await supabase
       .from("vendor_products")
       .select("id, handle, shopify_id")
       .eq("vendor_slug", vendor.slug)
       .is("image_url", null)
       .eq("is_available", true)
-      .limit(Math.min(remaining, 20));
+      .limit(perVendor);
 
-    if (!products || products.length === 0) continue;
+    if (!products || products.length === 0) return { enriched: 0, failed: 0 };
 
-    for (const product of products) {
-      const productUrl = product.handle.endsWith(".html")
-        ? `${vendor.base_url}/${product.handle}`
-        : `${vendor.base_url}/products/${product.handle}`;
+    const outcomes = await runWithConcurrency(products, 4, (product) =>
+      enrichSingleProduct(supabase, vendor, product)
+    );
 
-      try {
-        const res = await fetch(productUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          },
-          signal: AbortSignal.timeout(20000),
-        });
+    return {
+      enriched: outcomes.filter((o) => o === "enriched").length,
+      failed: outcomes.filter((o) => o === "failed").length,
+    };
+  });
 
-        if (!res.ok) {
-          failed++;
-          continue;
-        }
-
-        const html = await res.text();
-        const imageUrl = extractOgImage(html);
-
-        if (imageUrl) {
-          const path = `${vendor.slug}/${product.shopify_id}`;
-          const cachedUrl = await cacheImage(supabase, imageUrl, path);
-          await supabase
-            .from("vendor_products")
-            .update({ image_url: cachedUrl ?? imageUrl })
-            .eq("id", product.id);
-          enriched++;
-        } else {
-          failed++;
-        }
-      } catch {
-        failed++;
-      }
-
-      await new Promise(r => setTimeout(r, 300));
-    }
-  }
-
-  return { enriched, failed };
+  return vendorResults.reduce(
+    (acc, r) => ({ enriched: acc.enriched + r.enriched, failed: acc.failed + r.failed }),
+    { enriched: 0, failed: 0 }
+  );
 }
 
 Deno.serve(async (req: Request) => {
@@ -147,45 +172,41 @@ Deno.serve(async (req: Request) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const limit: number = body.limit ?? 100;
     const enrichLimit: number = body.enrich_limit ?? 50;
+    const concurrency: number = body.concurrency ?? 10;
 
-    const enrichResult = await enrichNullImageProducts(supabase, enrichLimit);
-
-    let vendorCached = 0;
-    let vendorFailed = 0;
-    let wwcCached = 0;
-    let wwcFailed = 0;
-
-    const { data: vendorProducts } = await supabase
-      .from("vendor_products")
-      .select("id, vendor_slug, shopify_id, image_url")
-      .not("image_url", "is", null)
-      .not("image_url", "like", `${storagePrefix}%`)
-      .limit(limit);
-
-    for (const product of vendorProducts ?? []) {
-      const path = `${product.vendor_slug}/${product.shopify_id}`;
-      const cachedUrl = await cacheImage(supabase, product.image_url, path);
-      if (cachedUrl) {
-        await supabase
-          .from("vendor_products")
-          .update({ image_url: cachedUrl })
-          .eq("id", product.id);
-        vendorCached++;
-      } else {
-        vendorFailed++;
-      }
-    }
-
-    const wwcLimit = Math.max(0, limit - (vendorProducts?.length ?? 0));
-    if (wwcLimit > 0) {
-      const { data: wwcProducts } = await supabase
+    const [enrichResult, vendorProductsResult, wwcProductsResult] = await Promise.all([
+      enrichNullImageProducts(supabase, enrichLimit),
+      supabase
+        .from("vendor_products")
+        .select("id, vendor_slug, shopify_id, image_url")
+        .not("image_url", "is", null)
+        .not("image_url", "like", `${storagePrefix}%`)
+        .limit(limit),
+      supabase
         .from("wwc_products")
         .select("id, shopify_id, image_url")
         .not("image_url", "is", null)
         .not("image_url", "like", `${storagePrefix}%`)
-        .limit(wwcLimit);
+        .limit(limit),
+    ]);
 
-      for (const product of wwcProducts ?? []) {
+    const vendorProducts = vendorProductsResult.data ?? [];
+    const wwcProducts = wwcProductsResult.data ?? [];
+
+    const [vendorOutcomes, wwcOutcomes] = await Promise.all([
+      runWithConcurrency(vendorProducts, concurrency, async (product) => {
+        const path = `${product.vendor_slug}/${product.shopify_id}`;
+        const cachedUrl = await cacheImage(supabase, product.image_url, path);
+        if (cachedUrl) {
+          await supabase
+            .from("vendor_products")
+            .update({ image_url: cachedUrl })
+            .eq("id", product.id);
+          return "cached";
+        }
+        return "failed";
+      }),
+      runWithConcurrency(wwcProducts, concurrency, async (product) => {
         const path = `wwc/${product.shopify_id}`;
         const cachedUrl = await cacheImage(supabase, product.image_url, path);
         if (cachedUrl) {
@@ -193,14 +214,18 @@ Deno.serve(async (req: Request) => {
             .from("wwc_products")
             .update({ image_url: cachedUrl })
             .eq("id", product.id);
-          wwcCached++;
-        } else {
-          wwcFailed++;
+          return "cached";
         }
-      }
-    }
+        return "failed";
+      }),
+    ]);
 
-    const totalRemaining = await Promise.all([
+    const vendorCached = vendorOutcomes.filter((o) => o === "cached").length;
+    const vendorFailed = vendorOutcomes.filter((o) => o === "failed").length;
+    const wwcCached = wwcOutcomes.filter((o) => o === "cached").length;
+    const wwcFailed = wwcOutcomes.filter((o) => o === "failed").length;
+
+    const [vendorCountResult, wwcCountResult] = await Promise.all([
       supabase
         .from("vendor_products")
         .select("id", { count: "exact", head: true })
@@ -213,7 +238,7 @@ Deno.serve(async (req: Request) => {
         .not("image_url", "like", `${storagePrefix}%`),
     ]);
 
-    const remaining = (totalRemaining[0].count ?? 0) + (totalRemaining[1].count ?? 0);
+    const remaining = (vendorCountResult.count ?? 0) + (wwcCountResult.count ?? 0);
 
     return new Response(
       JSON.stringify({
