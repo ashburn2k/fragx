@@ -231,31 +231,3 @@ export interface VendorPriceHistory {
   price_change_pct: number | null;
   recorded_at: string;
 }
-
-export interface WwcProduct {
-  id: string;
-  shopify_id: number;
-  handle: string;
-  title: string;
-  product_type: string;
-  collection: string;
-  price: number;
-  compare_at_price: number | null;
-  image_url: string | null;
-  tags: string[];
-  description: string | null;
-  scraped_at: string;
-  is_available: boolean;
-}
-
-export interface WwcScrapeRun {
-  id: string;
-  started_at: string;
-  completed_at: string | null;
-  collections_scraped: string[];
-  products_found: number;
-  products_inserted: number;
-  products_updated: number;
-  status: string;
-  error_message: string | null;
-}
