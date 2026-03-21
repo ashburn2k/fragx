@@ -61,6 +61,31 @@ function AppInner() {
         {currentPage === 'admin' && user && <AdminPage />}
       </main>
 
+      <footer className="hidden md:block border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors duration-200">
+        <div className="max-w-screen-xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-slate-400 dark:text-slate-500 text-xs">
+            &copy; {new Date().getFullYear()} BlueKrush. All rights reserved.
+          </p>
+          <div className="flex items-center gap-4 text-xs">
+            <a
+              href="https://bluekrush.fish"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 dark:text-slate-500 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors"
+            >
+              bluekrush.fish
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
+            <a
+              href="mailto:sales@bluekrush.fish"
+              className="text-slate-400 dark:text-slate-500 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors"
+            >
+              sales@bluekrush.fish
+            </a>
+          </div>
+        </div>
+      </footer>
+
       {showAuth && (
         <AuthModal
           onClose={() => setShowAuth(false)}
