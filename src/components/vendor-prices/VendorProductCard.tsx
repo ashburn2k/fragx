@@ -44,7 +44,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
       href={productUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex flex-col border rounded-xl overflow-hidden transition-all duration-200 ${
+      className={`group flex flex-col border rounded-xl overflow-hidden transition-all duration-200 outline-none focus:outline-none isolate ${
         soldOut
           ? 'bg-slate-50 dark:bg-slate-950 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400 dark:hover:border-slate-600'
           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
