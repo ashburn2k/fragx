@@ -728,7 +728,14 @@ export default function VendorPricesPage() {
       );
     }
     if (selectedTags.size > 0) {
-      const smallLabels = getSmallTagLabels(collectionFilteredProducts);
+      const smallBase = selectedCollection !== 'all'
+        ? (() => {
+            const tab = collectionTabs.find(t => t.label === selectedCollection);
+            const handles = tab?.handles ?? [selectedCollection];
+            return visibleProducts.filter(p => handles.includes(p.collection));
+          })()
+        : visibleProducts;
+      const smallLabels = getSmallTagLabels(smallBase);
       result = result.filter(p =>
         [...selectedTags].every(tag => {
           if (tag === 'Other') {
@@ -754,7 +761,7 @@ export default function VendorPricesPage() {
 
     setFiltered(result);
     setPage(1);
-  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor, collectionFilteredProducts]);
+  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor, visibleProducts]);
 
   useEffect(() => { applyFilters(); }, [applyFilters]);
   useEffect(() => { setPage(1); }, [pageSize]);
