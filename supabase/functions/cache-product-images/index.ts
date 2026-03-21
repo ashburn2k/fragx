@@ -82,7 +82,33 @@ async function enrichSingleProduct(
   vendor: { slug: string; base_url: string },
   product: { id: string; handle: string; shopify_id: string }
 ): Promise<"enriched" | "failed"> {
-  const productUrl = product.handle.endsWith(".html")
+  const isNonShopify = product.handle.endsWith(".html");
+  const path = `${vendor.slug}/${product.shopify_id}`;
+
+  if (!isNonShopify) {
+    try {
+      const jsonRes = await fetch(`${vendor.base_url}/products/${product.handle}.json`, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; coral-price-tracker/1.0)" },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (jsonRes.ok) {
+        const jsonData = await jsonRes.json();
+        const rawImageUrl: string | undefined = jsonData.product?.images?.[0]?.src;
+        if (rawImageUrl) {
+          const imageUrl = rawImageUrl.split("?")[0];
+          const cachedUrl = await cacheImage(supabase, imageUrl, path);
+          await supabase
+            .from("vendor_products")
+            .update({ image_url: cachedUrl ?? imageUrl })
+            .eq("id", product.id);
+          return "enriched";
+        }
+      }
+    } catch {
+    }
+  }
+
+  const productUrl = isNonShopify
     ? `${vendor.base_url}/${product.handle}`
     : `${vendor.base_url}/products/${product.handle}`;
 
@@ -101,7 +127,6 @@ async function enrichSingleProduct(
     const imageUrl = extractOgImage(html);
     if (!imageUrl) return "failed";
 
-    const path = `${vendor.slug}/${product.shopify_id}`;
     const cachedUrl = await cacheImage(supabase, imageUrl, path);
     await supabase
       .from("vendor_products")
