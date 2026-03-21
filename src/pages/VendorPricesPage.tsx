@@ -570,7 +570,7 @@ export default function VendorPricesPage() {
   }
 
   async function fetchAllProducts(vendorSlug: string): Promise<VendorProduct[]> {
-    const CHUNK = 5000;
+    const CHUNK = 1000;
     let all: VendorProduct[] = [];
     let from = 0;
     while (true) {
@@ -642,7 +642,7 @@ export default function VendorPricesPage() {
         setLoading(false);
       }
 
-      if (firstBatch.length === 5000) {
+      if (firstBatch.length >= 1000) {
         const rest = await fetchAllProducts(vendorSlug);
         if (isMountedRef.current && requestId === loadRequestIdRef.current) {
           setProducts(rest);
