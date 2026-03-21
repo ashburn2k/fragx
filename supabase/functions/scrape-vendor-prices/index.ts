@@ -338,6 +338,55 @@ async function scrapeWooCommerceVendor(
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }
 
+interface MagentoGraphQLProduct {
+  id: number;
+  name: string;
+  sku: string;
+  url_key: string;
+  stock_status: "IN_STOCK" | "OUT_OF_STOCK";
+  image: { url: string } | null;
+  price_range: {
+    minimum_price: {
+      regular_price: { value: number };
+      final_price: { value: number };
+    };
+  };
+}
+
+async function fetchMagentoGraphQLProducts(
+  baseUrl: string,
+  categoryUrlKey: string
+): Promise<MagentoGraphQLProduct[]> {
+  const all: MagentoGraphQLProduct[] = [];
+  let page = 1;
+  while (true) {
+    const query = `{ categoryList(filters: { url_key: { eq: "${categoryUrlKey}" } }) { products(pageSize: 300, currentPage: ${page}) { total_count items { id name sku url_key stock_status image { url } price_range { minimum_price { regular_price { value } final_price { value } } } } } } }`;
+    let items: MagentoGraphQLProduct[] = [];
+    try {
+      const res = await fetch(`${baseUrl}/graphql`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (compatible; coral-price-tracker/1.0)",
+        },
+        body: JSON.stringify({ query }),
+        signal: AbortSignal.timeout(25000),
+      });
+      if (!res.ok) break;
+      const data = await res.json();
+      items = data?.data?.categoryList?.[0]?.products?.items ?? [];
+    } catch {
+      break;
+    }
+    if (items.length === 0) break;
+    all.push(...items);
+    if (items.length < 300) break;
+    page++;
+    await new Promise(r => setTimeout(r, 300));
+  }
+  return all;
+}
+
 interface MagentoItem {
   item_name: string;
   item_id: string;
@@ -468,6 +517,39 @@ async function scrapeMagentoVendor(
       page++;
       await new Promise(r => setTimeout(r, 500));
     }
+  }
+
+  for (const catalogPath of vendor.coral_collections) {
+    const urlKey = catalogPath.replace(/\.html$/, "");
+    const gqlProducts = await fetchMagentoGraphQLProducts(vendor.base_url, urlKey);
+    for (const gp of gqlProducts) {
+      if (seenIds.has(gp.id)) continue;
+      const regularPrice = gp.price_range?.minimum_price?.regular_price?.value ?? 0;
+      const finalPrice = gp.price_range?.minimum_price?.final_price?.value ?? 0;
+      const price = finalPrice > 0 ? finalPrice : regularPrice;
+      if (price <= 0) continue;
+      const isAvailable = gp.stock_status === "IN_STOCK";
+      const imageUrl = gp.image?.url
+        ? gp.image.url.split("?")[0]
+        : null;
+      allRecords.set(gp.id, {
+        vendor_slug: vendor.slug,
+        shopify_id: gp.id,
+        handle: `${gp.url_key}.html`,
+        title: gp.name,
+        product_type: urlKey,
+        collection: urlKey,
+        price,
+        compare_at_price: regularPrice > finalPrice && finalPrice > 0 ? regularPrice : null,
+        image_url: imageUrl,
+        tags: [],
+        description: null,
+        scraped_at: new Date().toISOString(),
+        is_available: isAvailable,
+      });
+      seenIds.add(gp.id);
+    }
+    await new Promise(r => setTimeout(r, 300));
   }
 
   const historyRecords: object[] = [];
