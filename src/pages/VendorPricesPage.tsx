@@ -660,10 +660,15 @@ export default function VendorPricesPage() {
     }
   }
 
+  const visibleProducts = useMemo(
+    () => products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug)),
+    [products]
+  );
+
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug))) {
+    for (const p of visibleProducts) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -672,7 +677,7 @@ export default function VendorPricesPage() {
     return Object.entries(labelCounts)
       .sort((a, b) => b[1] - a[1])
       .map(([label, count]) => ({ label, handles: labelToHandles[label], count }));
-  }, [products]);
+  }, [visibleProducts]);
 
   useEffect(() => {
     if (selectedVendor !== ALL_VENDORS_SLUG || !search.trim()) {
@@ -723,14 +728,7 @@ export default function VendorPricesPage() {
       );
     }
     if (selectedTags.size > 0) {
-      const collFiltered = selectedCollection !== 'all'
-        ? (() => {
-            const tab = collectionTabs.find(t => t.label === selectedCollection);
-            const handles = tab?.handles ?? [selectedCollection];
-            return base.filter(p => handles.includes(p.collection));
-          })()
-        : base;
-      const smallLabels = getSmallTagLabels(collFiltered);
+      const smallLabels = getSmallTagLabels(collectionFilteredProducts);
       result = result.filter(p =>
         [...selectedTags].every(tag => {
           if (tag === 'Other') {
@@ -756,7 +754,7 @@ export default function VendorPricesPage() {
 
     setFiltered(result);
     setPage(1);
-  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor]);
+  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor, collectionFilteredProducts]);
 
   useEffect(() => { applyFilters(); }, [applyFilters]);
   useEffect(() => { setPage(1); }, [pageSize]);
@@ -866,20 +864,21 @@ export default function VendorPricesPage() {
 
   const currentVendor = vendors.find(v => v.slug === selectedVendor);
 
-  const collectionFilteredProducts = selectedCollection !== 'all'
-    ? (() => {
-        const tab = collectionTabs.find(t => t.label === selectedCollection);
-        const handles = tab?.handles ?? [selectedCollection];
-        return products.filter(p => handles.includes(p.collection));
-      })()
-    : products;
+  const collectionFilteredProducts = useMemo(() => {
+    if (selectedCollection !== 'all') {
+      const tab = collectionTabs.find(t => t.label === selectedCollection);
+      const handles = tab?.handles ?? [selectedCollection];
+      return visibleProducts.filter(p => handles.includes(p.collection));
+    }
+    return visibleProducts;
+  }, [visibleProducts, selectedCollection, collectionTabs]);
 
-  const tagOptions = buildTagFilterOptions(collectionFilteredProducts);
-
-  const catalogCount = useMemo(
-    () => products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug)).length,
-    [products]
+  const tagOptions = useMemo(
+    () => buildTagFilterOptions(collectionFilteredProducts),
+    [collectionFilteredProducts]
   );
+
+  const catalogCount = visibleProducts.length;
 
   const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], { base: string; active: string }> = {
     cyan:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 hover:border-cyan-400 dark:hover:border-cyan-700/60',    active: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-cyan-400 dark:border-cyan-600' },
