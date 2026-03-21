@@ -474,6 +474,8 @@ export default function VendorPricesPage() {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [totalDbCount, setTotalDbCount] = useState<number | null>(null);
   const [vendorLastRuns, setVendorLastRuns] = useState<Map<string, string | null>>(new Map());
+  const [dbSearchResults, setDbSearchResults] = useState<VendorProduct[] | null>(null);
+  const [isDbSearching, setIsDbSearching] = useState(false);
 
   const VENDOR_STALE_DAYS = 14;
 
@@ -489,6 +491,7 @@ export default function VendorPricesPage() {
   const scrapeAbortRef = useRef(false);
   const loadRequestIdRef = useRef(0);
   const shuffledProductsRef = useRef<VendorProduct[]>([]);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -671,10 +674,39 @@ export default function VendorPricesPage() {
       .map(([label, count]) => ({ label, handles: labelToHandles[label], count }));
   }, [products]);
 
+  useEffect(() => {
+    if (selectedVendor !== ALL_VENDORS_SLUG || !search.trim()) {
+      setDbSearchResults(null);
+      setIsDbSearching(false);
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      return;
+    }
+    setIsDbSearching(true);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(async () => {
+      const q = search.trim();
+      const { data } = await supabase
+        .from('vendor_products')
+        .select(PRODUCT_SELECT_COLUMNS)
+        .not('collection', 'in', COLLECTION_BLOCK_LIST)
+        .or(`title.ilike.%${q}%,collection.ilike.%${q}%`)
+        .order('scraped_at', { ascending: false })
+        .limit(1000);
+      if (isMountedRef.current) {
+        setDbSearchResults((data as VendorProduct[]) ?? []);
+        setIsDbSearching(false);
+      }
+    }, 400);
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
+  }, [search, selectedVendor]);
+
   const applyFilters = useCallback(() => {
-    const base = sortBy === 'random' && shuffledProductsRef.current.length > 0
-      ? shuffledProductsRef.current
-      : products;
+    const isAllVendorSearch = selectedVendor === ALL_VENDORS_SLUG && search.trim() && dbSearchResults !== null;
+    const base = isAllVendorSearch
+      ? dbSearchResults
+      : (sortBy === 'random' && shuffledProductsRef.current.length > 0
+        ? shuffledProductsRef.current
+        : products);
     let result = base.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug));
 
     if (selectedCollection !== 'all') {
@@ -724,7 +756,7 @@ export default function VendorPricesPage() {
 
     setFiltered(result);
     setPage(1);
-  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags]);
+  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor]);
 
   useEffect(() => { applyFilters(); }, [applyFilters]);
   useEffect(() => { setPage(1); }, [pageSize]);
@@ -1388,11 +1420,16 @@ export default function VendorPricesPage() {
               )}
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">
-                  {selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters && totalDbCount !== null
-                    ? `${totalDbCount.toLocaleString()} products`
-                    : `${filtered.length.toLocaleString()} products`}
-                  {hasActiveFilters && <span className="text-slate-400 dark:text-slate-500"> (filtered)</span>}
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  {isDbSearching
+                    ? <><RefreshCw size={12} className="animate-spin" /> Searching all vendors...</>
+                    : <>
+                        {selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters && totalDbCount !== null
+                          ? `${totalDbCount.toLocaleString()} products`
+                          : `${filtered.length.toLocaleString()} products`}
+                        {hasActiveFilters && <span className="text-slate-400 dark:text-slate-500"> (filtered)</span>}
+                      </>
+                  }
                 </span>
                 <div className="flex items-center gap-2">
                   {!(selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters) && (
