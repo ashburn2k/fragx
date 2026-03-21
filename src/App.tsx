@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navigation from './components/layout/Navigation';
 import AuthModal from './components/auth/AuthModal';
 import ProfileSetup from './components/auth/ProfileSetup';
-import ReefToolsPage from './pages/ReefToolsPage';
-import PriceTrackerPage from './pages/PriceTrackerPage';
-import VendorsPage from './pages/VendorsPage';
-import VendorPricesPage from './pages/VendorPricesPage';
-import TradesPage from './pages/TradesPage';
-import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage';
+
+const ReefToolsPage = lazy(() => import('./pages/ReefToolsPage'));
+const PriceTrackerPage = lazy(() => import('./pages/PriceTrackerPage'));
+const VendorsPage = lazy(() => import('./pages/VendorsPage'));
+const VendorPricesPage = lazy(() => import('./pages/VendorPricesPage'));
+const TradesPage = lazy(() => import('./pages/TradesPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 type Page = 'reef-tools' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 animate-pulse" />
+        <div className="text-slate-500 dark:text-slate-400 text-sm">Loading...</div>
+      </div>
+    </div>
+  );
+}
 
 function AppInner() {
   const { user, profile, loading } = useAuth();
@@ -52,13 +64,15 @@ function AppInner() {
       />
 
       <main className="max-w-screen-xl mx-auto px-4 pt-20 pb-24 md:pb-8">
-        {currentPage === 'reef-tools' && <ReefToolsPage />}
-        {currentPage === 'price-tracker' && <PriceTrackerPage />}
-        {currentPage === 'vendors' && <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />}
-        {currentPage === 'vendor-prices' && <VendorPricesPage />}
-        {currentPage === 'trades' && <TradesPage />}
-        {currentPage === 'profile' && <ProfilePage onListingClick={() => {}} />}
-        {currentPage === 'admin' && user && <AdminPage />}
+        <Suspense fallback={<PageLoader />}>
+          {currentPage === 'reef-tools' && <ReefToolsPage />}
+          {currentPage === 'price-tracker' && <PriceTrackerPage />}
+          {currentPage === 'vendors' && <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />}
+          {currentPage === 'vendor-prices' && <VendorPricesPage />}
+          {currentPage === 'trades' && <TradesPage />}
+          {currentPage === 'profile' && <ProfilePage onListingClick={() => {}} />}
+          {currentPage === 'admin' && user && <AdminPage />}
+        </Suspense>
       </main>
 
       <footer className="hidden md:block border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors duration-200">

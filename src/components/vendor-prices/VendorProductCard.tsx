@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { VendorProduct } from '../../lib/supabase';
 import { getProductNormalizedTags, NormalizedTag } from '../../lib/tagNormalizer';
 
@@ -22,7 +22,7 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
   orange:  'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/60',
 };
 
-export default function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
+const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const isAreefCreation = (vendorSlug ?? product.vendor_slug) === 'areef-creation';
   const hidePrice = isAreefCreation && product.price === 10000;
@@ -125,4 +125,6 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
       </div>
     </a>
   );
-}
+});
+
+export default VendorProductCard;
