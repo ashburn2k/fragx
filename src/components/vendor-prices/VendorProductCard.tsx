@@ -44,13 +44,13 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
       href={productUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex flex-col border rounded-xl overflow-hidden transition-all duration-200 outline-none focus:outline-none isolate ${
+      className={`group flex flex-col border rounded-xl overflow-hidden transition-all duration-200 outline-none focus:outline-none ${
         soldOut
-          ? 'bg-slate-50 dark:bg-slate-950 border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400 dark:hover:border-slate-600'
-          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
+          ? 'border-slate-300/50 dark:border-slate-700/50 hover:border-slate-400 dark:hover:border-slate-600'
+          : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
       }`}
     >
-      <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden rounded-t-xl">
+      <div className="relative aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
         {product.image_url && !imgError ? (
           <img
             src={product.image_url}
@@ -77,7 +77,7 @@ export default function VendorProductCard({ product, vendorBaseUrl, vendorName, 
           <ExternalLink size={11} className="text-white" />
         </span>
       </div>
-      <div className="p-2.5 flex flex-col gap-1.5 flex-1">
+      <div className={`p-2.5 flex flex-col gap-1.5 flex-1 ${soldOut ? 'bg-slate-50 dark:bg-slate-950' : 'bg-white dark:bg-slate-900'}`}>
         <p className={`text-xs font-medium leading-snug line-clamp-2 transition-colors ${soldOut ? 'text-slate-500 dark:text-slate-400 group-hover:text-slate-400 dark:group-hover:text-slate-300' : 'text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300'}`}>
           {product.title}
         </p>

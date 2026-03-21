@@ -488,6 +488,7 @@ export default function VendorPricesPage() {
   const isMountedRef = useRef(true);
   const scrapeAbortRef = useRef(false);
   const loadRequestIdRef = useRef(0);
+  const shuffledProductsRef = useRef<VendorProduct[]>([]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -595,7 +596,10 @@ export default function VendorPricesPage() {
     setSelectedCollection('all');
     setSelectedTags(new Set());
     setCollectionOverflowOpen(false);
-    if (vendorSlug !== ALL_VENDORS_SLUG) setSortBy('newest');
+    if (vendorSlug !== ALL_VENDORS_SLUG) {
+      setSortBy('newest');
+      shuffledProductsRef.current = [];
+    }
 
     try {
       if (vendorSlug === ALL_VENDORS_SLUG) {
@@ -605,6 +609,7 @@ export default function VendorPricesPage() {
           const j = Math.floor(Math.random() * (i + 1));
           [data[i], data[j]] = [data[j], data[i]];
         }
+        shuffledProductsRef.current = data;
         if (isMountedRef.current && requestId === loadRequestIdRef.current) {
           setProducts(data);
           setLastRun(null);
@@ -667,7 +672,10 @@ export default function VendorPricesPage() {
   }, [products]);
 
   const applyFilters = useCallback(() => {
-    let result = products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug));
+    const base = sortBy === 'random' && shuffledProductsRef.current.length > 0
+      ? shuffledProductsRef.current
+      : products;
+    let result = base.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug));
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
@@ -687,9 +695,9 @@ export default function VendorPricesPage() {
         ? (() => {
             const tab = collectionTabs.find(t => t.label === selectedCollection);
             const handles = tab?.handles ?? [selectedCollection];
-            return products.filter(p => handles.includes(p.collection));
+            return base.filter(p => handles.includes(p.collection));
           })()
-        : products;
+        : base;
       const smallLabels = getSmallTagLabels(collFiltered);
       result = result.filter(p =>
         [...selectedTags].every(tag => {
