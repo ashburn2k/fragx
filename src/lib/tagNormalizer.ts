@@ -161,7 +161,6 @@ export function buildTagFilterOptions(
   }
 
   const all = Array.from(counts.entries())
-    .filter(([label]) => !GENUS_CATEGORY_TAGS.has(label))
     .map(([label, { color, count }]) => ({ label, color, count }))
     .sort((a, b) => b.count - a.count);
 
@@ -177,14 +176,6 @@ export function buildTagFilterOptions(
 }
 
 export const OTHER_TAG_LABELS = new Set<string>();
-
-const GENUS_CATEGORY_TAGS = new Set([
-  'LPS', 'SPS', 'Soft Coral', 'Zoanthids', 'Mushrooms',
-  'Acropora', 'Montipora', 'Euphyllia', 'Chalice', 'Goniopora',
-  'Favia', 'Blastomussa', 'Acanthastrea', 'Scolymia', 'Brain Coral',
-  'Cyphastrea', 'Encrusting SPS', 'Birdsnest / Pocillopora', 'Plate Coral',
-  'Anemone', 'Invert / CUC', 'Fish',
-]);
 
 export function getSmallTagLabels(
   products: Array<{ tags: string[] }>
