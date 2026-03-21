@@ -343,21 +343,30 @@ async function discoverMagentoProductUrls(
   knownHandles: Set<string>
 ): Promise<string[]> {
   const domain = new URL(baseUrl).hostname;
-  const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${domain}/stock-*&output=json&fl=original&collapse=urlkey&matchType=prefix&limit=3000&filter=statuscode:200`;
-  try {
-    const res = await fetch(cdxUrl, { signal: AbortSignal.timeout(30000), headers: { "User-Agent": "coral-price-tracker/1.0" } });
-    if (!res.ok) return [];
-    const rows: string[][] = await res.json();
-    const found: string[] = [];
-    for (const row of rows.slice(1)) {
-      const url = row[0];
-      if (!url || !url.endsWith(".html")) continue;
-      const m = url.match(/\/([^/?#]+\.html)$/);
-      if (!m) continue;
-      const handle = m[1];
-      if (!knownHandles.has(handle)) found.push(handle);
+  const prefixes = ["stock-", "wysiwyg-"];
+  const fetchCdx = async (prefix: string): Promise<string[]> => {
+    const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${domain}/${prefix}*&output=json&fl=original&collapse=urlkey&matchType=prefix&limit=3000&filter=statuscode:200`;
+    try {
+      const res = await fetch(cdxUrl, { signal: AbortSignal.timeout(30000), headers: { "User-Agent": "coral-price-tracker/1.0" } });
+      if (!res.ok) return [];
+      const rows: string[][] = await res.json();
+      const found: string[] = [];
+      for (const row of rows.slice(1)) {
+        const url = row[0];
+        if (!url || !url.endsWith(".html")) continue;
+        const m = url.match(/\/([^/?#]+\.html)$/);
+        if (!m) continue;
+        const handle = m[1];
+        if (!knownHandles.has(handle)) found.push(handle);
+      }
+      return found;
+    } catch {
+      return [];
     }
-    return [...new Set(found)];
+  };
+  try {
+    const results = await Promise.all(prefixes.map(fetchCdx));
+    return [...new Set(results.flat())];
   } catch {
     return [];
   }
