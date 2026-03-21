@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import {
   RefreshCw, CheckCircle, AlertTriangle, Clock, ChevronDown, ChevronUp,
   Store, TrendingUp, Sparkles, XCircle, Calendar, Package, BarChart3,
+  WifiOff, EyeOff,
 } from 'lucide-react';
 
 interface ScrapeRun {
@@ -32,6 +33,15 @@ interface NewProductSummary {
   vendor_slug: string;
   count: number;
 }
+
+interface StaleVendor {
+  slug: string;
+  name: string;
+  lastSuccessAt: string | null;
+  daysSince: number | null;
+}
+
+const STALE_THRESHOLD_DAYS = 14;
 
 function formatDuration(start: string, end: string | null): string {
   if (!end) return 'Running...';
@@ -85,6 +95,8 @@ const STATUS_CONFIG: Record<string, { icon: React.ReactNode; classes: string; la
 export default function ScrapeReportPanel() {
   const [runs, setRuns] = useState<ScrapeRun[]>([]);
   const [newProducts, setNewProducts] = useState<NewProductSummary[]>([]);
+  const [staleVendors, setStaleVendors] = useState<StaleVendor[]>([]);
+  const [deactivating, setDeactivating] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
 
@@ -95,7 +107,7 @@ export default function ScrapeReportPanel() {
     const since48h = new Date();
     since48h.setHours(since48h.getHours() - 48);
 
-    const [runsRes, newProdRes] = await Promise.all([
+    const [runsRes, newProdRes, vendorConfigsRes] = await Promise.all([
       supabase
         .from('vendor_scrape_runs')
         .select('id, vendor_slug, started_at, completed_at, products_found, products_inserted, products_updated, status, error_message')
@@ -106,9 +118,14 @@ export default function ScrapeReportPanel() {
         .from('vendor_products')
         .select('vendor_slug, first_seen_at')
         .gte('first_seen_at', since48h.toISOString()),
+      supabase
+        .from('vendor_scrape_configs')
+        .select('slug, name')
+        .eq('is_active', true),
     ]);
 
-    setRuns(runsRes.data ?? []);
+    const fetchedRuns = runsRes.data ?? [];
+    setRuns(fetchedRuns);
 
     if (newProdRes.data) {
       const countMap = new Map<string, number>();
@@ -121,8 +138,44 @@ export default function ScrapeReportPanel() {
       setNewProducts(sorted);
     }
 
+    if (vendorConfigsRes.data) {
+      const lastSuccessMap = new Map<string, string | null>();
+      for (const run of fetchedRuns) {
+        if (run.status === 'completed' && run.completed_at) {
+          const existing = lastSuccessMap.get(run.vendor_slug);
+          if (!existing || run.completed_at > existing) {
+            lastSuccessMap.set(run.vendor_slug, run.completed_at);
+          }
+        }
+      }
+
+      const now = Date.now();
+      const stale: StaleVendor[] = [];
+      for (const vendor of vendorConfigsRes.data) {
+        const lastSuccess = lastSuccessMap.get(vendor.slug) ?? null;
+        const daysSince = lastSuccess
+          ? Math.floor((now - new Date(lastSuccess).getTime()) / 86400000)
+          : null;
+        if (daysSince === null || daysSince >= STALE_THRESHOLD_DAYS) {
+          stale.push({ slug: vendor.slug, name: vendor.name, lastSuccessAt: lastSuccess, daysSince });
+        }
+      }
+      stale.sort((a, b) => (b.daysSince ?? 999) - (a.daysSince ?? 999));
+      setStaleVendors(stale);
+    }
+
     setLoading(false);
   }, []);
+
+  async function handleDeactivate(slug: string) {
+    setDeactivating(slug);
+    await supabase
+      .from('vendor_scrape_configs')
+      .update({ is_active: false })
+      .eq('slug', slug);
+    setStaleVendors(prev => prev.filter(v => v.slug !== slug));
+    setDeactivating(null);
+  }
 
   useEffect(() => {
     load();
@@ -187,6 +240,59 @@ export default function ScrapeReportPanel() {
           <div className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Errors today</div>
         </div>
       </div>
+
+      {/* Stale vendor alerts */}
+      {staleVendors.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 border border-amber-300/40 dark:border-amber-500/20 rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <WifiOff size={14} className="text-amber-500" />
+            <span className="text-slate-900 dark:text-white font-medium text-sm">
+              Stale Vendors — No Successful Scrape in {STALE_THRESHOLD_DAYS}+ Days
+            </span>
+            <span className="ml-auto text-xs text-amber-500 font-semibold">
+              {staleVendors.length} vendor{staleVendors.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+            These vendors have not returned a successful price scrape recently. Consider deactivating them to remove from the vendor tracking list. Their historical price data will be preserved.
+          </p>
+          <div className="space-y-2">
+            {staleVendors.map(v => (
+              <div
+                key={v.slug}
+                className="flex items-center justify-between gap-3 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15 rounded-lg px-3 py-2.5"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-slate-800 dark:text-slate-200 text-xs font-medium">{v.name}</span>
+                    <span className="text-amber-600 dark:text-amber-400 text-xs">
+                      {v.daysSince === null
+                        ? 'Never successfully scraped'
+                        : `Last success ${v.daysSince}d ago`}
+                    </span>
+                  </div>
+                  {v.lastSuccessAt && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Clock size={10} className="text-slate-400 dark:text-slate-500" />
+                      <span className="text-slate-400 dark:text-slate-500 text-xs">
+                        {new Date(v.lastSuccessAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDeactivate(v.slug)}
+                  disabled={deactivating === v.slug}
+                  className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/10 hover:bg-amber-200 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-medium transition-colors disabled:opacity-50"
+                >
+                  <EyeOff size={11} />
+                  {deactivating === v.slug ? 'Hiding...' : 'Deactivate'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* New products by vendor (last 48h) */}
       {newProducts.length > 0 && (

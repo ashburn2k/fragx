@@ -473,6 +473,17 @@ export default function VendorPricesPage() {
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [totalDbCount, setTotalDbCount] = useState<number | null>(null);
+  const [vendorLastRuns, setVendorLastRuns] = useState<Map<string, string | null>>(new Map());
+
+  const VENDOR_STALE_DAYS = 14;
+
+  function isVendorStale(slug: string): boolean {
+    if (!vendorLastRuns.has(slug)) return false;
+    const last = vendorLastRuns.get(slug);
+    if (!last) return true;
+    const days = (Date.now() - new Date(last).getTime()) / 86400000;
+    return days >= VENDOR_STALE_DAYS;
+  }
 
   const isMountedRef = useRef(true);
   const scrapeAbortRef = useRef(false);
@@ -521,6 +532,27 @@ export default function VendorPricesPage() {
       if (!selectedVendor || selectedVendor === '') {
         setSelectedVendor(ALL_VENDORS_SLUG);
       }
+
+      const since60d = new Date();
+      since60d.setDate(since60d.getDate() - 60);
+      const { data: runs } = await supabase
+        .from('vendor_scrape_runs')
+        .select('vendor_slug, completed_at')
+        .eq('status', 'completed')
+        .gte('completed_at', since60d.toISOString())
+        .order('completed_at', { ascending: false });
+
+      const lastRunMap = new Map<string, string | null>();
+      for (const v of sorted) lastRunMap.set(v.slug, null);
+      if (runs) {
+        for (const run of runs) {
+          if (!lastRunMap.has(run.vendor_slug)) continue;
+          if (!lastRunMap.get(run.vendor_slug)) {
+            lastRunMap.set(run.vendor_slug, run.completed_at);
+          }
+        }
+      }
+      setVendorLastRuns(lastRunMap);
     }
   }
 
@@ -862,19 +894,25 @@ export default function VendorPricesPage() {
                     >
                       All Vendors
                     </button>
-                    {vendors.map(v => (
-                      <button
-                        key={v.slug}
-                        onClick={() => { setSelectedVendor(v.slug); setVendorDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                          selectedVendor === v.slug
-                            ? 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 font-medium'
-                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                        }`}
-                      >
-                        {v.name}
-                      </button>
-                    ))}
+                    {vendors.map(v => {
+                      const stale = isVendorStale(v.slug);
+                      return (
+                        <button
+                          key={v.slug}
+                          onClick={() => { setSelectedVendor(v.slug); setVendorDropdownOpen(false); }}
+                          className={`w-full text-left flex items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors ${
+                            selectedVendor === v.slug
+                              ? 'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 font-medium'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          {v.name}
+                          {stale && (
+                            <span className="text-amber-500 text-xs font-medium whitespace-nowrap">Stale</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -915,19 +953,30 @@ export default function VendorPricesPage() {
                 >
                   All Vendors
                 </button>
-                {vendors.slice(0, MAX_VISIBLE_VENDORS).map(v => (
-                  <button
-                    key={v.slug}
-                    onClick={() => setSelectedVendor(v.slug)}
-                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      selectedVendor === v.slug
-                        ? 'bg-cyan-500 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {v.name}
-                  </button>
-                ))}
+                {vendors.slice(0, MAX_VISIBLE_VENDORS).map(v => {
+                  const stale = isVendorStale(v.slug);
+                  return (
+                    <button
+                      key={v.slug}
+                      onClick={() => setSelectedVendor(v.slug)}
+                      title={stale ? `No successful scrape in ${VENDOR_STALE_DAYS}+ days` : undefined}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        selectedVendor === v.slug
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {v.name}
+                      {stale && (
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            selectedVendor === v.slug ? 'bg-amber-300' : 'bg-amber-400'
+                          }`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
                 {vendors.length > MAX_VISIBLE_VENDORS && (() => {
                   const overflowVendors = vendors.slice(MAX_VISIBLE_VENDORS);
                   const overflowActive = overflowVendors.some(v => v.slug === selectedVendor);
@@ -951,19 +1000,25 @@ export default function VendorPricesPage() {
                       </button>
                       {vendorOverflowOpen && (
                         <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden z-30 shadow-xl min-w-48">
-                          {overflowVendors.map(v => (
-                            <button
-                              key={v.slug}
-                              onClick={() => { setSelectedVendor(v.slug); setVendorOverflowOpen(false); }}
-                              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                                selectedVendor === v.slug
-                                  ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-medium'
-                                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                              }`}
-                            >
-                              {v.name}
-                            </button>
-                          ))}
+                          {overflowVendors.map(v => {
+                            const stale = isVendorStale(v.slug);
+                            return (
+                              <button
+                                key={v.slug}
+                                onClick={() => { setSelectedVendor(v.slug); setVendorOverflowOpen(false); }}
+                                className={`w-full text-left flex items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors ${
+                                  selectedVendor === v.slug
+                                    ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-medium'
+                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                {v.name}
+                                {stale && (
+                                  <span className="text-amber-500 text-xs font-medium whitespace-nowrap">Stale</span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -995,6 +1050,24 @@ export default function VendorPricesPage() {
             </div>
           </div>
 
+
+          {selectedVendor !== ALL_VENDORS_SLUG && isVendorStale(selectedVendor) && !scraping && (
+            <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-xl p-3.5">
+              <AlertCircle size={15} className="text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-amber-700 dark:text-amber-400 text-sm font-medium">Price data may be outdated</p>
+                <p className="text-amber-600/70 dark:text-amber-500/70 text-xs mt-0.5">
+                  This vendor has not had a successful price scrape in {VENDOR_STALE_DAYS}+ days. The catalog shown may not reflect current inventory or pricing.
+                </p>
+              </div>
+              <button
+                onClick={handleScrape}
+                className="shrink-0 bg-amber-500 hover:bg-amber-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+              >
+                Fetch Now
+              </button>
+            </div>
+          )}
 
           {scraping && currentVendor && (
             <ScrapeProgressBar
