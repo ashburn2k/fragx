@@ -587,6 +587,7 @@ export default function VendorPricesPage() {
 
   async function fetchAllVendorsPage(): Promise<VendorProduct[]> {
     const { data } = await buildBaseQuery()
+      .order('is_available', { ascending: false })
       .order('scraped_at', { ascending: false })
       .limit(1200);
     return (data as VendorProduct[]) ?? [];
