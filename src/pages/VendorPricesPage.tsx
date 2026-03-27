@@ -237,6 +237,35 @@ const ALL_VENDORS_SLUG = '__all__';
 const PRODUCT_SELECT_COLUMNS = 'id,vendor_slug,title,handle,collection,product_type,tags,price,compare_at_price,image_url,is_available,scraped_at';
 const COLLECTION_BLOCK_LIST = '("dry-goods","drygoods","dry-good","freshwater-fish","freshwater-&-planted","freshwater-invert","aquatic-plant","frozen-food","aquarium","neptune-systems","aquarium-services","aquarium-supplies-and-accessories","aquariums-&-sumps","aquarium-furniture","aquariums,-tanks-and-bowls","aquarium-water","product","additives","food","fish-food","fish-&-coral-foods","shopkeep","reef-wear","water-care-and-testing","supplements-and-internal-health-supplies","skimmers,-reactors-&-filtration","salt-&-maintenance","cleaning-supplies","heaters-&-chillers","fragging-supplies","temperature-monitoring-and-control","auto-top-off","rock-&-sand","feeding-supplies","controllers-&-testing","panta-rhei","equipment","aquarium-supplies","supplements","testing","dosing","merch","apparel","fragging","salt","ro-di","lighting","nugget_giftcard","gift-card","gift-cards","gift-certificates","freshwater","pond","terrarium","reptile","medication","medications","fish-medication","fish-health","disease-treatment","treatments","ich-treatment","parasite-treatment","fish-treatments","shipping-upgrade","shipping-insurance","shipping-protection","shipping-fee","overnight-shipping","flat-rate-shipping","live-arrival","maintenance","water-maintenance","water-care","tank-maintenance","algae-control","algae-scrapers","cleaning","coral-food","reef-food","frozen-foods","live-food","dry-food","food-and-supplements")';
 
+const STATIC_VENDORS: VendorScrapeConfig[] = [
+  { id: 'areef-creation', slug: 'areef-creation', name: 'A Reef Creation', base_url: 'https://areefcreation.com', public_url: 'https://areefcreation.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'aquasd', slug: 'aquasd', name: 'AquaSD', base_url: 'https://aquasd.com', public_url: 'https://aquasd.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'aquatic-collection', slug: 'aquatic-collection', name: 'Aquatic Collection', base_url: 'https://aquaticcollection.com', public_url: 'https://aquaticcollection.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'battle-corals', slug: 'battle-corals', name: 'Battle Corals', base_url: 'https://battlecorals.com', public_url: 'https://battlecorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'cherry-corals', slug: 'cherry-corals', name: 'Cherry Corals', base_url: 'https://cherrycorals.com', public_url: 'https://cherrycorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'cornbred-corals', slug: 'cornbred-corals', name: 'Cornbred Corals', base_url: 'https://cornbredcorals.com', public_url: 'https://cornbredcorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'corals-com', slug: 'corals-com', name: 'Corals.com', base_url: 'https://www.corals.com', public_url: 'https://www.corals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'dans-reef-world', slug: 'dans-reef-world', name: "Dan's Reef World", base_url: 'https://dansreefworld.com', public_url: 'https://dansreefworld.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'dust-bowl-corals', slug: 'dust-bowl-corals', name: 'Dust Bowl Corals', base_url: 'https://dustbowlcorals.com', public_url: 'https://dustbowlcorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'gem-state-corals', slug: 'gem-state-corals', name: 'Gem State Corals', base_url: 'https://gemstatecorals.net', public_url: 'https://gemstatecorals.net', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'living-reef-orlando', slug: 'living-reef-orlando', name: 'Living Reef Orlando', base_url: 'https://www.livingreeforlando.com', public_url: 'https://www.livingreeforlando.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'nemos-reef', slug: 'nemos-reef', name: "Nemo's Reef", base_url: 'https://nemosreef.com', public_url: 'https://nemosreef.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'new-wave-aquaria', slug: 'new-wave-aquaria', name: 'New Wave Aquaria', base_url: 'https://newwaveaquaria.com', public_url: 'https://newwaveaquaria.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'pacific-east-aquaculture', slug: 'pacific-east-aquaculture', name: 'Pacific East Aquaculture', base_url: 'https://pacificeastaquaculture.com', public_url: 'https://pacificeastaquaculture.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'palmetto-reef', slug: 'palmetto-reef', name: 'Palmetto Reef', base_url: 'https://palmettoreef.com', public_url: 'https://palmettoreef.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'reef-chasers', slug: 'reef-chasers', name: 'Reef Chasers', base_url: 'https://reefchasers.com', public_url: 'https://reefchasers.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'reef-life-aquariums', slug: 'reef-life-aquariums', name: 'Reef Life Aquariums', base_url: 'https://reeflifeaquariums.com', public_url: 'https://reeflifeaquariums.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'reef-pro-store', slug: 'reef-pro-store', name: 'Reef Pro Store', base_url: 'https://reefprostore.com', public_url: 'https://reefprostore.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'reef-raft-usa', slug: 'reef-raft-usa', name: 'Reef Raft USA', base_url: 'https://reefraftusa.com', public_url: 'https://reefraftusa.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'tidal-gardens', slug: 'tidal-gardens', name: 'Tidal Gardens', base_url: 'https://tidalgardens.com', public_url: 'https://tidalgardens.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'top-shelf-aquatics', slug: 'top-shelf-aquatics', name: 'Top Shelf Aquatics', base_url: 'https://topshelfaquatics.com', public_url: 'https://topshelfaquatics.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'unique-corals', slug: 'unique-corals', name: 'Unique Corals', base_url: 'https://uniquecorals.com', public_url: 'https://uniquecorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'vivid-aquariums', slug: 'vivid-aquariums', name: 'Vivid Aquariums', base_url: 'https://vividaquariums.com', public_url: 'https://vividaquariums.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'water-world-aquatics', slug: 'water-world-aquatics', name: 'Water World Aquatics', base_url: 'https://waterworldaquatics.us', public_url: 'https://waterworldaquatics.us', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'wine-country-corals', slug: 'wine-country-corals', name: 'Wine Country Corals', base_url: 'https://winecountrycorals.com', public_url: 'https://winecountrycorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+  { id: 'world-wide-corals', slug: 'world-wide-corals', name: 'World Wide Corals', base_url: 'https://worldwidecorals.com', public_url: 'https://worldwidecorals.com', coral_collections: [], fish_collections: [], is_active: true, created_at: '' },
+].sort((a, b) => a.name.localeCompare(b.name));
+
 const COLLECTION_LABEL_MAP: Record<string, string> = {
   'acropora': 'Acropora',
   'acros-millis': 'Acropora / Millepora',
@@ -525,17 +554,25 @@ export default function VendorPricesPage() {
   }, [selectedVendor, vendors]);
 
   async function loadVendors() {
-    const { data } = await supabase
-      .from('vendor_scrape_configs')
-      .select('*')
-      .eq('is_active', true);
+    setVendors(STATIC_VENDORS);
+    if (!selectedVendor || selectedVendor === '') {
+      setSelectedVendor(ALL_VENDORS_SLUG);
+    }
+    const staticMap = new Map<string, string | null>();
+    for (const v of STATIC_VENDORS) staticMap.set(v.slug, null);
+    setVendorLastRuns(staticMap);
 
-    if (data && data.length > 0) {
-      const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
-      setVendors(sorted);
-      if (!selectedVendor || selectedVendor === '') {
-        setSelectedVendor(ALL_VENDORS_SLUG);
-      }
+    try {
+      const { data } = await supabase
+        .from('vendor_scrape_configs')
+        .select('*')
+        .eq('is_active', true);
+
+      const vendorList = (data && data.length > 0)
+        ? [...data].sort((a, b) => a.name.localeCompare(b.name))
+        : STATIC_VENDORS;
+
+      if (data && data.length > 0) setVendors(vendorList);
 
       const since60d = new Date();
       since60d.setDate(since60d.getDate() - 60);
@@ -547,7 +584,7 @@ export default function VendorPricesPage() {
         .order('completed_at', { ascending: false });
 
       const lastRunMap = new Map<string, string | null>();
-      for (const v of sorted) lastRunMap.set(v.slug, null);
+      for (const v of vendorList) lastRunMap.set(v.slug, null);
       if (runs) {
         for (const run of runs) {
           if (!lastRunMap.has(run.vendor_slug)) continue;
@@ -557,6 +594,8 @@ export default function VendorPricesPage() {
         }
       }
       setVendorLastRuns(lastRunMap);
+    } catch {
+      // Static vendor list already set; DB unavailable
     }
   }
 
