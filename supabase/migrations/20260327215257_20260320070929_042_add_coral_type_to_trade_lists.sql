@@ -1,0 +1,13 @@
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'have_list' AND column_name = 'coral_type') THEN
+    ALTER TABLE have_list ADD COLUMN coral_type text;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'want_list' AND column_name = 'coral_type') THEN
+    ALTER TABLE want_list ADD COLUMN coral_type text;
+  END IF;
+END $$;
