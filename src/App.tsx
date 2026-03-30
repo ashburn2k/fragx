@@ -70,7 +70,7 @@ function AppInner() {
           {currentPage === 'vendors' && <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />}
           {currentPage === 'vendor-prices' && <VendorPricesPage />}
           {currentPage === 'trades' && <TradesPage />}
-          {currentPage === 'profile' && <ProfilePage onListingClick={() => {}} />}
+          {currentPage === 'profile' && <ProfilePage />}
           {currentPage === 'admin' && user && <AdminPage />}
         </Suspense>
       </main>

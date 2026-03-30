@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react';
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { VendorProduct } from '../../lib/supabase';
 import { getProductNormalizedTags, NormalizedTag } from '../../lib/tagNormalizer';
 
@@ -35,7 +35,7 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
   const productUrl = product.handle.endsWith('.html')
     ? `${vendorBaseUrl}/${product.handle}`
     : `${vendorBaseUrl}/products/${product.handle}`;
-  const normalizedTags = getProductNormalizedTags(product.tags).slice(0, 3);
+  const normalizedTags = useMemo(() => getProductNormalizedTags(product.tags).slice(0, 3), [product.tags]);
 
   const soldOut = !product.is_available;
 

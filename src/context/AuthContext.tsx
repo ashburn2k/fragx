@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, Profile } from '../lib/supabase';
 
@@ -21,14 +21,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const latestUserIdRef = useRef<string | null>(null);
 
   async function fetchProfile(userId: string) {
+    latestUserIdRef.current = userId;
     const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-    setProfile(data);
+    if (latestUserIdRef.current === userId) {
+      setProfile(data);
+    }
   }
 
   async function refreshProfile() {
@@ -81,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    latestUserIdRef.current = null;
     await supabase.auth.signOut();
   }
 

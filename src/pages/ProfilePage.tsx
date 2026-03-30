@@ -17,11 +17,7 @@ const badgeColors: Record<string, string> = {
   '#f97316': 'text-orange-400',
 };
 
-interface ProfilePageProps {
-  onListingClick: (listing: Listing) => void;
-}
-
-export default function ProfilePage({ onListingClick }: ProfilePageProps) {
+export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -217,7 +213,7 @@ export default function ProfilePage({ onListingClick }: ProfilePageProps) {
           <h3 className="text-slate-900 dark:text-white font-semibold mb-3">Active Listings ({activeListings.length})</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {activeListings.map(l => (
-              <ListingCard key={l.id} listing={l} onClick={() => onListingClick(l)} />
+              <ListingCard key={l.id} listing={l} onClick={() => {}} />
             ))}
           </div>
         </div>

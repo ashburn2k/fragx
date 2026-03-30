@@ -35,7 +35,7 @@ export default function AdminPage() {
   const [cacheRunning, setCacheRunning] = useState(false);
   const [cacheResult, setCacheResult] = useState<{ enriched?: number; cached?: number; remaining?: number } | null>(null);
 
-  const isAdmin = profile?.role === 'admin' || profile?.username === 'hui';
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     if (!user || !isAdmin) return;
@@ -49,7 +49,7 @@ export default function AdminPage() {
       supabase.from('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('flags').select('id', { count: 'exact', head: true }).eq('is_resolved', false),
-      supabase.from('flags').select('*, listings(title, seller_id)').order('created_at', { ascending: false }).limit(20),
+      supabase.from('flags').select('*, listings(title, seller_id)').eq('is_resolved', false).order('created_at', { ascending: false }).limit(50),
     ]);
 
     setStats({
