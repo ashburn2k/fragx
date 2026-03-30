@@ -65,6 +65,21 @@ interface ShopifyResponse {
   products: ShopifyProduct[];
 }
 
+interface WwcRecord {
+  shopify_id: number;
+  handle: string;
+  title: string;
+  product_type: string;
+  collection: string;
+  price: number;
+  compare_at_price: number | null;
+  image_url: string | null;
+  tags: string[];
+  description: string | null;
+  scraped_at: string;
+  is_available: boolean;
+}
+
 async function fetchCollection(collection: string, page: number): Promise<ShopifyProduct[]> {
   const url = `https://worldwidecorals.com/collections/${collection}/products.json?limit=250&page=${page}`;
   const res = await fetch(url, {
@@ -79,7 +94,7 @@ async function scrapeCollection(
   collection: string,
   supabase: ReturnType<typeof createClient>,
   storagePrefix: string
-): Promise<{ inserted: number; updated: number; found: number }> {
+): Promise<{ upserted: number; found: number }> {
   let page = 1;
   let allProducts: ShopifyProduct[] = [];
 
@@ -92,8 +107,7 @@ async function scrapeCollection(
     await new Promise(r => setTimeout(r, 300));
   }
 
-  let inserted = 0;
-  let updated = 0;
+  const records: WwcRecord[] = [];
 
   for (const product of allProducts) {
     const variant = product.variants?.[0];
@@ -112,7 +126,7 @@ async function scrapeCollection(
       if (cached) imageUrl = cached;
     }
 
-    const record = {
+    records.push({
       shopify_id: product.id,
       handle: product.handle,
       title: product.title,
@@ -125,24 +139,18 @@ async function scrapeCollection(
       description: product.body_html ? product.body_html.replace(/<[^>]*>/g, "").trim().slice(0, 1000) : null,
       scraped_at: new Date().toISOString(),
       is_available: true,
-    };
-
-    const { error } = await supabase
-      .from("wwc_products")
-      .upsert(record, { onConflict: "shopify_id" });
-
-    if (!error) {
-      const { data: existing } = await supabase
-        .from("wwc_products")
-        .select("id")
-        .eq("shopify_id", product.id)
-        .maybeSingle();
-      if (existing) updated++;
-      else inserted++;
-    }
+    });
   }
 
-  return { inserted, updated, found: allProducts.length };
+  const BATCH = 250;
+  for (let i = 0; i < records.length; i += BATCH) {
+    const { error } = await supabase
+      .from("wwc_products")
+      .upsert(records.slice(i, i + BATCH), { onConflict: "shopify_id" });
+    if (error) console.error(`Upsert error for ${collection} batch ${i}:`, error.message);
+  }
+
+  return { upserted: records.length, found: allProducts.length };
 }
 
 Deno.serve(async (req: Request) => {
@@ -179,15 +187,13 @@ Deno.serve(async (req: Request) => {
     const runId = runData.id;
 
     let totalFound = 0;
-    let totalInserted = 0;
-    let totalUpdated = 0;
+    let totalUpserted = 0;
 
     for (const collection of targetCollections) {
       try {
         const result = await scrapeCollection(collection, supabase, storagePrefix);
         totalFound += result.found;
-        totalInserted += result.inserted;
-        totalUpdated += result.updated;
+        totalUpserted += result.upserted;
         await new Promise(r => setTimeout(r, 200));
       } catch (err) {
         console.error(`Error scraping ${collection}:`, err);
@@ -199,8 +205,8 @@ Deno.serve(async (req: Request) => {
       .update({
         completed_at: new Date().toISOString(),
         products_found: totalFound,
-        products_inserted: totalInserted,
-        products_updated: totalUpdated,
+        products_inserted: totalUpserted,
+        products_updated: 0,
         status: "completed",
       })
       .eq("id", runId);
@@ -211,8 +217,7 @@ Deno.serve(async (req: Request) => {
         run_id: runId,
         collections_scraped: targetCollections.length,
         products_found: totalFound,
-        products_inserted: totalInserted,
-        products_updated: totalUpdated,
+        products_upserted: totalUpserted,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
