@@ -42,7 +42,7 @@ function AppInner() {
     );
   }
 
-  if (user && !profile) {
+  if (user && (!profile || !profile.username)) {
     return <ProfileSetup onComplete={() => {}} />;
   }
 

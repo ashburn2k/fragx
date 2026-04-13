@@ -16,7 +16,7 @@ const roles: { value: UserRole; label: string; desc: string; Icon: typeof User }
 export default function ProfileSetup({ onComplete }: ProfileSetupProps) {
   const { user, refreshProfile } = useAuth();
   const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [displayName, setDisplayName] = useState(user?.user_metadata?.full_name ?? '');
   const [role, setRole] = useState<UserRole>('hobbyist');
   const [locationCity, setLocationCity] = useState('');
   const [locationState, setLocationState] = useState('');
@@ -29,14 +29,14 @@ export default function ProfileSetup({ onComplete }: ProfileSetupProps) {
     setError('');
     setLoading(true);
 
-    const { error } = await supabase.from('profiles').insert({
+    const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       username: username.toLowerCase().trim(),
       display_name: displayName.trim() || username.trim(),
       role,
       location_city: locationCity.trim() || null,
       location_state: locationState.trim() || null,
-    });
+    }, { onConflict: 'id' });
 
     if (error) {
       if (error.code === '23505') setError('Username already taken. Try another.');
