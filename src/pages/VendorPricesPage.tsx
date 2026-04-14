@@ -214,6 +214,110 @@ const VENDOR_HIDE_RULES: Record<string, { collections?: RegExp[]; titlePatterns?
   },
 };
 
+const LIVESTOCK_COLLECTION_PATTERNS = [
+  /wysiwyg|wizzi.wig|wsiwyg|wysiwg/i,
+  /coral/i,
+  /\bfrag/i,
+  /\bsps\b/i,
+  /\blps\b/i,
+  /zoa|zoanthid|palythoa|palys/i,
+  /mushroom|ricordea/i,
+  /anemone|nem\b/i,
+  /^acro|acropora/i,
+  /montipora/i,
+  /euphyllia|hammer|torch|frogspawn/i,
+  /chalice/i,
+  /^fish$|saltwater.fish|reef.fish|clownfish|tangs|wrasses|gobies|blennies|anthias|damselfish|angelfish|triggerfish|lionfish|pufferfish|rabbitfish/i,
+  /^invert|^cuc$|clean.up.crew|^shrimp$|^snails?$|^crabs?$|^clams?$|^urchin|^starfish|^sea.star|^hermit|^gorgon|^sponge|^nudibranch|^lobster|^octopus/i,
+  /goniopora|alveopora|blastomussa|micromussa|acanthastrea|scolymia|cynarina|fungia|trachyphyllia|turbinaria|hydnophora|galaxea|leptastrea|leptoseris|pavona|porites|pectinia|pocillopora|stylophora/i,
+  /brain.coral|bubble.coral|plate.coral|fox.coral|meat.coral|leather.coral|pipe.organ|star.polyp|kenya.tree/i,
+  /softies|soft.coral|birds.nest|birdsnest/i,
+  /\bcolony\b|\bcolonies\b/i,
+  /weekly.special|clearance|doorbuster|new.arrival|latest.arrival/i,
+  /battlebox|battl|battlenem|battlegras/i,
+  /frag.pack|coral.pack/i,
+  /premium.frag|collector/i,
+];
+
+const LIVESTOCK_TITLE_PATTERNS = [
+  /\bcoral\b/i,
+  /\bfrag\b/i,
+  /\bwysiwyg\b/i,
+  /\bsps\b/i,
+  /\blps\b/i,
+  /\bzoa\b|\bzoanthid/i,
+  /\bpalythoa\b|\bpalys?\b/i,
+  /\bmushroom\b|\bricordea\b/i,
+  /\banemone\b/i,
+  /\bacropora\b|\bacro\b/i,
+  /\bmontipora\b/i,
+  /\beuphyllia\b|\bhammer\b|\btorch\b|\bfrogspawn\b/i,
+  /\bchalice\b/i,
+  /\btang\b/i,
+  /\bwrasse\b/i,
+  /\bgoby\b|\bgobies\b/i,
+  /\bclownfish\b|\bclown\s+fish\b/i,
+  /\bshrimp\b/i,
+  /\burchin\b/i,
+  /\bstarfish\b|\bsea\s+star\b/i,
+  /\bgorgonian\b|\bsea\s+fan\b/i,
+  /\bnudibranch\b/i,
+  /\bclam\b/i,
+  /\bblastomussa\b|\bmicromussa\b|\bacanthastrea\b/i,
+  /\bscolymia\b|\bcynarina\b|\btrachyphyllia\b/i,
+  /\bgoniopora\b|\balveopora\b/i,
+  /\bfungia\b|\bplate\s+coral\b/i,
+  /\bbrain\s+coral\b|\bopen\s+brain\b/i,
+  /\bpocillopora\b|\bstylophora\b|\bseriatopora\b/i,
+  /\bporites\b|\bpavona\b|\bleptoseris\b|\bleptastrea\b/i,
+  /\bhydnophora\b|\bgalaxea\b|\bpectinia\b|\bturbinaria\b/i,
+  /\bfavites\b|\bfavia\b|\bcyphastrea\b|\bdipsastraea\b/i,
+  /\bduncan\b/i,
+  /\bbubble\s+coral\b|\bfox\s+coral\b|\bmeat\s+coral\b/i,
+  /\bsoftie\b|\bsoft\s+coral\b/i,
+  /\bleather\s+coral\b|\bsinularia\b|\bsarcophyton\b/i,
+  /\bxenia\b|\bpulsing\s+xenia\b/i,
+  /\bstar\s+polyp\b|\bkenya\s+tree\b/i,
+  /\bbirdsnest\b|\bbirds\s+nest\b/i,
+  /\bcolony\b|\bcolonies\b/i,
+  /\binvert\b|\binvertebrate\b/i,
+  /\bclean\s*up\s*crew\b|\bcuc\b/i,
+  /\blobster\b|\boctopus\b|\bsponge\b|\bfeather\s+duster\b/i,
+  /\bsaltwater\s+fish\b|\bmarine\s+fish\b|\breef\s+fish\b/i,
+  /\bblenny\b|\bblennies\b|\banthias\b|\bbasslet\b|\bfirefish\b|\bhawkfish\b|\bdottyback\b|\bdragonet\b/i,
+  /\bdamselfish\b|\bangelfish\b|\btriggerfish\b|\blionfish\b|\bpufferfish\b|\brabbitfish\b/i,
+  /\bacanthophyllia\b|\bmycedium\b|\boxypora\b|\bbowerbanki\b|\bechinata\b/i,
+  /\bplatygyra\b|\bgoniastrea\b|\bcaulastrea\b|\bdendrophyllia\b|\btubastraea\b/i,
+  /\bwellsophyllia\b|\blobophyllia\b|\beuphylliidae\b/i,
+  /\bduncan\s+coral\b/i,
+];
+
+const LIVESTOCK_PRODUCT_TYPES_ALLOWLIST = new Set([
+  'coral', 'corals', 'frag', 'frags', 'live coral', 'sps', 'lps',
+  'soft coral', 'soft corals', 'zoanthid', 'zoanthids', 'anemone', 'anemones',
+  'fish', 'marine fish', 'saltwater fish', 'reef fish', 'live fish',
+  'invert', 'inverts', 'invertebrate', 'invertebrates',
+  'clam', 'shrimp', 'crab', 'sea urchin', 'starfish',
+  'livestock', 'live livestock', 'marine livestock', 'wysiwyg', 'frag pack',
+  'colony', 'colonies', 'euphyllia', 'acropora', 'montipora',
+  'lps coral', 'sps coral', 'chalice', 'mushroom', 'ricordea',
+]);
+
+function isMaybeLivestock(tags: string[], collection: string, title: string, productType: string): boolean {
+  const col = collection.toLowerCase().trim();
+  if (COLLECTION_LABEL_MAP[col]) return true;
+  if (LIVESTOCK_COLLECTION_PATTERNS.some(p => p.test(col))) return true;
+
+  const pt = productType.toLowerCase().trim();
+  if (pt && LIVESTOCK_PRODUCT_TYPES_ALLOWLIST.has(pt)) return true;
+
+  if (title && LIVESTOCK_TITLE_PATTERNS.some(p => p.test(title))) return true;
+
+  if (tags.some(t => LIVESTOCK_TITLE_PATTERNS.some(p => p.test(t.trim())))) return true;
+
+  return false;
+}
+
 function shouldHideProduct(tags: string[], collection: string, title = '', productType = '', vendorSlug = ''): boolean {
   if (HIDDEN_COLLECTIONS.has(collection.toLowerCase().trim())) return true;
   if (productType && HIDDEN_PRODUCT_TYPES.has(productType.toLowerCase().trim())) return true;
@@ -226,6 +330,7 @@ function shouldHideProduct(tags: string[], collection: string, title = '', produ
     if (title && rules.titlePatterns?.some(p => p.test(title))) return true;
     if (rules.tags?.some(p => tags.some(t => p.test(t.trim())))) return true;
   }
+  if (!isMaybeLivestock(tags, collection, title, productType)) return true;
   return false;
 }
 
