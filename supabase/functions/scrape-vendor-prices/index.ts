@@ -1389,17 +1389,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    EdgeRuntime.waitUntil(
-      runScrapeJob(
-        vendors as (VendorConfig & { last_scraped_at: string | null })[],
-        includefish,
-        force,
-        supabase
-      )
+    await runScrapeJob(
+      vendors as (VendorConfig & { last_scraped_at: string | null })[],
+      includefish,
+      force,
+      supabase
     );
 
     return new Response(
-      JSON.stringify({ success: true, queued: vendors.map((v: VendorConfig) => v.slug) }),
+      JSON.stringify({ success: true, scraped: vendors.map((v: VendorConfig) => v.slug) }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

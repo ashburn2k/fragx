@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, Activity } from 'lucide-react';
+import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, Activity, Store, AlertTriangle } from 'lucide-react';
 import UserControlPanel from '../components/admin/UserControlPanel';
 import TradeModPanel from '../components/admin/TradeModPanel';
 import ListingsPanel from '../components/admin/ListingsPanel';
@@ -34,6 +34,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [cacheRunning, setCacheRunning] = useState(false);
   const [cacheResult, setCacheResult] = useState<{ enriched?: number; cached?: number; remaining?: number } | null>(null);
+  const [scanAllRunning, setScanAllRunning] = useState(false);
+  const [scanAllProgress, setScanAllProgress] = useState<{ current: number; total: number; vendorName: string } | null>(null);
+  const [scanAllResults, setScanAllResults] = useState<{ succeeded: number; failed: number; vendors: { name: string; status: 'ok' | 'error'; error?: string }[] } | null>(null);
+  const scanAllAbortRef = useRef(false);
 
   const isAdmin = profile?.role === 'admin';
 
@@ -96,6 +100,73 @@ export default function AdminPage() {
     } finally {
       setCacheRunning(false);
     }
+  }
+
+  async function runScanAll() {
+    scanAllAbortRef.current = false;
+    setScanAllRunning(true);
+    setScanAllResults(null);
+    setScanAllProgress(null);
+
+    const { data: vendors } = await supabase
+      .from('vendor_scrape_configs')
+      .select('slug, name')
+      .eq('is_active', true)
+      .order('name');
+
+    if (!vendors || vendors.length === 0) {
+      setScanAllRunning(false);
+      return;
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const { data: { session } } = await supabase.auth.getSession();
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const token = session?.access_token ?? anonKey;
+
+    const results: { name: string; status: 'ok' | 'error'; error?: string }[] = [];
+
+    for (let i = 0; i < vendors.length; i++) {
+      if (scanAllAbortRef.current) break;
+      const v = vendors[i];
+      setScanAllProgress({ current: i + 1, total: vendors.length, vendorName: v.name });
+
+      try {
+        const res = await fetch(`${supabaseUrl}/functions/v1/scrape-vendor-prices`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Apikey: anonKey,
+          },
+          body: JSON.stringify({ vendor_slug: v.slug, include_fish: true, force: true }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          results.push({ name: v.name, status: 'ok' });
+        } else {
+          results.push({ name: v.name, status: 'error', error: json.error ?? 'Failed to start' });
+        }
+      } catch (err: unknown) {
+        results.push({ name: v.name, status: 'error', error: err instanceof Error ? err.message : 'Network error' });
+      }
+
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    setScanAllResults({
+      succeeded: results.filter(r => r.status === 'ok').length,
+      failed: results.filter(r => r.status === 'error').length,
+      vendors: results,
+    });
+    setScanAllProgress(null);
+    setScanAllRunning(false);
+  }
+
+  function stopScanAll() {
+    scanAllAbortRef.current = true;
+    setScanAllRunning(false);
+    setScanAllProgress(null);
   }
 
   if (!user || !isAdmin) return null;
@@ -276,6 +347,82 @@ export default function AdminPage() {
 
           {activeTab === 'tools' && (
             <div className="space-y-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center flex-shrink-0">
+                    <Store size={18} className="text-teal-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-slate-900 dark:text-white font-semibold text-sm">Scan All Stores</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 leading-relaxed">
+                      Triggers a price scrape for every active vendor. Queues each store sequentially — scans run in the background so results appear in Reports once complete.
+                    </p>
+
+                    {scanAllProgress && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500 dark:text-slate-400">
+                            Queuing <span className="font-medium text-slate-700 dark:text-slate-300">{scanAllProgress.vendorName}</span>
+                          </span>
+                          <span className="text-slate-400 dark:text-slate-500 tabular-nums">{scanAllProgress.current} / {scanAllProgress.total}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.round((scanAllProgress.current / scanAllProgress.total) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {scanAllResults && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          <span className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">
+                            {scanAllResults.succeeded} queued
+                          </span>
+                          {scanAllResults.failed > 0 && (
+                            <span className="text-xs bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 px-3 py-1 rounded-full">
+                              {scanAllResults.failed} failed
+                            </span>
+                          )}
+                        </div>
+                        {scanAllResults.vendors.filter(v => v.status === 'error').length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {scanAllResults.vendors.filter(v => v.status === 'error').map(v => (
+                              <div key={v.name} className="flex items-start gap-2 text-xs text-red-400">
+                                <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+                                <span><span className="font-medium">{v.name}:</span> {v.error}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 flex-shrink-0">
+                    {scanAllRunning ? (
+                      <button
+                        onClick={stopScanAll}
+                        className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 text-sm font-medium px-4 py-2 rounded-xl transition-all"
+                      >
+                        <XCircle size={14} />
+                        Stop
+                      </button>
+                    ) : (
+                      <button
+                        onClick={runScanAll}
+                        className="flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all"
+                      >
+                        <RefreshCw size={14} />
+                        Run
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">

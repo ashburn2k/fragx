@@ -45,7 +45,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   currentPage === page
                     ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Icon size={16} />
@@ -58,7 +58,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   currentPage === 'admin'
                     ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Shield size={16} />
@@ -70,7 +70,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
               title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -78,7 +78,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
 
             {user ? (
               <>
-                <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                <button className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                   <Bell size={18} />
                 </button>
                 <button
@@ -92,7 +92,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 </button>
                 <button
                   onClick={signOut}
-                  className="p-2 text-slate-400 hover:text-red-500 transition-colors hidden md:block"
+                  className="p-2 text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors hidden md:block"
                   title="Sign out"
                 >
                   <LogOut size={16} />
@@ -108,7 +108,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
             )}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -124,7 +124,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   currentPage === page
                     ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Icon size={18} />
@@ -137,7 +137,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   currentPage === 'admin'
                     ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <Shield size={18} />
@@ -166,7 +166,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
                 currentPage === page
                   ? 'text-cyan-600 dark:text-cyan-400'
-                  : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Icon size={20} />
