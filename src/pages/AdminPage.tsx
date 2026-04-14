@@ -6,6 +6,7 @@ import UserControlPanel from '../components/admin/UserControlPanel';
 import TradeModPanel from '../components/admin/TradeModPanel';
 import ListingsPanel from '../components/admin/ListingsPanel';
 import ScrapeReportPanel from '../components/admin/ScrapeReportPanel';
+import ScrapeScheduleSettings from '../components/admin/ScrapeScheduleSettings';
 
 interface FlaggedItem {
   id: string;
@@ -347,6 +348,8 @@ export default function AdminPage() {
 
           {activeTab === 'tools' && (
             <div className="space-y-4">
+              <ScrapeScheduleSettings />
+
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center flex-shrink-0">
