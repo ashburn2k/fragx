@@ -8,6 +8,7 @@ import VendorProductCard from '../components/vendor-prices/VendorProductCard';
 import PriceChangesPanel from '../components/vendor-prices/PriceChangesPanel';
 import ScrapeProgressBar from '../components/vendor-prices/ScrapeProgressBar';
 import ImageCacheProgressBanner from '../components/vendor-prices/ImageCacheProgressBanner';
+import DailyUpdatesBanner from '../components/vendor-prices/DailyUpdatesBanner';
 import { buildTagFilterOptions, productMatchesTagFilter, getSmallTagLabels, NormalizedTag } from '../lib/tagNormalizer';
 
 const EQUIPMENT_TAGS = new Set([
@@ -909,6 +910,8 @@ export default function VendorPricesPage() {
           </p>
         </div>
       </div>
+
+      <DailyUpdatesBanner />
 
       {vendors.length === 0 ? (
         <div className="text-center py-20 text-slate-400 dark:text-slate-500">Loading vendors...</div>
