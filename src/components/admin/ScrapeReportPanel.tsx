@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import {
   RefreshCw, CheckCircle, AlertTriangle, Clock, ChevronDown, ChevronUp,
   Store, TrendingUp, Sparkles, XCircle, Calendar, Package, BarChart3,
-  WifiOff, EyeOff,
+  WifiOff, EyeOff, ExternalLink,
 } from 'lucide-react';
 
 interface ScrapeRun {
@@ -99,6 +99,7 @@ export default function ScrapeReportPanel() {
   const [deactivating, setDeactivating] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [vendorUrls, setVendorUrls] = useState<Map<string, string>>(new Map());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -120,7 +121,7 @@ export default function ScrapeReportPanel() {
         .gte('first_seen_at', since48h.toISOString()),
       supabase
         .from('vendor_scrape_configs')
-        .select('slug, name')
+        .select('slug, name, public_url')
         .eq('is_active', true),
     ]);
 
@@ -139,6 +140,11 @@ export default function ScrapeReportPanel() {
     }
 
     if (vendorConfigsRes.data) {
+      const urlMap = new Map<string, string>();
+      for (const v of vendorConfigsRes.data) {
+        if (v.public_url) urlMap.set(v.slug, v.public_url);
+      }
+      setVendorUrls(urlMap);
       const lastSuccessMap = new Map<string, string | null>();
       for (const run of fetchedRuns) {
         if (run.status === 'completed' && run.completed_at) {
@@ -265,6 +271,18 @@ export default function ScrapeReportPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-slate-800 dark:text-slate-200 text-xs font-medium">{v.name}</span>
+                    {vendorUrls.get(v.slug) && (
+                      <a
+                        href={vendorUrls.get(v.slug)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="flex items-center gap-1 text-xs text-cyan-500 hover:text-cyan-400 transition-colors"
+                      >
+                        <ExternalLink size={10} />
+                        Store
+                      </a>
+                    )}
                     <span className="text-amber-600 dark:text-amber-400 text-xs">
                       {v.daysSince === null
                         ? 'Never successfully scraped'
@@ -309,10 +327,23 @@ export default function ScrapeReportPanel() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {newProducts.map(({ vendor_slug, count }) => (
               <div key={vendor_slug} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
-                <span className="text-slate-700 dark:text-slate-300 text-xs font-medium capitalize">
-                  {vendor_slug.replace(/-/g, ' ')}
-                </span>
-                <span className="text-emerald-500 text-xs font-bold">+{count.toLocaleString()}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-slate-700 dark:text-slate-300 text-xs font-medium capitalize">
+                    {vendor_slug.replace(/-/g, ' ')}
+                  </span>
+                  {vendorUrls.get(vendor_slug) && (
+                    <a
+                      href={vendorUrls.get(vendor_slug)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-cyan-500 hover:text-cyan-400 transition-colors shrink-0"
+                    >
+                      <ExternalLink size={10} />
+                      Store
+                    </a>
+                  )}
+                </div>
+                <span className="text-emerald-500 text-xs font-bold shrink-0">+{count.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -394,6 +425,17 @@ export default function ScrapeReportPanel() {
                                   <span className="text-slate-700 dark:text-slate-300 text-xs font-medium capitalize">
                                     {run.vendor_slug.replace(/-/g, ' ')}
                                   </span>
+                                  {vendorUrls.get(run.vendor_slug) && (
+                                    <a
+                                      href={vendorUrls.get(run.vendor_slug)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 text-xs text-cyan-500 hover:text-cyan-400 transition-colors"
+                                    >
+                                      <ExternalLink size={10} />
+                                      Store
+                                    </a>
+                                  )}
                                   <span className={`flex items-center gap-1 text-xs border px-1.5 py-0.5 rounded-full ${cfg.classes}`}>
                                     {cfg.icon}
                                     {cfg.label}
