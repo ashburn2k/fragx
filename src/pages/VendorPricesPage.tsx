@@ -1016,7 +1016,7 @@ export default function VendorPricesPage() {
         </div>
       </div>
 
-      <DailyUpdatesBanner />
+      <DailyUpdatesBanner onSelectVendor={setSelectedVendor} />
 
       {vendors.length === 0 ? (
         <div className="text-center py-20 text-slate-400 dark:text-slate-500">Loading vendors...</div>

@@ -31,7 +31,11 @@ function formatRelative(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function DailyUpdatesBanner() {
+interface DailyUpdatesBannerProps {
+  onSelectVendor?: (slug: string) => void;
+}
+
+export default function DailyUpdatesBanner({ onSelectVendor }: DailyUpdatesBannerProps) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -213,9 +217,18 @@ export default function DailyUpdatesBanner() {
                   {v.status === 'error' && <XCircle size={12} className="text-red-400 shrink-0" />}
                   {v.status === 'running' && <Clock size={12} className="text-amber-400 shrink-0 animate-spin" />}
                   {v.status === 'none' && <Store size={12} className="text-slate-400 shrink-0" />}
-                  <span className="text-slate-700 dark:text-slate-300 text-xs font-medium truncate capitalize">
-                    {v.name}
-                  </span>
+                  {onSelectVendor ? (
+                    <button
+                      onClick={() => onSelectVendor(v.slug)}
+                      className="text-slate-700 dark:text-slate-300 text-xs font-medium truncate capitalize hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors text-left"
+                    >
+                      {v.name}
+                    </button>
+                  ) : (
+                    <span className="text-slate-700 dark:text-slate-300 text-xs font-medium truncate capitalize">
+                      {v.name}
+                    </span>
+                  )}
                   {v.publicUrl && (
                     <a
                       href={v.publicUrl}
