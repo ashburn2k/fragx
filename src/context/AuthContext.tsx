@@ -40,15 +40,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    let done = false;
+    const finish = () => {
+      if (!done) {
+        done = true;
+        setLoading(false);
+      }
+    };
+
+    const timeout = setTimeout(finish, 5000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session) {
-        fetchProfile(session.user.id).then(() => setLoading(false));
+        fetchProfile(session.user.id).finally(finish);
       } else {
-        setLoading(false);
+        finish();
       }
-    });
+    }).catch(finish);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -62,7 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function signUp(email: string, password: string) {
