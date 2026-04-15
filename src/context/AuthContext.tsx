@@ -40,24 +40,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    let initialized = false;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session) {
+        fetchProfile(session.user.id).then(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (!session) {
         setProfile(null);
-        if (!initialized) {
-          initialized = true;
-          setLoading(false);
-        }
       } else {
         (async () => {
           await fetchProfile(session.user.id);
-          if (!initialized) {
-            initialized = true;
-            setLoading(false);
-          }
         })();
       }
     });
