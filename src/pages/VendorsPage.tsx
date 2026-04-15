@@ -162,28 +162,20 @@ interface VendorsPageProps {
 export default function VendorsPage({ onViewPrices }: VendorsPageProps) {
   return (
     <div className="space-y-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Online Vendors</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Curated list of {ALL_VENDORS.length} trusted online coral stores, sorted A–Z
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {onViewPrices && (
-            <button
-              onClick={() => onViewPrices('vendor-prices')}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all duration-200"
-            >
-              <BarChart2 size={14} />
-              View Live Prices
-            </button>
-          )}
-          <div className="shrink-0 flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2">
-            <ShoppingCart size={14} className="text-cyan-400" />
-            <span className="text-slate-900 dark:text-white text-sm font-semibold">{ALL_VENDORS.length}</span>
-            <span className="text-slate-500 dark:text-slate-400 text-xs">vendors</span>
-          </div>
+      <div className="flex items-center gap-2">
+        {onViewPrices && (
+          <button
+            onClick={() => onViewPrices('vendor-prices')}
+            className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all duration-200"
+          >
+            <BarChart2 size={14} />
+            View Live Prices
+          </button>
+        )}
+        <div className="shrink-0 flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2">
+          <ShoppingCart size={14} className="text-cyan-400" />
+          <span className="text-slate-900 dark:text-white text-sm font-semibold">{ALL_VENDORS.length}</span>
+          <span className="text-slate-500 dark:text-slate-400 text-xs">vendors</span>
         </div>
       </div>
 

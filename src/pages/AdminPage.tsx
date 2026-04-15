@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, Activity, Store, AlertTriangle } from 'lucide-react';
+import { Flag, ShoppingBag, Users, CheckCircle, XCircle, Eye, Image as ImageIcon, RefreshCw, Activity, Store, AlertTriangle } from 'lucide-react';
 import UserControlPanel from '../components/admin/UserControlPanel';
 import TradeModPanel from '../components/admin/TradeModPanel';
 import ListingsPanel from '../components/admin/ListingsPanel';
@@ -174,16 +174,6 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-700 flex items-center justify-center">
-          <Shield size={18} className="text-red-400" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Moderation & platform management</p>
-        </div>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {[

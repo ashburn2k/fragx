@@ -306,11 +306,6 @@ export default function TradesPage() {
   return (
     <div className="flex gap-6 items-start">
       <div className="flex-1 min-w-0 space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Trade Network</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Smart matchmaking for reef hobbyists</p>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {tabs.map(({ id, label, count, modOnly }) => (

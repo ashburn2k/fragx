@@ -1007,15 +1007,6 @@ export default function VendorPricesPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Vendor Prices</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Real-time retail prices scraped from {vendors.length} online coral stores
-          </p>
-        </div>
-      </div>
-
       <DailyUpdatesBanner onSelectVendor={setSelectedVendor} />
 
       {vendors.length === 0 ? (

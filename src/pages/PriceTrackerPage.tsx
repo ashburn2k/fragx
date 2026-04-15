@@ -143,13 +143,6 @@ export default function PriceTrackerPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Price Tracker</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-          {totalCount.toLocaleString()} live coral listings across {vendors.length} vendors
-        </p>
-      </div>
-
       {/* Search + filter bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">

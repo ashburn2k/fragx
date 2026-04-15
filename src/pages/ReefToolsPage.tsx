@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Wrench } from 'lucide-react';
 import VolumeCalculator from '../components/reef-tools/VolumeCalculator';
 import SalinityConverter from '../components/reef-tools/SalinityConverter';
 import DosingCalculator from '../components/reef-tools/DosingCalculator';
@@ -47,18 +46,6 @@ export default function ReefToolsPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-            <Wrench size={20} className="text-cyan-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reef Tools</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Calculators and references for reef hobbyists</p>
-          </div>
-        </div>
-      </div>
-
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         {CATEGORIES.map(c => (
           <button key={c.id} onClick={() => setCategory(c.id)} className={tabCls(category === c.id)}>
