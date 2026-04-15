@@ -4,7 +4,7 @@ import {
   Search, RefreshCw, Pencil, Trash2, X, CheckCircle, AlertTriangle, ArrowLeftRight
 } from 'lucide-react';
 
-const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Zoanthids', 'Mushrooms', 'Frag Pack', 'Equipment', 'Tank', 'Light', 'Other'];
+const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Equipment', 'Tank', 'Light', 'Other'];
 
 type ListType = 'have' | 'want';
 

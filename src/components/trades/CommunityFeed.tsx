@@ -4,7 +4,7 @@ import { supabase, HaveListItem } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import HaveListCard from './HaveListCard';
 
-const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Zoanthids', 'Mushrooms', 'Frag Pack', 'Equipment', 'Tank', 'Light', 'Other'];
+const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Equipment', 'Tank', 'Light', 'Other'];
 const PAGE_SIZE = 24;
 
 type SortOption = 'newest' | 'price_asc' | 'price_desc';

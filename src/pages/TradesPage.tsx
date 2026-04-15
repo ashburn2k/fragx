@@ -7,7 +7,7 @@ import ImageUpload from '../components/trades/ImageUpload';
 import TradeModPanel from '../components/admin/TradeModPanel';
 import CommunityFeed from '../components/trades/CommunityFeed';
 
-const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Zoanthids', 'Mushrooms', 'Frag Pack', 'Equipment', 'Tank', 'Light', 'Other'];
+const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Equipment', 'Tank', 'Light', 'Other'];
 
 type TradeTab = 'browse' | 'have' | 'want' | 'matches' | 'messages' | 'moderate';
 
