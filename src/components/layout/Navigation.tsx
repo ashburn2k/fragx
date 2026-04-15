@@ -52,7 +52,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 {label}
               </button>
             ))}
-            {profile?.role === 'admin' && (
+            {(profile?.role === 'admin' || profile?.role === 'moderator') && (
               <button
                 onClick={() => onNavigate('admin')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -131,7 +131,7 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
                 {label}
               </button>
             ))}
-            {profile?.role === 'admin' && (
+            {(profile?.role === 'admin' || profile?.role === 'moderator') && (
               <button
                 onClick={() => { onNavigate('admin'); setMenuOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -158,12 +158,12 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
       </header>
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 transition-colors duration-200">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="flex items-center justify-around h-16 px-1">
           {navItems.map(({ page, label, Icon }) => (
             <button
               key={page}
               onClick={() => onNavigate(page)}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200 ${
+              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-200 ${
                 currentPage === page
                   ? 'text-cyan-600 dark:text-cyan-400'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -173,6 +173,19 @@ export default function Navigation({ currentPage, onNavigate, onAuthClick }: Nav
               <span className="text-[10px] font-medium">{label}</span>
             </button>
           ))}
+          {(profile?.role === 'admin' || profile?.role === 'moderator') && (
+            <button
+              onClick={() => onNavigate('admin')}
+              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-200 ${
+                currentPage === 'admin'
+                  ? 'text-cyan-600 dark:text-cyan-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Shield size={20} />
+              <span className="text-[10px] font-medium">Admin</span>
+            </button>
+          )}
         </div>
       </nav>
     </>
