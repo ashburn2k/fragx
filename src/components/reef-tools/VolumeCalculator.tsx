@@ -107,7 +107,7 @@ export default function VolumeCalculator() {
   const result = calcVolume();
   const weights = result && showWeight ? calcWeights(result.gal) : null;
 
-  const inputCls = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500";
+  const inputCls = "w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-2 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 min-w-0";
   const tabCls = (active: boolean) =>
     `px-3 py-1.5 rounded-md text-xs font-medium transition-all ${active
       ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
@@ -154,17 +154,17 @@ export default function VolumeCalculator() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-1.5">
             <div>
-              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Length ({unit})</label>
+              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">L ({unit})</label>
               <input className={inputCls} placeholder="0" value={l} onChange={e => setL(e.target.value)} type="number" min="0" />
             </div>
             <div>
-              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Width ({unit})</label>
+              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">W ({unit})</label>
               <input className={inputCls} placeholder="0" value={w} onChange={e => setW(e.target.value)} type="number" min="0" />
             </div>
             <div>
-              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Height ({unit})</label>
+              <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">H ({unit})</label>
               <input className={inputCls} placeholder="0" value={h} onChange={e => setH(e.target.value)} type="number" min="0" />
             </div>
           </div>
@@ -260,29 +260,29 @@ export default function VolumeCalculator() {
             {weights && result && (
               <div className="space-y-2">
                 <div className="bg-slate-100/60 dark:bg-slate-800/60 rounded-xl p-3 space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">
+                  <div className="flex flex-wrap justify-between items-start gap-1 text-xs">
+                    <span className="text-slate-500 dark:text-slate-400 flex-1 min-w-0">
                       Water weight ({waterType === 'saltwater' ? '8.55 lb/gal' : '8.34 lb/gal'})
                     </span>
-                    <span className="text-slate-700 dark:text-slate-300 font-medium tabular-nums">
-                      {weights.waterLbs.toFixed(1)} lbs &nbsp;/&nbsp; {(weights.waterLbs * 0.453592).toFixed(1)} kg
+                    <span className="text-slate-700 dark:text-slate-300 font-medium tabular-nums flex-shrink-0">
+                      {weights.waterLbs.toFixed(1)} lbs / {(weights.waterLbs * 0.453592).toFixed(1)} kg
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">
+                  <div className="flex flex-wrap justify-between items-start gap-1 text-xs">
+                    <span className="text-slate-500 dark:text-slate-400 flex-1 min-w-0">
                       {material.charAt(0).toUpperCase() + material.slice(1)} tank ({THICKNESS_OPTIONS[thicknessIdx].value !== -1 ? THICKNESS_OPTIONS[thicknessIdx].label : `${customThickness} ${unit}`} thick)
                     </span>
-                    <span className="text-slate-700 dark:text-slate-300 font-medium tabular-nums">
-                      {weights.tankLbs.toFixed(1)} lbs &nbsp;/&nbsp; {(weights.tankLbs * 0.453592).toFixed(1)} kg
+                    <span className="text-slate-700 dark:text-slate-300 font-medium tabular-nums flex-shrink-0">
+                      {weights.tankLbs.toFixed(1)} lbs / {(weights.tankLbs * 0.453592).toFixed(1)} kg
                     </span>
                   </div>
-                  <div className="border-t border-slate-300 dark:border-slate-700 pt-2 flex justify-between items-center">
+                  <div className="border-t border-slate-300 dark:border-slate-700 pt-2 flex justify-between items-center gap-2">
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">Total filled weight</span>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <span className="text-base font-bold text-cyan-400 tabular-nums">
                         {weights.totalLbs.toFixed(0)} lbs
                       </span>
-                      <span className="text-xs text-slate-400 dark:text-slate-500 ml-2 tabular-nums">
+                      <span className="text-xs text-slate-400 dark:text-slate-500 ml-1.5 tabular-nums">
                         {(weights.totalLbs * 0.453592).toFixed(0)} kg
                       </span>
                     </div>

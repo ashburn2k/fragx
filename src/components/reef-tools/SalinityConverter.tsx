@@ -76,18 +76,18 @@ export default function SalinityConverter() {
       </div>
 
       {res && (
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className={`rounded-xl p-3 text-center ${mode === 'sg' ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-slate-100/60 dark:bg-slate-800/60'}`}>
-            <div className="text-lg font-bold text-cyan-400">{res.sg.toFixed(4)}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">SG</div>
+        <div className="mt-4 grid grid-cols-3 gap-1.5">
+          <div className={`rounded-xl p-2 text-center ${mode === 'sg' ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-slate-100/60 dark:bg-slate-800/60'}`}>
+            <div className="text-sm font-bold text-cyan-400 tabular-nums truncate">{res.sg.toFixed(4)}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">SG</div>
           </div>
-          <div className={`rounded-xl p-3 text-center ${mode === 'ppt' ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-slate-100/60 dark:bg-slate-800/60'}`}>
-            <div className="text-lg font-bold text-teal-400">{res.ppt.toFixed(2)}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">PPT</div>
+          <div className={`rounded-xl p-2 text-center ${mode === 'ppt' ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-slate-100/60 dark:bg-slate-800/60'}`}>
+            <div className="text-sm font-bold text-teal-400 tabular-nums">{res.ppt.toFixed(2)}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">PPT</div>
           </div>
-          <div className={`rounded-xl p-3 text-center ${mode === 'refractometer' ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-slate-100/60 dark:bg-slate-800/60'}`}>
-            <div className="text-lg font-bold text-sky-400">{res.ref.toFixed(2)}</div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Refract.</div>
+          <div className={`rounded-xl p-2 text-center ${mode === 'refractometer' ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-slate-100/60 dark:bg-slate-800/60'}`}>
+            <div className="text-sm font-bold text-sky-400 tabular-nums">{res.ref.toFixed(2)}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Refract.</div>
           </div>
         </div>
       )}

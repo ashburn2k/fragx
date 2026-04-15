@@ -50,7 +50,7 @@ export default function SaltMixCalculator() {
       </div>
 
       <div className="space-y-3">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <div className="col-span-2">
             <label className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 block">Volume to mix</label>
             <input className={inputCls} placeholder="20" value={volume} onChange={e => setVolume(e.target.value)} type="number" min="0" />

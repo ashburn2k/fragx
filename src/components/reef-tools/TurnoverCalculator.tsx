@@ -70,9 +70,9 @@ export default function TurnoverCalculator() {
         </div>
 
         {recMin && recMax && (
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex items-center justify-between">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex flex-wrap items-center justify-between gap-1">
             <span className="text-xs text-slate-700 dark:text-slate-300">Recommended flow</span>
-            <span className="text-sm font-semibold text-blue-400">
+            <span className="text-sm font-semibold text-blue-400 tabular-nums flex-shrink-0">
               {recMin.toLocaleString()} – {recMax.toLocaleString()} GPH
             </span>
           </div>

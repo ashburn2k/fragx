@@ -56,7 +56,7 @@ export default function ReefToolsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {visible.map(tool => (
-          <div key={tool.id}>
+          <div key={tool.id} className="min-w-0 overflow-hidden">
             {tool.component}
           </div>
         ))}

@@ -65,9 +65,9 @@ export default function ParameterChecker() {
 
           return (
             <div key={key} className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${sc ? sc.bg : 'border-transparent'}`}>
-              <div className="w-28 flex-shrink-0">
-                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{def.label}</div>
-                <div className="text-[10px] text-slate-400 dark:text-slate-500">
+              <div className="w-24 sm:w-28 flex-shrink-0 min-w-0">
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{def.label}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:block">
                   ideal: {def.ideal[0]}–{def.ideal[1]} {def.unit}
                 </div>
               </div>
