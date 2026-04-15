@@ -5,10 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import TradeSidebar from '../components/trades/TradeSidebar';
 import ImageUpload from '../components/trades/ImageUpload';
 import TradeModPanel from '../components/admin/TradeModPanel';
+import CommunityFeed from '../components/trades/CommunityFeed';
 
 const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Zoanthids', 'Mushrooms', 'Frag Pack', 'Other'];
 
-type TradeTab = 'have' | 'want' | 'matches' | 'messages' | 'moderate';
+type TradeTab = 'browse' | 'have' | 'want' | 'matches' | 'messages' | 'moderate';
 
 type TradeForm = { coral_type: string; notes: string; quantity: string; max_price: string; asking_price: string };
 
@@ -96,7 +97,7 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
 export default function TradesPage() {
   const { user, profile } = useAuth();
   const canModerate = profile?.role === 'moderator' || profile?.role === 'admin';
-  const [activeTab, setActiveTab] = useState<TradeTab>('have');
+  const [activeTab, setActiveTab] = useState<TradeTab>('browse');
   const [haveList, setHaveList] = useState<HaveListItem[]>([]);
   const [wantList, setWantList] = useState<WantListItem[]>([]);
   const [matches, setMatches] = useState<TradeMatch[]>([]);
@@ -286,20 +287,14 @@ export default function TradesPage() {
     loadAll();
   }
 
-  if (!user) {
-    return (
-      <div className="text-center py-20">
-        <ArrowLeftRight size={40} className="text-slate-400 dark:text-slate-600 mx-auto mb-3" />
-        <p className="text-slate-500 dark:text-slate-400 mb-2">Sign in to access the Trade Network</p>
-      </div>
-    );
-  }
-
-  const tabs: { id: TradeTab; label: string; count?: number; modOnly?: boolean }[] = [
-    { id: 'have', label: 'Have', count: haveList.length },
-    { id: 'want', label: 'Want', count: wantList.length },
-    { id: 'matches', label: 'Matches', count: matches.filter(m => m.status === 'pending').length },
-    { id: 'messages', label: 'Messages', count: conversations.reduce((a, c) => a + c.unread, 0) },
+  const tabs: { id: TradeTab; label: string; count?: number; modOnly?: boolean; publicOnly?: boolean }[] = [
+    { id: 'browse', label: 'Browse', publicOnly: true },
+    ...(user ? [
+      { id: 'have' as TradeTab, label: 'Have', count: haveList.length },
+      { id: 'want' as TradeTab, label: 'Want', count: wantList.length },
+      { id: 'matches' as TradeTab, label: 'Matches', count: matches.filter(m => m.status === 'pending').length },
+      { id: 'messages' as TradeTab, label: 'Messages', count: conversations.reduce((a, c) => a + c.unread, 0) },
+    ] : []),
     ...(canModerate ? [{ id: 'moderate' as TradeTab, label: 'Moderate', modOnly: true }] : []),
   ];
 
@@ -333,11 +328,23 @@ export default function TradesPage() {
         ))}
       </div>
 
-      {loading ? (
+      {/* BROWSE tab - always visible */}
+      {activeTab === 'browse' && (
+        <CommunityFeed
+          onContactSeller={(sellerId, sellerName) => {
+            if (!user) return;
+            setActiveTab('messages');
+            loadConversation(sellerId);
+          }}
+          onAuthRequired={() => setActiveTab('browse')}
+        />
+      )}
+
+      {loading && activeTab !== 'browse' ? (
         <div className="space-y-2">
           {[...Array(4)].map((_, i) => <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-16 animate-pulse" />)}
         </div>
-      ) : (
+      ) : activeTab !== 'browse' && (
         <>
           {/* HAVE tab */}
           {activeTab === 'have' && (
