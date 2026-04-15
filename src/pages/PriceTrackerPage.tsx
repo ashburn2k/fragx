@@ -309,7 +309,7 @@ export default function PriceTrackerPage() {
 
       {/* Sort bar */}
       {!loading && products.length > 0 && (
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mr-1">
             <ArrowUpDown size={12} />
             Sort:
