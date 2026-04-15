@@ -141,7 +141,7 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
       supabase.from('have_list').select('*').eq('user_id', user.id).eq('is_active', true),
       supabase.from('want_list').select('*').eq('user_id', user.id).eq('is_active', true),
       supabase.from('trade_matches').select('*, user_a:user_a_id(username, display_name, reputation_score, total_reviews), user_b:user_b_id(username, display_name, reputation_score, total_reviews)').or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`).order('created_at', { ascending: false }),
-      supabase.from('messages').select('*, sender:sender_id(username)').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at', { ascending: false }),
+      supabase.from('messages').select('*, sender:sender_id(username), recipient:recipient_id(username)').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at', { ascending: false }),
     ]);
 
     setHaveList(haveRes.data ?? []);
@@ -152,7 +152,9 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
     const convMap = new Map<string, typeof conversations[number]>();
     msgs.forEach(m => {
       const partnerId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
-      const partnerName = m.sender_id === user.id ? 'Them' : (m.sender as { username: string })?.username ?? 'User';
+      const partnerName = m.sender_id === user.id
+        ? (m.recipient as { username: string } | null)?.username ?? 'User'
+        : (m.sender as { username: string } | null)?.username ?? 'User';
       if (!convMap.has(partnerId)) {
         convMap.set(partnerId, { partnerId, partnerName, lastMsg: m.content, unread: m.status === 'sent' && m.recipient_id === user.id ? 1 : 0 });
       } else if (m.status === 'sent' && m.recipient_id === user.id) {
