@@ -47,7 +47,7 @@ function AppInner() {
   }
 
   function handleNavigate(page: Page) {
-    if ((page === 'trades' || page === 'profile') && !user) {
+    if (page === 'profile' && !user) {
       setShowAuth(true);
       return;
     }
@@ -69,7 +69,7 @@ function AppInner() {
           {currentPage === 'price-tracker' && <PriceTrackerPage />}
           {currentPage === 'vendors' && <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />}
           {currentPage === 'vendor-prices' && <VendorPricesPage />}
-          {currentPage === 'trades' && <TradesPage />}
+          {currentPage === 'trades' && <TradesPage onShowAuth={() => setShowAuth(true)} />}
           {currentPage === 'profile' && <ProfilePage />}
           {currentPage === 'admin' && user && <AdminPage />}
         </Suspense>

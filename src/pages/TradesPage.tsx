@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil, Shield } from 'lucide-react';
+import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil, Shield, LogIn } from 'lucide-react';
 import { supabase, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import TradeSidebar from '../components/trades/TradeSidebar';
@@ -94,7 +94,11 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
   );
 }
 
-export default function TradesPage() {
+interface TradesPageProps {
+  onShowAuth?: () => void;
+}
+
+export default function TradesPage({ onShowAuth }: TradesPageProps) {
   const { user, profile } = useAuth();
   const canModerate = profile?.role === 'moderator' || profile?.role === 'admin';
   const [activeTab, setActiveTab] = useState<TradeTab>('browse');
@@ -329,6 +333,21 @@ export default function TradesPage() {
       </div>
 
       {/* BROWSE tab - always visible */}
+      {activeTab === 'browse' && !user && (
+        <div className="flex items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <LogIn size={14} className="text-cyan-500 flex-shrink-0" />
+            <p className="text-slate-600 dark:text-slate-400 text-sm truncate">Sign in to post listings or contact sellers</p>
+          </div>
+          <button
+            onClick={onShowAuth}
+            className="flex-shrink-0 bg-cyan-500 hover:bg-cyan-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Sign In
+          </button>
+        </div>
+      )}
+
       {activeTab === 'browse' && (
         <CommunityFeed
           onContactSeller={(sellerId, sellerName) => {
@@ -336,7 +355,7 @@ export default function TradesPage() {
             setActiveTab('messages');
             loadConversation(sellerId);
           }}
-          onAuthRequired={() => setActiveTab('browse')}
+          onAuthRequired={() => onShowAuth?.()}
         />
       )}
 

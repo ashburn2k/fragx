@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Search, X, ArrowLeftRight, MapPin, Package, Truck, MessageSquare, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Search, X, ArrowLeftRight, MapPin, Package, Truck, MessageSquare, ChevronDown, SlidersHorizontal, LogIn } from 'lucide-react';
 import { supabase, HaveListItem } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import HaveListCard from './HaveListCard';
@@ -365,7 +365,23 @@ export default function CommunityFeed({ onContactSeller, onAuthRequired }: Commu
                 </div>
               </div>
 
-              {user?.id === selected.user_id ? (
+              {!user ? (
+                <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mx-auto">
+                    <LogIn size={16} className="text-slate-500 dark:text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="text-slate-900 dark:text-white font-medium text-sm">Sign in to contact this seller</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Create a free account to message sellers and post your own listings</p>
+                  </div>
+                  <button
+                    onClick={onAuthRequired}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 text-white font-semibold py-2.5 rounded-xl transition-all text-sm"
+                  >
+                    Sign In / Register
+                  </button>
+                </div>
+              ) : user.id === selected.user_id ? (
                 <div className="text-center py-2 text-slate-400 dark:text-slate-500 text-sm">
                   This is your listing
                 </div>
@@ -376,7 +392,7 @@ export default function CommunityFeed({ onContactSeller, onAuthRequired }: Commu
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 text-white font-semibold py-3.5 rounded-xl transition-all disabled:opacity-60 text-sm"
                 >
                   <MessageSquare size={16} />
-                  {contacting ? 'Sending...' : user ? 'Contact Seller' : 'Sign In to Contact'}
+                  {contacting ? 'Sending...' : 'Contact Seller'}
                 </button>
               )}
             </div>
