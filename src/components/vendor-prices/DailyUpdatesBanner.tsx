@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Sparkles, TrendingUp, Store, Clock, ChevronDown, ChevronUp, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Sparkles, TrendingUp, Store, Clock, ChevronDown, ChevronUp, CheckCircle, XCircle, AlertTriangle, ExternalLink } from 'lucide-react';
 
 interface VendorStat {
   slug: string;
   name: string;
+  publicUrl: string | null;
   newCount: number;
   updatedCount: number;
   status: 'completed' | 'error' | 'running' | 'none';
@@ -53,7 +54,7 @@ export default function DailyUpdatesBanner() {
           .gte('first_seen_at', since24h.toISOString()),
         supabase
           .from('vendor_scrape_configs')
-          .select('slug, name')
+          .select('slug, name, public_url')
           .eq('is_active', true),
       ]);
 
@@ -62,6 +63,7 @@ export default function DailyUpdatesBanner() {
       const configs = configsRes.data ?? [];
 
       const nameMap = new Map(configs.map(c => [c.slug, c.name]));
+      const urlMap = new Map(configs.map(c => [c.slug, c.public_url as string | null]));
 
       const newCountMap = new Map<string, number>();
       for (const p of newProds) {
@@ -87,6 +89,7 @@ export default function DailyUpdatesBanner() {
         vendorStats.push({
           slug,
           name: nameMap.get(slug) ?? slug.replace(/-/g, ' '),
+          publicUrl: urlMap.get(slug) ?? null,
           newCount: newCountMap.get(slug) ?? 0,
           updatedCount: updatedMap.get(slug) ?? 0,
           status: latest.status as VendorStat['status'],
@@ -213,6 +216,18 @@ export default function DailyUpdatesBanner() {
                   <span className="text-slate-700 dark:text-slate-300 text-xs font-medium truncate capitalize">
                     {v.name}
                   </span>
+                  {v.publicUrl && (
+                    <a
+                      href={v.publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-cyan-400 transition-colors"
+                      title={`Visit ${v.name} store`}
+                    >
+                      <ExternalLink size={10} />
+                    </a>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {v.newCount > 0 && (
