@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase, Badge, Review, Listing } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { User, Store, Sprout, CreditCard as Edit3, Check, X, ShieldCheck, Star, MessageSquare } from 'lucide-react';
+import { User, Store, Sprout, CreditCard as Edit3, Check, X, ShieldCheck, Star, MessageSquare, Bell, BellOff } from 'lucide-react';
 import ReputationScore from '../components/ui/ReputationScore';
 import ListingCard from '../components/marketplace/ListingCard';
 
@@ -29,6 +29,7 @@ export default function ProfilePage() {
     bio: '',
     location_city: '',
     location_state: '',
+    notify_new_listings: false,
   });
   const [saving, setSaving] = useState(false);
 
@@ -39,6 +40,7 @@ export default function ProfilePage() {
       bio: profile.bio ?? '',
       location_city: profile.location_city ?? '',
       location_state: profile.location_state ?? '',
+      notify_new_listings: profile.notify_new_listings ?? false,
     });
     loadProfileData();
   }, [user, profile]);
@@ -65,6 +67,7 @@ export default function ProfilePage() {
       bio: editForm.bio || null,
       location_city: editForm.location_city || null,
       location_state: editForm.location_state || null,
+      notify_new_listings: editForm.notify_new_listings,
       updated_at: new Date().toISOString(),
     }).eq('id', user.id);
     await refreshProfile();
@@ -132,6 +135,25 @@ export default function ProfilePage() {
                   placeholder="State"
                 />
               </div>
+              <button
+                type="button"
+                onClick={() => setEditForm(f => ({ ...f, notify_new_listings: !f.notify_new_listings }))}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+                  editForm.notify_new_listings
+                    ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400'
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400'
+                }`}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  {editForm.notify_new_listings ? <Bell size={15} /> : <BellOff size={15} />}
+                  Email me when new trade listings are posted
+                </span>
+                <span className={`w-9 h-5 rounded-full flex items-center transition-all duration-200 ${
+                  editForm.notify_new_listings ? 'bg-cyan-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                }`}>
+                  <span className="w-4 h-4 rounded-full bg-white mx-0.5 shadow-sm" />
+                </span>
+              </button>
               <button
                 onClick={() => setEditing(false)}
                 className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm transition-colors flex items-center gap-1"

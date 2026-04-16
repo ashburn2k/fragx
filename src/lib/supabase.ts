@@ -28,6 +28,7 @@ export interface Profile {
   total_trades: number;
   is_verified: boolean;
   is_banned: boolean;
+  notify_new_listings: boolean;
   created_at: string;
 }
 
