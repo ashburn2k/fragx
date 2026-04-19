@@ -12,57 +12,209 @@ const WYSIWYG_PATTERNS = [
 
 const TAG_RULES: Array<{ match: RegExp | RegExp[] | string[]; label: string; color: NormalizedTag['color'] }> = [
   { match: WYSIWYG_PATTERNS, label: 'WYSIWYG', color: 'amber' },
-  { match: [/^aquacultured/i, /aquacultured coral/i, /^aqc$/i, /^aqua$/i], label: 'Aquacultured', color: 'emerald' },
-  { match: [/^wild$/i, /^wild.caught$/i, /^wild collected$/i], label: 'Wild Caught', color: 'orange' },
-  { match: [/^colony$/i, /^colonies$/i, /colony$/i, /^coral colony$/i], label: 'Colony', color: 'rose' },
-  { match: [/^frag$/i, /^frags$/i, /^si frag$/i, /^single frag/i, /just frags/i, /^15frag$/i, /^25frag$/i, /^35frag$/i, /^45frag$/i], label: 'Frag', color: 'sky' },
-  { match: [/^frag.?pack/i, /^coral.pack$/i, /^pack$/i, /^fragpack$/i], label: 'Frag Pack', color: 'sky' },
-  { match: [/^on.?sale$/i, /^sale$/i, /clearance/i, /deal$/i, /doorbuster/i, /flashsale/i, /blue.light.special/i], label: 'Sale', color: 'rose' },
-  { match: [/^new$/i, /^new.arrivals?$/i, /^latest.arrivals?$/i, /^fresh/i], label: 'New Arrival', color: 'cyan' },
-  { match: [/^beginner/i, /^easy$/i, /^easy.in.sps.tank$/i], label: 'Beginner Friendly', color: 'emerald' },
-  { match: [/^lps$/i, /^lps corals?$/i, /^lps.frags?$/i, /^lps.coral.frags?$/i], label: 'LPS', color: 'teal' },
-  { match: [/^sps$/i, /^sps.corals?$/i, /^sps.frags?$/i, /^sps.coral$/i], label: 'SPS', color: 'sky' },
-  { match: [/^soft.?coral/i, /^softy$/i, /^softies$/i, /^soft$/i], label: 'Soft Coral', color: 'teal' },
-  { match: [/^zoanthids?$/i, /^zoa$/i, /^zoas$/i, /^palys?$/i, /^palythoa$/i, /^polyps? [&] zoanthids?$/i, /^zoas? [&] palys?$/i, /^zoas & palys$/i, /^paly\/zoa$/i, /^zoanthus/i], label: 'Zoanthids', color: 'cyan' },
-  { match: [/^mushroom/i, /^ricordea/i, /^discosoma/i, /^actinodiscus/i, /^rhodactis/i], label: 'Mushrooms', color: 'teal' },
-  { match: [/^acropora/i, /^acro$/i, /^acros?$/i, /^acropora.frags?$/i], label: 'Acropora', color: 'sky' },
-  { match: [/^montipora/i, /^monti$/i], label: 'Montipora', color: 'sky' },
-  { match: [/^euphyllia/i, /^hammer$/i, /^torch$/i, /^frogspawn$/i, /^elegance$/i], label: 'Euphyllia', color: 'teal' },
-  { match: [/^chalice/i, /^echinophyllia/i, /^mycedium/i, /^pectinia/i, /^oxypora/i, /^lithophyllon/i], label: 'Chalice', color: 'teal' },
-  { match: [/^goniopora/i, /^goniopora.sp$/i], label: 'Goniopora', color: 'teal' },
-  { match: [/^favia$/i, /^favia.sp$/i, /^favites/i], label: 'Favia', color: 'teal' },
+  {
+    match: [
+      /^aquacultured/i, /aquacultured coral/i, /^aqc$/i, /^aqua$/i,
+      /^aquaculture$/i, /^tank.?raised$/i, /^tank.?bred$/i, /^captive.?bred$/i,
+      /^vivid.?grown/i, /^farm.?raised/i,
+    ],
+    label: 'Aquacultured', color: 'emerald',
+  },
+  {
+    match: [/^wild$/i, /^wild.caught$/i, /^wild.collected$/i, /^wild.harvest/i],
+    label: 'Wild Caught', color: 'orange',
+  },
+  {
+    match: [
+      /^colony$/i, /^colonies$/i, /colony$/i, /^coral.colony$/i, /^colony.coral$/i,
+      /^wysiwyg.coloni/i,
+    ],
+    label: 'Colony', color: 'rose',
+  },
+  {
+    match: [
+      /^frag$/i, /^frags$/i, /^si.frag$/i, /^single.frag/i, /just.frags/i,
+      /^xl.frag$/i, /^xxl.frag$/i, /^lg.frag$/i, /^sm.frag$/i,
+      /^\d+frag$/i,
+    ],
+    label: 'Frag', color: 'sky',
+  },
+  {
+    match: [/^frag.?pack/i, /^coral.pack$/i, /^pack$/i, /^fragpack$/i],
+    label: 'Frag Pack', color: 'sky',
+  },
+  {
+    match: [
+      /^on.?sale$/i, /^sale$/i, /clearance/i, /deal$/i, /doorbuster/i,
+      /flashsale/i, /blue.light.special/i, /^discount.eligible/i,
+      /^black.friday/i, /black.friday/i, /\d+%.?off/i,
+    ],
+    label: 'Sale', color: 'rose',
+  },
+  {
+    match: [
+      /^new$/i, /^new.arrivals?$/i, /^latest.arrivals?$/i, /^fresh$/i,
+      /^fresh.cherries$/i, /^new.this.week/i, /^just.arrived/i,
+    ],
+    label: 'New Arrival', color: 'cyan',
+  },
+  {
+    match: [
+      /^beginner/i, /^easy$/i, /^easy.in.sps.tank$/i, /^easy.care/i,
+      /^great.beginner/i, /^entry.level/i,
+    ],
+    label: 'Beginner Friendly', color: 'emerald',
+  },
+  {
+    match: [
+      /^lps$/i, /^lps.corals?$/i, /^lps.frags?$/i, /^lps.coral.frags?$/i,
+      /^other.lps/i,
+    ],
+    label: 'LPS', color: 'teal',
+  },
+  {
+    match: [/^sps$/i, /^sps.corals?$/i, /^sps.frags?$/i, /^sps.coral$/i],
+    label: 'SPS', color: 'sky',
+  },
+  {
+    match: [/^soft.?coral/i, /^softy$/i, /^softies$/i, /^soft$/i, /^leather/i],
+    label: 'Soft Coral', color: 'teal',
+  },
+  {
+    match: [
+      /^zoanthids?$/i, /^zoa$/i, /^zoas$/i, /^palys?$/i, /^palythoa$/i,
+      /^polyps?.&.zoanthids?$/i, /^zoas?.&.palys?$/i, /^zoas.&.palys$/i,
+      /^paly\/zoa$/i, /^zoanthus/i, /^zoa.&.paly/i,
+    ],
+    label: 'Zoanthids', color: 'cyan',
+  },
+  {
+    match: [/^mushroom/i, /^ricordea/i, /^discosoma/i, /^actinodiscus/i, /^rhodactis/i],
+    label: 'Mushrooms', color: 'teal',
+  },
+  {
+    match: [/^acropora/i, /^acro$/i, /^acros?$/i, /^acropora.frags?$/i],
+    label: 'Acropora', color: 'sky',
+  },
+  {
+    match: [/^montipora/i, /^monti$/i, /^montis$/i],
+    label: 'Montipora', color: 'sky',
+  },
+  {
+    match: [
+      /^euphyllia/i, /^hammer$/i, /^torch$/i, /^frogspawn$/i, /^elegance$/i,
+      /^branching.frogspawn/i, /^branching.hammer/i, /^branching.torch/i,
+      /^wall.hammer/i, /^wall.torch/i, /^hammer.coral/i, /^torch.coral/i,
+    ],
+    label: 'Euphyllia', color: 'teal',
+  },
+  {
+    match: [
+      /^chalice/i, /^echinophyllia/i, /^mycedium/i, /^pectinia/i,
+      /^oxypora/i, /^lithophyllon/i, /^chalices$/i,
+    ],
+    label: 'Chalice', color: 'teal',
+  },
+  {
+    match: [/^goniopora/i, /^goniopora.sp$/i, /^gonis?.&.alves?/i, /^alveopora/i],
+    label: 'Goniopora', color: 'teal',
+  },
+  {
+    match: [/^favia$/i, /^favia.sp$/i, /^favites/i, /^favias?$/i],
+    label: 'Favia', color: 'teal',
+  },
   { match: [/^blastomussa/i], label: 'Blastomussa', color: 'teal' },
-  { match: [/^acanthastrea/i, /^acan$/i, /^lord$/i, /^micromussa/i], label: 'Acanthastrea', color: 'teal' },
-  { match: [/^scolymia/i, /^cynarina/i, /^acanthophyllia/i], label: 'Scolymia', color: 'teal' },
-  { match: [/^trachyphyllia/i, /^wellsophyllia/i, /^lobophyllia/i], label: 'Brain Coral', color: 'teal' },
+  {
+    match: [/^acanthastrea/i, /^acan$/i, /^acans$/i, /^lord$/i, /^micromussa/i],
+    label: 'Acanthastrea', color: 'teal',
+  },
+  {
+    match: [/^scolymia/i, /^cynarina/i, /^acanthophyllia/i],
+    label: 'Scolymia', color: 'teal',
+  },
+  {
+    match: [/^trachyphyllia/i, /^wellsophyllia/i, /^lobophyllia/i, /^brain.coral/i],
+    label: 'Brain Coral', color: 'teal',
+  },
   { match: [/^cyphastrea/i], label: 'Cyphastrea', color: 'teal' },
-  { match: [/^pavona/i, /^leptastrea/i, /^leptoseris/i, /^psammacora/i, /^psammocora/i], label: 'Encrusting SPS', color: 'sky' },
-  { match: [/^pocillopora/i, /^stylophora/i, /^birdsnest/i, /^bird.?s.?nest/i], label: 'Birdsnest / Pocillopora', color: 'sky' },
-  { match: [/^fungia/i, /^plate.coral/i, /^fungia$/i], label: 'Plate Coral', color: 'teal' },
-  { match: [/^anemone/i, /^entacmaea/i, /^bubble.tip/i], label: 'Anemone', color: 'rose' },
-  { match: [
-    /^invert/i, /^clean.up.crew/i, /^cuc$/i,
-    /^shrimp/i, /^crab/i, /^snail/i, /^clam/i,
-    /^starfish/i, /^sea.star/i, /^cucumber/i, /^sea.cucumber/i,
-    /^urchin/i, /^sea.urchin/i, /^hermit/i, /^hermit.crab/i,
-    /^nassarius/i, /^cerith/i, /^astrea/i, /^trochus/i, /^turbo/i,
-    /^nerite/i, /^conch/i, /^chiton/i, /^cowrie/i, /^nudibranch/i,
-    /^feather.duster/i, /^bristle.?worm/i, /^serpent.star/i,
-    /^brittle.star/i, /^sand.sifter/i, /^copepod/i, /^amphipod/i,
-    /^pistol.shrimp/i, /^cleaner.shrimp/i, /^peppermint.shrimp/i,
-    /^fire.shrimp/i, /^coral.banded.shrimp/i, /^mantis.shrimp/i,
-    /^emerald.crab/i, /^arrow.crab/i, /^sally.lightfoot/i,
-    /^lobster/i, /^octopus/i, /^squid/i, /^nudibranch/i,
-    /^sea.apple/i, /^tridacna/i, /^maxima/i, /^crocea/i, /^derasa/i,
-    /^gorgonian/i, /^sea.fan/i, /^tunicate/i, /^sponge/i,
-    /^worm.rock/i, /^worm$/i,
-  ], label: 'Invert / CUC', color: 'slate' },
-  { match: [/^fish$/i, /^livestock$/i, /^live.stock$/i, /^fish.direct$/i], label: 'Fish', color: 'slate' },
-  { match: [/^moderate/i, /^low.to.moderate/i], label: 'Moderate Light', color: 'amber' },
-  { match: [/^high.light/i, /^moderate.to.high/i, /^high.par/i], label: 'High Light', color: 'amber' },
-  { match: [/^low.light/i, /^low.par/i], label: 'Low Light', color: 'emerald' },
-  { match: [/^featured/i, /^signature/i, /^ultra/i, /^premium/i, /^gem$/i, /^vics.picks$/i, /^vivid.?s.vault$/i, /^uc.signature$/i, /^joes?.gems?$/i], label: 'Featured / Ultra', color: 'amber' },
-  { match: [/^limited/i, /^rare$/i, /^unique$/i, /^most.popular$/i], label: 'Rare / Limited', color: 'rose' },
+  {
+    match: [
+      /^pavona/i, /^leptastrea/i, /^leptoseris/i, /^psammacora/i,
+      /^psammocora/i, /^encrusters?$/i, /^stylocoeniella/i,
+    ],
+    label: 'Encrusting SPS', color: 'sky',
+  },
+  {
+    match: [/^pocillopora/i, /^stylophora/i, /^birdsnest/i, /^bird.?s.?nest/i],
+    label: 'Birdsnest / Pocillopora', color: 'sky',
+  },
+  {
+    match: [/^fungia/i, /^plate.coral/i],
+    label: 'Plate Coral', color: 'teal',
+  },
+  {
+    match: [/^anemone/i, /^entacmaea/i, /^bubble.tip/i, /^rock.anemone/i, /^rock.flower.anemone/i],
+    label: 'Anemone', color: 'rose',
+  },
+  {
+    match: [
+      /^invert/i, /^clean.up.crew/i, /^cuc$/i,
+      /^shrimp/i, /^crab/i, /^snail/i, /^clam/i,
+      /^starfish/i, /^sea.star/i, /^cucumber/i, /^sea.cucumber/i,
+      /^urchin/i, /^sea.urchin/i, /^hermit/i, /^hermit.crab/i,
+      /^nassarius/i, /^cerith/i, /^astrea/i, /^trochus/i, /^turbo/i,
+      /^nerite/i, /^conch/i, /^chiton/i, /^cowrie/i, /^nudibranch/i,
+      /^feather.duster/i, /^bristle.?worm/i, /^serpent.star/i,
+      /^brittle.star/i, /^sand.sifter/i, /^copepod/i, /^amphipod/i,
+      /^pistol.shrimp/i, /^cleaner.shrimp/i, /^peppermint.shrimp/i,
+      /^fire.shrimp/i, /^coral.banded.shrimp/i, /^mantis.shrimp/i,
+      /^emerald.crab/i, /^arrow.crab/i, /^sally.lightfoot/i,
+      /^lobster/i, /^octopus/i, /^squid/i,
+      /^sea.apple/i, /^tridacna/i, /^maxima/i, /^crocea/i, /^derasa/i,
+      /^squamosa/i, /^cultured.*clam/i,
+      /^gorgonian/i, /^sea.fan/i, /^tunicate/i, /^sponge/i,
+      /^worm.rock/i, /^worm$/i,
+    ],
+    label: 'Invert / CUC', color: 'slate',
+  },
+  {
+    match: [
+      /^fish$/i, /^livestock$/i, /^live.stock$/i, /^fish.direct$/i,
+      /^clownfish/i, /^saltwater.fish/i, /^tang$/i, /^tangs$/i,
+      /^wrasse/i, /^angel$/i, /^angelfish/i, /^angel.fish/i,
+      /^seacreature/i, /^sea.creature/i,
+      /^conditioned.fish/i, /^dottyback/i, /^blenny/i, /^goby/i,
+      /^basslet/i, /^damsel/i, /^chromis/i, /^anthias/i, /^hawkfish/i,
+      /^cardinalfish/i, /^rabbitfish/i, /^grouper/i, /^puffer/i,
+      /^mandarin/i, /^dragonet/i,
+    ],
+    label: 'Fish', color: 'slate',
+  },
+  {
+    match: [/^moderate/i, /^low.to.moderate/i, /^moderate.lighting/i],
+    label: 'Moderate Light', color: 'amber',
+  },
+  {
+    match: [/^high.light/i, /^moderate.to.high/i, /^high.par/i],
+    label: 'High Light', color: 'amber',
+  },
+  {
+    match: [/^low.light/i, /^low.par/i],
+    label: 'Low Light', color: 'emerald',
+  },
+  {
+    match: [
+      /^featured/i, /^signature/i, /^ultra/i, /^premium/i, /^gem$/i,
+      /^vics.picks$/i, /^vivid.?s.vault$/i, /^uc.signature$/i, /^joes?.gems?$/i,
+      /^asd.treasure.vault/i, /^tsa.vault/i, /^tsa.signature/i,
+      /^vivid.grown/i,
+    ],
+    label: 'Featured / Ultra', color: 'amber',
+  },
+  {
+    match: [/^limited/i, /^rare$/i, /^unique$/i, /^most.popular$/i],
+    label: 'Rare / Limited', color: 'rose',
+  },
 ];
 
 const NOISE_TAGS = new Set([
@@ -70,7 +222,7 @@ const NOISE_TAGS = new Set([
   'live sale', 'livesale', 'coral', 'live', 'reef', 'saltwater', 'ccg',
   '#n/a', 'battlecorals', 'panta rhei', 'dalua', 'dastapo', 'dastaco',
   'illumagic', 'polyplab', 'corechem', 'pax bellum', 'arid', 'marco rocks',
-  'marcoRocks', 'triton', 'core7', 'magsleeve', 'bf2023', 'vday24', 'vday25',
+  'marcorocks', 'triton', 'core7', 'magsleeve', 'bf2023', 'vday24', 'vday25',
   'blo23-inv', 'stamina', 'summer frenzy', 'usa', 'texas',
   'eastern asia', 'south asia', 'central pacific', 'west americas',
   'melanesia', 'australia / coral sea', 'symbiotic-relationships',
@@ -82,7 +234,34 @@ const NOISE_TAGS = new Set([
   'pairs', 'juveniles',
   '25-50', '50-75', '75-100', '100-150', '150-300', '300-500', '500-750', '750-1000',
   '10-25', 'over-50', 'over-100', 'over-1000', 'under-25',
+  // live sale / auction management
+  'ls_eligible', 'ls_eligble', 'live_sale', 'livesale2', 'on_auction',
+  'wk_auction', 'wk_end_auction', 'auction', 'auctions', 'not5',
+  'prelivesale', 'livesale_note', 'discount eligible',
+  // inventory / system internal
+  'shopkeep', 'hide', 'in-store', 'product', 'usps', 'shopify collective',
+  'fw inventory', 'sw inventory', 'aquatic products', 'reef safe',
+  'cut to order', 'all corals', 'limit_warning_on', '5_limit_warning',
+  'spk_limit_warning', 'the farm', 'farm', 'printed reef', 'wear',
+  // dry goods / equipment
+  'aquariums', 'supplements', 'water testing', 'test kits',
+  'lighting accessories', 'protein skimmers', 'powerheads', 'pumps',
+  'freshwater fish', 'fw inventory', 'saltwater fish', 'food',
+  // color-only tags (no coral context)
+  'green', 'red', 'pink', 'blue', 'orange', 'purple', 'yellow', 'white', 'black',
 ]);
+
+const NOISE_PATTERNS: RegExp[] = [
+  /^ls[\s_]/i,
+  /^(tc|spr)\d+/i,
+  /^group\s+[a-z\d]{1,2}$/i,
+  /^spk_/i,
+  /^sms_/i,
+  /^vday\d+$/i,
+  /^\d{1,2}(jan|feb|mar|apr|may|jun|jul|july|aug|sep|sept|oct|nov|dec)\d{0,4}[a-z]?$/i,
+  /^(jan|feb|mar|apr|may|jun|jul|july|aug|sep|sept|oct|nov|dec)\d{1,4}[a-z]?$/i,
+  /^\d{1,2}_\d{1,2}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\d{2,4}$/i,
+];
 
 const SIZE_PATTERN = /^\d+-\d+$|^(under|over)-\d+$/i;
 const FRAG_SIZE_PATTERN = /^\d+frag$/i;
@@ -99,6 +278,7 @@ export function normalizeTag(raw: string): NormalizedTag | null {
     NOISE_TAGS.has(lower) ||
     SIZE_PATTERN.test(lower) ||
     FRAG_SIZE_PATTERN.test(lower) ||
+    NOISE_PATTERNS.some(p => p.test(lower)) ||
     (GENUS_PATTERN.test(lower) && lower.length < 30)
   ) {
     cache.set(raw, null);
