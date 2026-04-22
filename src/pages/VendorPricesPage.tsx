@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Search, RefreshCw,
-  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff, Shield
+  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff, Shield, Link2, Check
 } from 'lucide-react';
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
@@ -551,9 +551,23 @@ function getCollectionLabel(handle: string): string {
 }
 
 
+function getInitialUrlParams() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    q: p.get('q') ?? '',
+    v: p.get('v') ?? '',
+    sort: (p.get('sort') as SortOption) ?? 'newest',
+    tags: p.get('tags') ? p.get('tags')!.split(',').filter(Boolean) : [],
+    min: p.get('min') ?? '',
+    max: p.get('max') ?? '',
+    sale: p.get('sale') === '1',
+    hide_sold: p.get('hide_sold') === '1',
+  };
+}
+
 export default function VendorPricesPage() {
   const [vendors, setVendors] = useState<VendorScrapeConfig[]>([]);
-  const [selectedVendor, setSelectedVendor] = useState<string>('');
+  const [selectedVendor, setSelectedVendor] = useState<string>(() => getInitialUrlParams().v);
   const [products, setProducts] = useState<VendorProduct[]>([]);
   const [filtered, setFiltered] = useState<VendorProduct[]>([]);
   const [displayed, setDisplayed] = useState<VendorProduct[]>([]);
@@ -561,18 +575,18 @@ export default function VendorPricesPage() {
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [search, setSearch] = useState<string>(() => getInitialUrlParams().q);
+  const [sortBy, setSortBy] = useState<SortOption>(() => getInitialUrlParams().sort);
   const [showFilters, setShowFilters] = useState(false);
-  const [priceMin, setPriceMin] = useState('');
-  const [priceMax, setPriceMax] = useState('');
-  const [onSaleOnly, setOnSaleOnly] = useState(false);
-  const [hideSoldOut, setHideSoldOut] = useState(false);
+  const [priceMin, setPriceMin] = useState<string>(() => getInitialUrlParams().min);
+  const [priceMax, setPriceMax] = useState<string>(() => getInitialUrlParams().max);
+  const [onSaleOnly, setOnSaleOnly] = useState<boolean>(() => getInitialUrlParams().sale);
+  const [hideSoldOut, setHideSoldOut] = useState<boolean>(() => getInitialUrlParams().hide_sold);
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(200);
   const [viewTab, setViewTab] = useState<ViewTab>('catalog');
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(() => new Set(getInitialUrlParams().tags));
   const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
   const [collectionOverflowOpen, setCollectionOverflowOpen] = useState(false);
   const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
@@ -582,6 +596,7 @@ export default function VendorPricesPage() {
   const [vendorLastRuns, setVendorLastRuns] = useState<Map<string, string | null>>(new Map());
   const [dbSearchResults, setDbSearchResults] = useState<VendorProduct[] | null>(null);
   const [isDbSearching, setIsDbSearching] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const VENDOR_STALE_DAYS = 14;
 
@@ -606,6 +621,20 @@ export default function VendorPricesPage() {
       scrapeAbortRef.current = true;
     };
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    if (selectedVendor && selectedVendor !== ALL_VENDORS_SLUG) params.set('v', selectedVendor);
+    if (sortBy !== 'newest') params.set('sort', sortBy);
+    if (selectedTags.size > 0) params.set('tags', [...selectedTags].join(','));
+    if (priceMin) params.set('min', priceMin);
+    if (priceMax) params.set('max', priceMax);
+    if (onSaleOnly) params.set('sale', '1');
+    if (hideSoldOut) params.set('hide_sold', '1');
+    const qs = params.toString();
+    history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+  }, [search, selectedVendor, sortBy, selectedTags, priceMin, priceMax, onSaleOnly, hideSoldOut]);
 
   const MAX_VISIBLE_TABS = 6;
   const MAX_VISIBLE_VENDORS = 5;
@@ -1376,6 +1405,23 @@ export default function VendorPricesPage() {
                   <SlidersHorizontal size={15} />
                   Filter
                   {hasActiveFilters && <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full" />}
+                </button>
+                <button
+                  title="Copy shareable link"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href).then(() => {
+                      setLinkCopied(true);
+                      setTimeout(() => setLinkCopied(false), 2000);
+                    });
+                  }}
+                  className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                    linkCopied
+                      ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                      : 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {linkCopied ? <Check size={15} /> : <Link2 size={15} />}
+                  <span className="hidden sm:inline">{linkCopied ? 'Copied!' : 'Share'}</span>
                 </button>
                 {selectedVendor !== ALL_VENDORS_SLUG && currentVendor && (
                   <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 shrink-0 transition-colors duration-200">
