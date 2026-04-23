@@ -211,17 +211,6 @@ async function scrapeWooCommerceVendor(
     existingMap.set(p.shopify_id, p);
   }
 
-  const { data: lastHistRow } = await supabase
-    .from("vendor_price_history")
-    .select("recorded_at")
-    .eq("vendor_slug", vendor.slug)
-    .order("recorded_at", { ascending: false })
-    .limit(1);
-  const lastHistDate = lastHistRow?.[0]?.recorded_at
-    ? new Date(lastHistRow[0].recorded_at).toDateString()
-    : null;
-  const isFirstScrapeToday = lastHistDate !== new Date().toDateString();
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
@@ -296,7 +285,7 @@ async function scrapeWooCommerceVendor(
         price_change_pct: changePct,
         recorded_at: new Date().toISOString(),
       });
-    } else if (isFirstScrapeToday) {
+    } else {
       historyRecords.push({
         vendor_slug: vendor.slug,
         shopify_id: rec.shopify_id,
@@ -342,17 +331,6 @@ async function scrapeWooCommerceVendor(
     }
   }
 
-  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
-  if (unseenIds.length > 0) {
-    const UBATCH = 500;
-    for (let i = 0; i < unseenIds.length; i += UBATCH) {
-      await supabase
-        .from("vendor_products")
-        .update({ is_available: false, scraped_at: new Date().toISOString() })
-        .eq("vendor_slug", vendor.slug)
-        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
-    }
-  }
 
   await supabase
     .from("vendor_scrape_configs")
@@ -581,17 +559,6 @@ async function scrapeMagentoVendor(
     existingMap.set(p.shopify_id, p);
   }
 
-  const { data: lastHistRow } = await supabase
-    .from("vendor_price_history")
-    .select("recorded_at")
-    .eq("vendor_slug", vendor.slug)
-    .order("recorded_at", { ascending: false })
-    .limit(1);
-  const lastHistDate = lastHistRow?.[0]?.recorded_at
-    ? new Date(lastHistRow[0].recorded_at).toDateString()
-    : null;
-  const isFirstScrapeToday = lastHistDate !== new Date().toDateString();
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
@@ -721,7 +688,7 @@ async function scrapeMagentoVendor(
         price_change_pct: changePct,
         recorded_at: new Date().toISOString(),
       });
-    } else if (isFirstScrapeToday) {
+    } else {
       historyRecords.push({
         vendor_slug: vendor.slug,
         shopify_id: rec.shopify_id,
@@ -767,17 +734,6 @@ async function scrapeMagentoVendor(
     }
   }
 
-  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
-  if (unseenIds.length > 0) {
-    const UBATCH = 500;
-    for (let i = 0; i < unseenIds.length; i += UBATCH) {
-      await supabase
-        .from("vendor_products")
-        .update({ is_available: false, scraped_at: new Date().toISOString() })
-        .eq("vendor_slug", vendor.slug)
-        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
-    }
-  }
 
   await supabase
     .from("vendor_scrape_configs")
@@ -865,17 +821,6 @@ async function scrapeVenderUpVendor(
     existingMap.set(p.shopify_id, p);
   }
 
-  const { data: lastHistRow } = await supabase
-    .from("vendor_price_history")
-    .select("recorded_at")
-    .eq("vendor_slug", vendor.slug)
-    .order("recorded_at", { ascending: false })
-    .limit(1);
-  const lastHistDate = lastHistRow?.[0]?.recorded_at
-    ? new Date(lastHistRow[0].recorded_at).toDateString()
-    : null;
-  const isFirstScrapeToday = lastHistDate !== new Date().toDateString();
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
@@ -941,7 +886,7 @@ async function scrapeVenderUpVendor(
         price_change_pct: changePct,
         recorded_at: new Date().toISOString(),
       });
-    } else if (isFirstScrapeToday) {
+    } else {
       historyRecords.push({
         vendor_slug: vendor.slug,
         shopify_id: rec.shopify_id,
@@ -987,17 +932,6 @@ async function scrapeVenderUpVendor(
     }
   }
 
-  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
-  if (unseenIds.length > 0) {
-    const UBATCH = 500;
-    for (let i = 0; i < unseenIds.length; i += UBATCH) {
-      await supabase
-        .from("vendor_products")
-        .update({ is_available: false, scraped_at: new Date().toISOString() })
-        .eq("vendor_slug", vendor.slug)
-        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
-    }
-  }
 
   await supabase
     .from("vendor_scrape_configs")
@@ -1022,17 +956,6 @@ async function scrapeShopifyVendor(
   for (const p of (existingRaw ?? [])) {
     existingMap.set(p.shopify_id, p);
   }
-
-  const { data: lastHistRow } = await supabase
-    .from("vendor_price_history")
-    .select("recorded_at")
-    .eq("vendor_slug", vendor.slug)
-    .order("recorded_at", { ascending: false })
-    .limit(1);
-  const lastHistDate = lastHistRow?.[0]?.recorded_at
-    ? new Date(lastHistRow[0].recorded_at).toDateString()
-    : null;
-  const isFirstScrapeToday = lastHistDate !== new Date().toDateString();
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
@@ -1115,7 +1038,7 @@ async function scrapeShopifyVendor(
         price_change_pct: changePct,
         recorded_at: new Date().toISOString(),
       });
-    } else if (isFirstScrapeToday) {
+    } else {
       historyRecords.push({
         vendor_slug: vendor.slug,
         shopify_id: rec.shopify_id,
@@ -1161,17 +1084,6 @@ async function scrapeShopifyVendor(
     }
   }
 
-  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
-  if (unseenIds.length > 0) {
-    const UBATCH = 500;
-    for (let i = 0; i < unseenIds.length; i += UBATCH) {
-      await supabase
-        .from("vendor_products")
-        .update({ is_available: false, scraped_at: new Date().toISOString() })
-        .eq("vendor_slug", vendor.slug)
-        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
-    }
-  }
 
   await supabase
     .from("vendor_scrape_configs")
@@ -1264,17 +1176,6 @@ async function scrapeVolusionVendor(
     existingMap.set(p.shopify_id, p);
   }
 
-  const { data: lastHistRow } = await supabase
-    .from("vendor_price_history")
-    .select("recorded_at")
-    .eq("vendor_slug", vendor.slug)
-    .order("recorded_at", { ascending: false })
-    .limit(1);
-  const lastHistDate = lastHistRow?.[0]?.recorded_at
-    ? new Date(lastHistRow[0].recorded_at).toDateString()
-    : null;
-  const isFirstScrapeToday = lastHistDate !== new Date().toDateString();
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const storagePrefix = `${supabaseUrl}/storage/v1/object/public/${BUCKET}`;
 
@@ -1341,7 +1242,7 @@ async function scrapeVolusionVendor(
         price_change_pct: changePct,
         recorded_at: new Date().toISOString(),
       });
-    } else if (isFirstScrapeToday) {
+    } else {
       historyRecords.push({
         vendor_slug: vendor.slug,
         shopify_id: rec.shopify_id,
@@ -1387,17 +1288,6 @@ async function scrapeVolusionVendor(
     }
   }
 
-  const unseenIds = Array.from(existingMap.keys()).filter(id => !seenIds.has(id));
-  if (unseenIds.length > 0) {
-    const UBATCH = 500;
-    for (let i = 0; i < unseenIds.length; i += UBATCH) {
-      await supabase
-        .from("vendor_products")
-        .update({ is_available: false, scraped_at: new Date().toISOString() })
-        .eq("vendor_slug", vendor.slug)
-        .in("shopify_id", unseenIds.slice(i, i + UBATCH));
-    }
-  }
 
   await supabase
     .from("vendor_scrape_configs")
