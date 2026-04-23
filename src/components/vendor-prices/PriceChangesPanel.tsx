@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar, PackageX } from 'lucide-react';
 import { supabase, VendorPriceHistory, VendorScrapeConfig } from '../../lib/supabase';
 import PriceHistoryChart from './PriceHistoryChart';
 
@@ -20,12 +20,14 @@ interface ProductHistory {
   totalChangePct: number | null;
   snapshots: VendorPriceHistory[];
   isNew: boolean;
+  isUnavailable: boolean;
   imageUrl: string | null;
 }
 
 export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
   const [history, setHistory] = useState<VendorPriceHistory[]>([]);
   const [imageMap, setImageMap] = useState<Map<number, string>>(new Map());
+  const [unavailableSet, setUnavailableSet] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ChangeFilter>('all');
   const [search, setSearch] = useState('');
@@ -59,15 +61,17 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
 
     const { data: products } = await supabase
       .from('vendor_products')
-      .select('shopify_id, image_url')
-      .eq('vendor_slug', vendor.slug)
-      .not('image_url', 'is', null);
+      .select('shopify_id, image_url, is_available')
+      .eq('vendor_slug', vendor.slug);
     if (products) {
       const map = new Map<number, string>();
+      const unavail = new Set<number>();
       for (const p of products) {
         if (p.image_url) map.set(p.shopify_id, p.image_url);
+        if (p.is_available === false) unavail.add(p.shopify_id);
       }
       setImageMap(map);
+      setUnavailableSet(unavail);
     }
 
     setLoading(false);
@@ -101,11 +105,12 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
         totalChangePct,
         snapshots: sorted,
         isNew: sorted.length === 1 && first.price_change === null,
+        isUnavailable: unavailableSet.has(id),
         imageUrl: imageMap.get(id) ?? null,
       });
     });
     return products;
-  }, [history, imageMap]);
+  }, [history, imageMap, unavailableSet]);
 
   const filtered = useMemo(() => grouped
     .filter(p => {
@@ -218,7 +223,11 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
             return (
               <div
                 key={product.shopify_id}
-                className="break-inside-avoid mb-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors duration-200"
+                className={`break-inside-avoid mb-2 border rounded-xl overflow-hidden transition-colors duration-200 ${
+                  product.isUnavailable
+                    ? 'bg-slate-50 dark:bg-slate-900/60 border-slate-300/60 dark:border-slate-700/60'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                }`}
               >
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : product.shopify_id)}
@@ -256,7 +265,15 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
 
                   <div className="flex-1 min-w-0 flex items-center gap-3 px-3 py-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{product.title}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className={`text-sm font-medium truncate ${product.isUnavailable ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}`}>{product.title}</p>
+                        {product.isUnavailable && (
+                          <span title="No longer listed at this vendor" className="shrink-0 flex items-center gap-1 bg-slate-200 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 text-[9px] font-semibold px-1.5 py-0.5 rounded-md">
+                            <PackageX size={9} />
+                            UNLISTED
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                         <span>{product.snapshots.length} snapshot{product.snapshots.length !== 1 ? 's' : ''}</span>
                         <span>·</span>
