@@ -1399,12 +1399,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    await runScrapeJob(
+    const scrapePromise = runScrapeJob(
       vendors as (VendorConfig & { last_scraped_at: string | null })[],
       includefish,
       force,
       supabase
     );
+
+    // Return immediately so pg_net / callers don't time out waiting.
+    // EdgeRuntime.waitUntil keeps the execution context alive until the
+    // scrape job finishes writing products and price history to the DB.
+    EdgeRuntime.waitUntil(scrapePromise);
 
     return new Response(
       JSON.stringify({ success: true, scraped: vendors.map((v: VendorConfig) => v.slug) }),
