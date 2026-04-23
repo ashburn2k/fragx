@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar } from 'lucide-
 import { supabase, VendorPriceHistory, VendorScrapeConfig } from '../../lib/supabase';
 import PriceHistoryChart from './PriceHistoryChart';
 
+
 interface PriceChangesPanelProps {
   vendor: VendorScrapeConfig;
 }
@@ -19,10 +20,12 @@ interface ProductHistory {
   totalChangePct: number | null;
   snapshots: VendorPriceHistory[];
   isNew: boolean;
+  imageUrl: string | null;
 }
 
 export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
   const [history, setHistory] = useState<VendorPriceHistory[]>([]);
+  const [imageMap, setImageMap] = useState<Map<number, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ChangeFilter>('all');
   const [search, setSearch] = useState('');
@@ -50,6 +53,20 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
       from += PAGE;
     }
     setHistory(all);
+
+    const { data: products } = await supabase
+      .from('vendor_products')
+      .select('shopify_id, image_url')
+      .eq('vendor_slug', vendor.slug)
+      .not('image_url', 'is', null);
+    if (products) {
+      const map = new Map<number, string>();
+      for (const p of products) {
+        if (p.image_url) map.set(p.shopify_id, p.image_url);
+      }
+      setImageMap(map);
+    }
+
     setLoading(false);
   }
 
@@ -81,10 +98,11 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
         totalChangePct,
         snapshots: sorted,
         isNew: sorted.length === 1 && first.price_change === null,
+        imageUrl: imageMap.get(id) ?? null,
       });
     });
     return products;
-  }, [history]);
+  }, [history, imageMap]);
 
   const filtered = useMemo(() => grouped
     .filter(p => {
@@ -185,54 +203,69 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
               >
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : product.shopify_id)}
-                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors"
+                  className="w-full text-left flex items-stretch hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors"
                 >
-                  <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${
-                    product.isNew ? 'bg-cyan-900/40' :
-                    isUp ? 'bg-red-900/40' :
-                    isDown ? 'bg-green-900/40' : 'bg-slate-100 dark:bg-slate-800'
-                  }`}>
-                    {product.isNew ? (
-                      <span className="text-cyan-400 text-[9px] font-bold">NEW</span>
-                    ) : isUp ? (
-                      <TrendingUp size={13} className="text-red-400" />
-                    ) : isDown ? (
-                      <TrendingDown size={13} className="text-green-400" />
-                    ) : (
-                      <Minus size={13} className="text-slate-400 dark:text-slate-500" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{product.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                      <span>{product.snapshots.length} snapshot{product.snapshots.length !== 1 ? 's' : ''}</span>
-                      <span>·</span>
-                      <span>First seen {formatDate(product.snapshots[0].recorded_at)}</span>
+                  {product.imageUrl ? (
+                    <div className="shrink-0 w-14 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={product.imageUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
                     </div>
-                  </div>
-
-                  <div className="shrink-0 text-right">
-                    <p className="text-slate-900 dark:text-white font-semibold text-sm">${product.latestPrice.toFixed(2)}</p>
-                    {!product.isNew && (
-                      <p className={`text-xs font-medium ${isUp ? 'text-red-400' : isDown ? 'text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
-                        {isUp ? '+' : ''}{product.totalChange.toFixed(2)}
-                        {product.totalChangePct !== null && (
-                          <span className="ml-1 opacity-70">({isUp ? '+' : ''}{product.totalChangePct}%)</span>
+                  ) : (
+                    <div className="shrink-0 flex items-center pl-4">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                        product.isNew ? 'bg-cyan-900/40' :
+                        isUp ? 'bg-red-900/40' :
+                        isDown ? 'bg-green-900/40' : 'bg-slate-100 dark:bg-slate-800'
+                      }`}>
+                        {product.isNew ? (
+                          <span className="text-cyan-400 text-[9px] font-bold">NEW</span>
+                        ) : isUp ? (
+                          <TrendingUp size={13} className="text-red-400" />
+                        ) : isDown ? (
+                          <TrendingDown size={13} className="text-green-400" />
+                        ) : (
+                          <Minus size={13} className="text-slate-400 dark:text-slate-500" />
                         )}
-                      </p>
-                    )}
-                  </div>
+                      </div>
+                    </div>
+                  )}
 
-                  <a
-                    href={`${vendor.base_url}/products/${product.handle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={e => e.stopPropagation()}
-                    className="shrink-0 text-slate-400 dark:text-slate-600 hover:text-cyan-400 transition-colors ml-1"
-                  >
-                    <ExternalLink size={13} />
-                  </a>
+                  <div className="flex-1 min-w-0 flex items-center gap-3 px-3 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{product.title}</p>
+                      <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                        <span>{product.snapshots.length} snapshot{product.snapshots.length !== 1 ? 's' : ''}</span>
+                        <span>·</span>
+                        <span>First seen {formatDate(product.snapshots[0].recorded_at)}</span>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="text-slate-900 dark:text-white font-semibold text-sm">${product.latestPrice.toFixed(2)}</p>
+                      {!product.isNew && (
+                        <p className={`text-xs font-medium ${isUp ? 'text-red-400' : isDown ? 'text-green-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                          {isUp ? '+' : ''}{product.totalChange.toFixed(2)}
+                          {product.totalChangePct !== null && (
+                            <span className="ml-1 opacity-70">({isUp ? '+' : ''}{product.totalChangePct}%)</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+
+                    <a
+                      href={`${vendor.base_url}/products/${product.handle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="shrink-0 text-slate-400 dark:text-slate-600 hover:text-cyan-400 transition-colors"
+                    >
+                      <ExternalLink size={13} />
+                    </a>
+                  </div>
                 </button>
 
                 {isExpanded && (
