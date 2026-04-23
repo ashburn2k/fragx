@@ -114,7 +114,7 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
               <span className={`font-bold text-sm ${soldOut ? 'text-slate-500 line-through' : 'text-cyan-400'}`}>
                 ${product.price.toFixed(2)}
               </span>
-              {!soldOut && product.compare_at_price && (
+              {!soldOut && !!product.compare_at_price && (
                 <span className="text-slate-400 dark:text-slate-500 text-[10px] line-through">
                   ${product.compare_at_price.toFixed(2)}
                 </span>
