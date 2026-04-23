@@ -32,6 +32,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(50);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadHistory();
@@ -223,13 +224,14 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                   onClick={() => setExpandedId(isExpanded ? null : product.shopify_id)}
                   className="w-full text-left flex items-stretch hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors"
                 >
-                  {product.imageUrl ? (
+                  {product.imageUrl && !failedImages.has(product.shopify_id) ? (
                     <div className="shrink-0 w-14 overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <img
                         src={product.imageUrl}
                         alt=""
                         className="w-full h-full object-cover"
                         loading="lazy"
+                        onError={() => setFailedImages(prev => new Set([...prev, product.shopify_id]))}
                       />
                     </div>
                   ) : (

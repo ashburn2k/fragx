@@ -50,12 +50,12 @@ export default function PriceHistoryChart({ history, title }: PriceHistoryChartP
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16">
         <defs>
-          <linearGradient id={`grad-${sorted[0].shopify_id}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`grad-${sorted[0].id}-${sorted[0].shopify_id}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={isUp ? '#f87171' : '#34d399'} stopOpacity="0.3" />
             <stop offset="100%" stopColor={isUp ? '#f87171' : '#34d399'} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path d={fill} fill={`url(#grad-${sorted[0].shopify_id})`} />
+        <path d={fill} fill={`url(#grad-${sorted[0].id}-${sorted[0].shopify_id})`} />
         <path d={d} fill="none" stroke={isFlat ? '#64748b' : isUp ? '#f87171' : '#34d399'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         {pts.map((p, i) => (
           <circle key={i} cx={p.x} cy={p.y} r="2" fill={isFlat ? '#64748b' : isUp ? '#f87171' : '#34d399'} />
