@@ -6,14 +6,13 @@ import AuthModal from './components/auth/AuthModal';
 import ProfileSetup from './components/auth/ProfileSetup';
 
 const ReefToolsPage = lazy(() => import('./pages/ReefToolsPage'));
-const PriceTrackerPage = lazy(() => import('./pages/PriceTrackerPage'));
 const VendorsPage = lazy(() => import('./pages/VendorsPage'));
 const VendorPricesPage = lazy(() => import('./pages/VendorPricesPage'));
 const TradesPage = lazy(() => import('./pages/TradesPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 
-type Page = 'reef-tools' | 'price-tracker' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
+type Page = 'reef-tools' | 'trades' | 'profile' | 'admin' | 'vendors' | 'vendor-prices';
 
 function PageLoader() {
   return (
@@ -66,7 +65,6 @@ function AppInner() {
       <main className="max-w-screen-xl mx-auto px-4 pt-20 pb-24 md:pb-8">
         <Suspense fallback={<PageLoader />}>
           {currentPage === 'reef-tools' && <ReefToolsPage />}
-          {currentPage === 'price-tracker' && <PriceTrackerPage />}
           {currentPage === 'vendors' && <VendorsPage onViewPrices={(page) => handleNavigate(page as Page)} />}
           {currentPage === 'vendor-prices' && <VendorPricesPage />}
           {currentPage === 'trades' && <TradesPage onShowAuth={() => setShowAuth(true)} />}
