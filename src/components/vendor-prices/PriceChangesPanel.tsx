@@ -240,19 +240,19 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                     {product.snapshots.length >= 2 && (
                       <PriceHistoryChart history={product.snapshots} title={product.title} />
                     )}
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 gap-x-3 max-h-48 overflow-y-auto">
                       {[...product.snapshots].reverse().map((snap, i) => (
-                        <div key={snap.id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60 dark:border-slate-800/60 last:border-0">
-                          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                            <Calendar size={10} className="shrink-0" />
-                            <span>{formatDate(snap.recorded_at)}</span>
+                        <div key={snap.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-200/50 dark:border-slate-800/50">
+                          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 min-w-0">
+                            <Calendar size={9} className="shrink-0" />
+                            <span className="truncate">{formatDate(snap.recorded_at)}</span>
                             {i === 0 && (
-                              <span className="bg-cyan-900/40 text-cyan-400 text-[9px] px-1.5 py-0.5 rounded">latest</span>
+                              <span className="bg-cyan-900/40 text-cyan-400 text-[8px] px-1 py-0.5 rounded shrink-0">•</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 shrink-0 ml-1">
                             {snap.price_change !== null && snap.price_change !== 0 && (
-                              <span className={`${snap.price_change > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                              <span className={`text-[10px] ${snap.price_change > 0 ? 'text-red-400' : 'text-green-400'}`}>
                                 {snap.price_change > 0 ? '+' : ''}{snap.price_change.toFixed(2)}
                               </span>
                             )}
