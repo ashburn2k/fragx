@@ -133,7 +133,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 animate-pulse h-16" />
         ))}
@@ -208,7 +208,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
       {filtered.length === 0 ? (
         <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm">No matching products</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
           {paged.map(product => {
             const isExpanded = expandedId === product.shopify_id;
             const isUp = product.totalChange > 0.01;
