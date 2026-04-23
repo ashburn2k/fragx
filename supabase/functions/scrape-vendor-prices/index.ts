@@ -319,6 +319,19 @@ async function scrapeWooCommerceVendor(
     }
   }
 
+  // Products that existed before but weren't returned by this scrape are unlisted/sold out
+  const unavailableIds = [...existingMap.keys()].filter(id => !allRecords.has(id));
+  if (unavailableIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unavailableIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unavailableIds.slice(i, i + UBATCH));
+    }
+  }
+
   if (historyRecords.length > 0) {
     const HBATCH = 500;
     for (let i = 0; i < historyRecords.length; i += HBATCH) {
@@ -722,6 +735,19 @@ async function scrapeMagentoVendor(
     }
   }
 
+  // Products that existed before but weren't returned by this scrape are unlisted/sold out
+  const unavailableIds = [...existingMap.keys()].filter(id => !allRecords.has(id));
+  if (unavailableIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unavailableIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unavailableIds.slice(i, i + UBATCH));
+    }
+  }
+
   if (historyRecords.length > 0) {
     const HBATCH = 500;
     for (let i = 0; i < historyRecords.length; i += HBATCH) {
@@ -920,6 +946,19 @@ async function scrapeVenderUpVendor(
     }
   }
 
+  // Products that existed before but weren't returned by this scrape are unlisted/sold out
+  const unavailableIds = [...existingMap.keys()].filter(id => !allRecords.has(id));
+  if (unavailableIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unavailableIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unavailableIds.slice(i, i + UBATCH));
+    }
+  }
+
   if (historyRecords.length > 0) {
     const HBATCH = 500;
     for (let i = 0; i < historyRecords.length; i += HBATCH) {
@@ -1069,6 +1108,19 @@ async function scrapeShopifyVendor(
       errors++;
     } else {
       totalFound += Math.min(BATCH, recordsArr.length - i);
+    }
+  }
+
+  // Products that existed before but weren't returned by this scrape are unlisted/sold out
+  const unavailableIds = [...existingMap.keys()].filter(id => !allRecords.has(id));
+  if (unavailableIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unavailableIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unavailableIds.slice(i, i + UBATCH));
     }
   }
 
@@ -1273,6 +1325,19 @@ async function scrapeVolusionVendor(
       errors++;
     } else {
       totalFound += Math.min(BATCH, recordsArr.length - i);
+    }
+  }
+
+  // Products that existed before but weren't returned by this scrape are unlisted/sold out
+  const unavailableIds = [...existingMap.keys()].filter(id => !allRecords.has(id));
+  if (unavailableIds.length > 0) {
+    const UBATCH = 500;
+    for (let i = 0; i < unavailableIds.length; i += UBATCH) {
+      await supabase
+        .from("vendor_products")
+        .update({ is_available: false })
+        .eq("vendor_slug", vendor.slug)
+        .in("shopify_id", unavailableIds.slice(i, i + UBATCH));
     }
   }
 
