@@ -30,6 +30,8 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
   const [filter, setFilter] = useState<ChangeFilter>('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => {
     loadHistory();
@@ -115,6 +117,11 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
     .sort((a, b) => Math.abs(b.totalChange) - Math.abs(a.totalChange)),
   [grouped, filter, search]);
 
+  useEffect(() => { setPage(0); }, [filter, search, pageSize, vendor.slug]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
   const increases = useMemo(() => grouped.filter(p => !p.isNew && p.totalChange > 0.01).length, [grouped]);
   const decreases = useMemo(() => grouped.filter(p => !p.isNew && p.totalChange < -0.01).length, [grouped]);
   const newCount = useMemo(() => grouped.filter(p => p.isNew).length, [grouped]);
@@ -179,19 +186,30 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
              `New (${newCount})`}
           </button>
         ))}
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search products..."
-          className="ml-auto bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-xs w-48"
-        />
+        <div className="ml-auto flex items-center gap-2">
+          <select
+            value={pageSize}
+            onChange={e => setPageSize(Number(e.target.value))}
+            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1.5 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500 transition-colors text-xs"
+          >
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
+            <option value={200}>200 / page</option>
+          </select>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors text-xs w-44"
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
         <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm">No matching products</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {filtered.map(product => {
+          {paged.map(product => {
             const isExpanded = expandedId === product.shopify_id;
             const isUp = product.totalChange > 0.01;
             const isDown = product.totalChange < -0.01;
@@ -199,7 +217,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
             return (
               <div
                 key={product.shopify_id}
-                className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors duration-200 ${isExpanded ? 'sm:col-span-2' : ''}`}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-colors duration-200"
               >
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : product.shopify_id)}
@@ -299,6 +317,30 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Previous
+          </button>
+          <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <span>Page {page + 1} of {totalPages}</span>
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span>{filtered.length} total</span>
+          </div>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>
