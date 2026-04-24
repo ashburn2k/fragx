@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Bell, BellOff, Mail, MessageSquare, TrendingDown, TrendingUp, X, Trash2, Check } from 'lucide-react';
-import { supabase, VendorProduct, ProductWatch } from '../../lib/supabase';
+import { supabase, ProductWatch } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
+export interface WatchableProduct {
+  vendor_slug: string;
+  shopify_id: number;
+  title: string;
+  handle: string;
+}
+
 interface WatchModalProps {
-  product: VendorProduct;
+  product: WatchableProduct;
   vendorName: string;
   onClose: () => void;
   onChanged: () => void;

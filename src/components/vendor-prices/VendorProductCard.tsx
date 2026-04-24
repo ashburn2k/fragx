@@ -86,14 +86,14 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
         {user && (
           <button
             onClick={e => { e.preventDefault(); e.stopPropagation(); setShowWatchModal(true); }}
-            className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-all ${
+            className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-all duration-150 ${
               isWatched
-                ? 'bg-cyan-500/90 text-white opacity-100'
-                : 'bg-slate-900/80 text-slate-400 hover:text-cyan-400 opacity-0 group-hover:opacity-100'
+                ? 'bg-cyan-500 text-white shadow-md opacity-100'
+                : 'bg-slate-900/70 text-slate-300 hover:bg-slate-900 hover:text-cyan-400 opacity-40 group-hover:opacity-100'
             }`}
             title={isWatched ? 'Watching — click to manage' : 'Watch this product'}
           >
-            {isWatched ? <BellRing size={11} /> : <Bell size={11} />}
+            {isWatched ? <BellRing size={13} /> : <Bell size={13} />}
           </button>
         )}
       </div>

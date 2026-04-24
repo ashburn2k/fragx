@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar, PackageX } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar, PackageX, Bell, BellRing } from 'lucide-react';
 import { supabase, VendorPriceHistory, VendorScrapeConfig } from '../../lib/supabase';
 import PriceHistoryChart from './PriceHistoryChart';
-
+import { useAuth } from '../../context/AuthContext';
+import WatchModal, { WatchableProduct } from './WatchModal';
 
 interface PriceChangesPanelProps {
   vendor: VendorScrapeConfig;
+  watchedSet?: Set<string>;
+  onWatchChanged?: () => void;
 }
 
 type ChangeFilter = 'all' | 'increases' | 'decreases' | 'new';
@@ -24,7 +27,9 @@ interface ProductHistory {
   imageUrl: string | null;
 }
 
-export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
+export default function PriceChangesPanel({ vendor, watchedSet, onWatchChanged }: PriceChangesPanelProps) {
+  const { user } = useAuth();
+  const [watchModal, setWatchModal] = useState<WatchableProduct | null>(null);
   const [history, setHistory] = useState<VendorPriceHistory[]>([]);
   const [imageMap, setImageMap] = useState<Map<number, string>>(new Map());
   const [unavailableSet, setUnavailableSet] = useState<Set<number>>(new Set());
@@ -160,6 +165,7 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
   }
 
   return (
+    <>
     <div className="space-y-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
@@ -293,6 +299,19 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
                       )}
                     </div>
 
+                    {user && (() => {
+                      const watchKey = `${vendor.slug}:${product.shopify_id}`;
+                      const isWatched = watchedSet?.has(watchKey) ?? false;
+                      return (
+                        <button
+                          onClick={e => { e.stopPropagation(); setWatchModal({ vendor_slug: vendor.slug, shopify_id: product.shopify_id, title: product.title, handle: product.handle }); }}
+                          className={`shrink-0 p-1 rounded-lg transition-colors ${isWatched ? 'text-cyan-400' : 'text-slate-400 dark:text-slate-600 hover:text-cyan-400'}`}
+                          title={isWatched ? 'Watching — click to manage' : 'Watch this product'}
+                        >
+                          {isWatched ? <BellRing size={13} /> : <Bell size={13} />}
+                        </button>
+                      );
+                    })()}
                     <a
                       href={`${vendor.base_url}/products/${product.handle}`}
                       target="_blank"
@@ -363,5 +382,14 @@ export default function PriceChangesPanel({ vendor }: PriceChangesPanelProps) {
         </div>
       )}
     </div>
+    {watchModal && (
+      <WatchModal
+        product={watchModal}
+        vendorName={vendor.name}
+        onClose={() => setWatchModal(null)}
+        onChanged={() => { onWatchChanged?.(); setWatchModal(null); }}
+      />
+    )}
+  </>
   );
 }

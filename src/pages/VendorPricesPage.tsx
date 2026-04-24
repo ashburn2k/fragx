@@ -1300,7 +1300,7 @@ export default function VendorPricesPage() {
 
 
           {viewTab === 'history' && currentVendor && products.length > 0 && selectedVendor !== ALL_VENDORS_SLUG && (
-            <PriceChangesPanel vendor={currentVendor} />
+            <PriceChangesPanel vendor={currentVendor} watchedSet={watchedSet} onWatchChanged={loadWatches} />
           )}
 
           {(viewTab === 'catalog' || selectedVendor === ALL_VENDORS_SLUG) && products.length > 0 && (
