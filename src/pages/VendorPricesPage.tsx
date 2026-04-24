@@ -136,6 +136,46 @@ const HIDDEN_TITLE_PATTERNS = [
   /\btank\s+maintenance\b/i,
   /\balgae\s+(scraper|magnet|cleaner|scrubber)\b/i,
   /\baquarium\s+maintenance\b/i,
+  // Reactors & filtration equipment
+  /\b(calcium|kalk|kalkwasser|media|bio|nitrate|phosphate|carbon|sulfur)\s+reactor\b/i,
+  /\breactor\b/i,
+  /\bprotein\s+skimmer\b/i,
+  /\bskimmer\b/i,
+  /\buv\s+(sterilizer|steriliser|clarifier|light)\b/i,
+  /\bwave\s*(maker|pump)\b/i,
+  /\bdosing\s+(pump|unit|system|head)\b/i,
+  /\bauto.?top.?off\b|\bato\s+(unit|system|sensor)\b/i,
+  /\bchiller\b/i,
+  /\brefugium\b/i,
+  /\bsump\b/i,
+  /\bcontroller\b/i,
+  /\bapex\s+(el|jr|ai|fusion|base|leak|trident|dos|sky|pmk|avr|np)\b/i,
+  /\bled\s+(light|bar|strip|fixture|pendant|module)\b/i,
+  /\bt5\s+(bulb|lamp|fixture|ho)\b/i,
+  /\bmetal\s+halide\b/i,
+  /\bpar\s+(meter|38|bulb)\b/i,
+  /\blight\s+(fixture|bar|strip|pendant|mount|arm)\b/i,
+  /\bfluorescent\b/i,
+  /\bcirculation\s+pump\b/i,
+  /\breturn\s+pump\b/i,
+  /\bsubmersible\s+pump\b/i,
+  /\bwater\s+pump\b/i,
+  /\bwater\s+test/i,
+  /\bsalinity\s+(meter|test|probe)\b/i,
+  /\bnitrate\s+(test|kit|monitor)\b/i,
+  /\bpH\s+(probe|meter|controller|monitor)\b/i,
+  /\btemperature\s+(probe|controller|sensor|monitor)\b/i,
+  /\boxy\s*(gen)?\s*(probe|monitor|meter)\b/i,
+  /\breef\s+octopus\b/i,
+  /\bprovab\b|\bhydros\b|\breef.?pi\b|\bneptune\b/i,
+  /\bmag.?(drive|float)\b/i,
+  /\btank\s+(stand|cabinet|canopy)\b/i,
+  /\baquarium\s+(stand|cabinet|kit|system|tank)\b/i,
+  /\bsalt\b/i,
+  /\bsock\s+filter\b|\bfilter\s+sock\b/i,
+  /\bro\/di\b|\brodi\s/i,
+  /\bdenitrator\b/i,
+  /\bmembrane\b.*\bro\b|\bro\b.*\bmembrane\b/i,
 ];
 
 const HIDDEN_COLLECTIONS = new Set([
@@ -494,7 +534,13 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   const pt = product.product_type.toLowerCase().trim();
   const { title, tags } = product;
 
-  // Fish / invert detection (checked first)
+  // Equipment first — prevents brand names like "Reef Octopus" matching invert patterns
+  if (HIDDEN_PRODUCT_TYPES.has(pt)) return 'equipment';
+  if (HIDDEN_COLLECTIONS.has(col)) return 'equipment';
+  if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return 'equipment';
+  if (HIDDEN_TITLE_PATTERNS.some(p => p.test(title))) return 'equipment';
+
+  // Fish / invert detection
   if (FISH_PRODUCT_TYPES.has(pt)) return 'fish';
   if (FISH_COLLECTION_PATTERNS.some(p => p.test(col))) return 'fish';
   if (FISH_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
@@ -503,13 +549,7 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   if (INVERT_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
   if (tags.some(t => INVERT_TITLE_PATTERNS.some(p => p.test(t.trim())))) return 'fish';
 
-  // Explicit dry-goods / equipment detection
-  if (HIDDEN_PRODUCT_TYPES.has(pt)) return 'equipment';
-  if (HIDDEN_COLLECTIONS.has(col)) return 'equipment';
-  if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return 'equipment';
-  if (HIDDEN_TITLE_PATTERNS.some(p => p.test(title))) return 'equipment';
-
-  // Default: treat as coral (these are reef-vendor catalogs)
+  // Default: coral (reef-vendor catalogs)
   return 'coral';
 }
 
