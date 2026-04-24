@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Search, RefreshCw,
@@ -335,6 +336,121 @@ function shouldHideProduct(tags: string[], collection: string, title = '', produ
   return false;
 }
 
+
+type ProductCategory = 'coral' | 'fish' | 'equipment';
+
+const FISH_COLLECTION_PATTERNS = [
+  /^(saltwater[\s-]?|marine[\s-]?|reef[\s-]?)?fish$/i,
+  /^clownfish|clown[\s-]?fish/i,
+  /^tangs?[\s-]?(surgeonfis|&|and)?/i,
+  /^wrasses?$/i,
+  /^gobies$/i,
+  /^blennies$/i,
+  /^anthias[\s-]?fish$/i,
+  /^damsels?[\s-]?chromis$/i,
+  /^angelfish$/i,
+  /^triggers?[\s-]?groupers?/i,
+  /^lionfish/i,
+  /^pufferfish/i,
+  /^rabbitfish/i,
+  /^cardinalfish$/i,
+  /^hawkfish/i,
+  /^basslets?[\s-]?dottybacks?$/i,
+  /^filefish$/i,
+  /^seahorses?$/i,
+  /^seahorses?[\s-]?pipefish$/i,
+  /^butterflyfish$/i,
+  /^boxfish$/i,
+  /^dartfish$/i,
+  /^chromis$/i,
+  /quarantined[\s-]?fish/i,
+  /captive[\s-]bred[\s-](marine[\s-]?)?fish/i,
+  /best[\s-]?selling[\s-]?marine[\s-]?fish/i,
+  /^beginner[\s-]?fish/i,
+  /^cultured[\s-]?fish/i,
+  /^reef[\s-]?safe[\s-]?fish/i,
+  /^fish[\s-]?wysiwyg/i,
+  /^eels?$/i,
+  /^sharks?[\s-]?(and[\s-]?rays?)?$/i,
+  /^scorpionfish/i,
+];
+
+const FISH_PRODUCT_TYPES = new Set([
+  'fish', 'marine fish', 'saltwater fish', 'reef fish', 'live fish',
+  'captive bred fish', 'captive-bred fish', 'saltwater', 'marine',
+]);
+
+const FISH_TITLE_PATTERNS = [
+  /\btang\b|\bsurgeon\s*fish\b/i,
+  /\bwrasse\b/i,
+  /\bgoby\b|\bgobies\b/i,
+  /\bclownfish\b|\bclown\s+fish\b/i,
+  /\bblenny\b|\bblennies\b/i,
+  /\banthias\b/i, /\bbasslet\b/i, /\bfirefish\b/i, /\bhawkfish\b/i,
+  /\bdottyback\b/i, /\bdragonet\b/i, /\bdamselfish\b|\bdamsel\s+fish\b/i,
+  /\bangelfish\b|\bangel\s+fish\b/i,
+  /\btriggerfish\b|\btrigger\s+fish\b/i,
+  /\blionfish\b|\blion\s+fish\b/i,
+  /\bpufferfish\b|\bpuffer\s+fish\b/i,
+  /\brabbitfish\b/i,
+  /\bsaltwater\s+fish\b|\bmarine\s+fish\b|\breef\s+fish\b/i,
+  /\bshark\b|\bray\s+fish\b/i,
+  /\bbutterflyfish\b|\bbutterfly\s+fish\b/i,
+  /\bgrouper\b/i, /\bboxfish\b/i, /\bmoray\b|\beel\b/i,
+  /\bscorpionfish\b/i, /\bdartfish\b/i,
+  /\bchromis\b/i, /\bcardinalfish\b|\bcardinal\s+fish\b/i,
+  /\bfilefish\b|\bseahorse\b|\bpipefish\b/i,
+];
+
+const JUNK_COLLECTIONS = new Set([
+  'gift-card', 'gift-cards', 'gift-certificates', 'nugget_giftcard',
+  'reef-stock', 'reef-wear', 'apparel', 'merch', 'clothing', 'sea-urchin-hats',
+  'freshwater-fish', 'freshwater-&-planted', 'freshwater-invert', 'aquatic-plant',
+  'aquarium-plant-packs', 'background-aquarium-plants',
+  'freshwater', 'pond', 'terrarium', 'reptile', 'axolotls', 'amphibians',
+  'subscriptions', 'service', 'box-fee',
+  'shipping', 'shipping-fee', 'shipping-upgrade', 'shipping-insurance',
+  'shipping-protection', 'overnight-shipping', 'flat-rate-shipping', 'live-arrival',
+  'african-cichlids', 'barbs', 'bettas-siamese-fighting-fish', 'bichir',
+  'captive-bred-freshwater-fish', 'captive-bred-freshwater-fish-and-invertebrates',
+  'cory-corydoras-catfish', 'danios-minnows',
+]);
+
+const JUNK_TITLE_PATTERNS = [
+  /\bgift\s+card\b|\bgift\s+certificate\b/i,
+  /\bsticker\b|\bdecal\b|\bbumper\s*sticker\b/i,
+  /\bt[\s-]?shirt\b|\btee\s+shirt\b/i,
+  /flat[\s-]?rate\s+shipping|overnight\s+ship/i,
+  /\bshipping\s+(upgrade|insurance|protection|fee)\b/i,
+  /\bhandling\s+fee\b|\blive\s+arrival\s+guarantee\b/i,
+];
+
+function shouldAlwaysHide(product: { vendor_slug: string; collection: string; title: string; tags: string[] }): boolean {
+  const col = product.collection.toLowerCase().trim();
+  const title = product.title;
+  const vendorSlug = product.vendor_slug;
+  if (JUNK_COLLECTIONS.has(col)) return true;
+  if (JUNK_TITLE_PATTERNS.some(p => p.test(title))) return true;
+  if (vendorSlug && VENDOR_HIDE_RULES[vendorSlug]) {
+    const rules = VENDOR_HIDE_RULES[vendorSlug];
+    if (rules.collections?.some(p => p.test(col))) return true;
+    if (title && rules.titlePatterns?.some(p => p.test(title))) return true;
+    if (rules.tags?.some(p => product.tags.some(t => p.test(t.trim())))) return true;
+  }
+  return false;
+}
+
+function getProductCategory(product: { tags: string[]; collection: string; title: string; product_type: string }): ProductCategory {
+  const col = product.collection.toLowerCase().trim();
+  const pt = product.product_type.toLowerCase().trim();
+  const { title, tags } = product;
+  if (FISH_PRODUCT_TYPES.has(pt)) return 'fish';
+  if (FISH_COLLECTION_PATTERNS.some(p => p.test(col))) return 'fish';
+  if (FISH_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
+  if (isMaybeLivestock(tags, col, title, pt)) return 'coral';
+  return 'equipment';
+}
+
 type ViewTab = 'catalog' | 'history';
 
 type SortOption = 'price_asc' | 'price_desc' | 'newest' | 'title_asc' | 'random';
@@ -589,6 +705,7 @@ export default function VendorPricesPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(200);
   const [viewTab, setViewTab] = useState<ViewTab>('catalog');
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>('coral');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(() => new Set(getInitialUrlParams().tags));
   const [vendorDropdownOpen, setVendorDropdownOpen] = useState(false);
   const [collectionOverflowOpen, setCollectionOverflowOpen] = useState(false);
@@ -650,6 +767,8 @@ export default function VendorPricesPage() {
     const qs = params.toString();
     history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
   }, [search, selectedVendor, sortBy, selectedTags, priceMin, priceMax, onSaleOnly, hideSoldOut]);
+
+  useEffect(() => { setSelectedCollection('all'); }, [selectedCategory]);
 
   const MAX_VISIBLE_TABS = 6;
   const MAX_VISIBLE_VENDORS = 5;
@@ -812,14 +931,30 @@ export default function VendorPricesPage() {
   }
 
   const visibleProducts = useMemo(
-    () => products.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug)),
+    () => products.filter(p => !shouldAlwaysHide(p)),
     [products]
   );
+
+  const { categoryProducts, categoryCounts } = useMemo(() => {
+    const coral: VendorProduct[] = [];
+    const fish: VendorProduct[] = [];
+    const equipment: VendorProduct[] = [];
+    for (const p of visibleProducts) {
+      const cat = getProductCategory(p);
+      if (cat === 'coral') coral.push(p);
+      else if (cat === 'fish') fish.push(p);
+      else equipment.push(p);
+    }
+    return {
+      categoryProducts: selectedCategory === 'coral' ? coral : selectedCategory === 'fish' ? fish : equipment,
+      categoryCounts: { coral: coral.length, fish: fish.length, equipment: equipment.length },
+    };
+  }, [visibleProducts, selectedCategory]);
 
   const collectionTabs = useMemo(() => {
     const labelToHandles: Record<string, string[]> = {};
     const labelCounts: Record<string, number> = {};
-    for (const p of visibleProducts) {
+    for (const p of categoryProducts) {
       const label = getCollectionLabel(p.collection);
       if (!labelToHandles[label]) labelToHandles[label] = [];
       if (!labelToHandles[label].includes(p.collection)) labelToHandles[label].push(p.collection);
@@ -828,7 +963,7 @@ export default function VendorPricesPage() {
     return Object.entries(labelCounts)
       .sort((a, b) => b[1] - a[1])
       .map(([label, count]) => ({ label, handles: labelToHandles[label], count }));
-  }, [visibleProducts]);
+  }, [categoryProducts]);
 
   useEffect(() => {
     if (selectedVendor !== ALL_VENDORS_SLUG || !search.trim()) {
@@ -863,7 +998,7 @@ export default function VendorPricesPage() {
       : (sortBy === 'random' && shuffledProductsRef.current.length > 0
         ? shuffledProductsRef.current
         : products);
-    let result = base.filter(p => !shouldHideProduct(p.tags, p.collection, p.title, p.product_type, p.vendor_slug));
+    let result = base.filter(p => !shouldAlwaysHide(p) && getProductCategory(p) === selectedCategory);
 
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
@@ -883,9 +1018,9 @@ export default function VendorPricesPage() {
         ? (() => {
             const tab = collectionTabs.find(t => t.label === selectedCollection);
             const handles = tab?.handles ?? [selectedCollection];
-            return visibleProducts.filter(p => handles.includes(p.collection));
+            return categoryProducts.filter(p => handles.includes(p.collection));
           })()
-        : visibleProducts;
+        : categoryProducts;
       const smallLabels = getSmallTagLabels(smallBase);
       result = result.filter(p =>
         [...selectedTags].every(tag => {
@@ -912,7 +1047,7 @@ export default function VendorPricesPage() {
 
     setFiltered(result);
     setPage(1);
-  }, [products, search, selectedCollection, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor, visibleProducts]);
+  }, [products, search, selectedCollection, selectedCategory, sortBy, priceMin, priceMax, onSaleOnly, hideSoldOut, collectionTabs, selectedTags, dbSearchResults, selectedVendor, visibleProducts, categoryProducts]);
 
   useEffect(() => { applyFilters(); }, [applyFilters]);
   useEffect(() => { setPage(1); }, [pageSize]);
@@ -1026,17 +1161,17 @@ export default function VendorPricesPage() {
     if (selectedCollection !== 'all') {
       const tab = collectionTabs.find(t => t.label === selectedCollection);
       const handles = tab?.handles ?? [selectedCollection];
-      return visibleProducts.filter(p => handles.includes(p.collection));
+      return categoryProducts.filter(p => handles.includes(p.collection));
     }
-    return visibleProducts;
-  }, [visibleProducts, selectedCollection, collectionTabs]);
+    return categoryProducts;
+  }, [categoryProducts, selectedCollection, collectionTabs]);
 
   const tagOptions = useMemo(
     () => buildTagFilterOptions(collectionFilteredProducts),
     [collectionFilteredProducts]
   );
 
-  const catalogCount = visibleProducts.length;
+  const catalogCount = categoryProducts.length;
 
   const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], { base: string; active: string }> = {
     cyan:    { base: 'border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 hover:border-cyan-400 dark:hover:border-cyan-700/60',    active: 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border-cyan-400 dark:border-cyan-600' },
@@ -1305,6 +1440,30 @@ export default function VendorPricesPage() {
 
           {(viewTab === 'catalog' || selectedVendor === ALL_VENDORS_SLUG) && products.length > 0 && (
             <>
+              <div className="flex gap-1.5">
+                {([
+                  { cat: 'coral' as ProductCategory, label: 'Coral', icon: <Waves size={14} /> },
+                  { cat: 'fish' as ProductCategory, label: 'Fish', icon: <Fish size={14} /> },
+                  { cat: 'equipment' as ProductCategory, label: 'Equipment', icon: <Wrench size={14} /> },
+                ] as { cat: ProductCategory; label: string; icon: React.ReactNode }[]).map(({ cat, label, icon }) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 border ${
+                      selectedCategory === cat
+                        ? 'bg-cyan-600/15 text-cyan-600 dark:text-cyan-300 border-cyan-500/50'
+                        : 'text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    {icon}
+                    {label}
+                    <span className={`text-xs font-normal ${selectedCategory === cat ? 'opacity-70' : 'opacity-40'}`}>
+                      {categoryCounts[cat].toLocaleString()}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               {collectionTabs.length > 1 && (() => {
                 const visibleTabs = collectionTabs.slice(0, MAX_VISIBLE_TABS);
                 const overflowTabs = collectionTabs.slice(MAX_VISIBLE_TABS);
