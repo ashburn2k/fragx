@@ -957,20 +957,18 @@ export default function VendorPricesPage() {
   }
 
   async function fetchAllVendorsPage(): Promise<VendorProduct[]> {
-    const CHUNK = 5000;
-    const all: VendorProduct[] = [];
-    let from = 0;
-    while (all.length < 15000) {
-      const { data } = await buildBaseQuery()
-        .order('is_available', { ascending: false })
-        .order('scraped_at', { ascending: false })
-        .range(from, from + CHUNK - 1);
-      const batch = (data as VendorProduct[]) ?? [];
-      all.push(...batch);
-      if (batch.length < CHUNK) break;
-      from += CHUNK;
-    }
-    return all;
+    const CHUNK = 1000;
+    const TARGET = 15000;
+    const pages = Array.from({ length: TARGET / CHUNK }, (_, i) => i * CHUNK);
+    const results = await Promise.all(
+      pages.map(from =>
+        buildBaseQuery()
+          .order('is_available', { ascending: false })
+          .order('scraped_at', { ascending: false })
+          .range(from, from + CHUNK - 1)
+      )
+    );
+    return results.flatMap(({ data }) => (data as VendorProduct[]) ?? []);
   }
 
   async function loadProducts(vendorSlug: string) {
