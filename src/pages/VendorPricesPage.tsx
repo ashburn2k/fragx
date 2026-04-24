@@ -4,6 +4,7 @@ import {
   X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff, Shield, Link2, Check
 } from 'lucide-react';
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import VendorProductCard from '../components/vendor-prices/VendorProductCard';
 import PriceChangesPanel from '../components/vendor-prices/PriceChangesPanel';
 import ScrapeProgressBar from '../components/vendor-prices/ScrapeProgressBar';
@@ -566,6 +567,8 @@ function getInitialUrlParams() {
 }
 
 export default function VendorPricesPage() {
+  const { user } = useAuth();
+  const [watchedSet, setWatchedSet] = useState<Set<string>>(new Set());
   const [vendors, setVendors] = useState<VendorScrapeConfig[]>([]);
   const [selectedVendor, setSelectedVendor] = useState<string>(() => getInitialUrlParams().v);
   const [products, setProducts] = useState<VendorProduct[]>([]);
@@ -621,6 +624,18 @@ export default function VendorPricesPage() {
       scrapeAbortRef.current = true;
     };
   }, []);
+
+  const loadWatches = useCallback(async () => {
+    if (!user) { setWatchedSet(new Set()); return; }
+    const { data } = await supabase
+      .from('product_watches')
+      .select('vendor_slug, shopify_id')
+      .eq('user_id', user.id);
+    const set = new Set<string>((data ?? []).map((w: any) => `${w.vendor_slug}:${w.shopify_id}`));
+    setWatchedSet(set);
+  }, [user]);
+
+  useEffect(() => { loadWatches(); }, [loadWatches]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -1643,6 +1658,8 @@ export default function VendorPricesPage() {
                           vendorName={vendorCfg?.name}
                           showVendorBadge={selectedVendor === ALL_VENDORS_SLUG}
                           vendorSlug={product.vendor_slug}
+                          isWatched={watchedSet.has(`${product.vendor_slug}:${product.shopify_id}`)}
+                          onWatchChanged={loadWatches}
                         />
                       );
                     })}

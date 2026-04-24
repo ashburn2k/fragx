@@ -1,7 +1,9 @@
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Bell, BellRing } from 'lucide-react';
 import { useState, memo, useMemo } from 'react';
 import { VendorProduct } from '../../lib/supabase';
 import { getProductNormalizedTags, NormalizedTag } from '../../lib/tagNormalizer';
+import { useAuth } from '../../context/AuthContext';
+import WatchModal from './WatchModal';
 
 interface VendorProductCardProps {
   product: VendorProduct;
@@ -9,6 +11,8 @@ interface VendorProductCardProps {
   vendorName?: string;
   showVendorBadge?: boolean;
   vendorSlug?: string;
+  isWatched?: boolean;
+  onWatchChanged?: () => void;
 }
 
 const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
@@ -22,8 +26,10 @@ const TAG_COLOR_CLASSES: Record<NormalizedTag['color'], string> = {
   orange:  'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/60',
 };
 
-const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug }: VendorProductCardProps) {
+const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseUrl, vendorName, showVendorBadge, vendorSlug, isWatched, onWatchChanged }: VendorProductCardProps) {
+  const { user } = useAuth();
   const [imgError, setImgError] = useState(false);
+  const [showWatchModal, setShowWatchModal] = useState(false);
   const isAreefCreation = (vendorSlug ?? product.vendor_slug) === 'areef-creation';
   const hidePrice = isAreefCreation && product.price === 10000;
   const isAuction = isAreefCreation && product.price === 1;
@@ -40,6 +46,7 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
   const soldOut = !product.is_available;
 
   return (
+    <>
     <a
       href={productUrl}
       target="_blank"
@@ -76,6 +83,19 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
         <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 rounded p-1">
           <ExternalLink size={11} className="text-white" />
         </span>
+        {user && (
+          <button
+            onClick={e => { e.preventDefault(); e.stopPropagation(); setShowWatchModal(true); }}
+            className={`absolute bottom-2 right-2 p-1.5 rounded-lg transition-all ${
+              isWatched
+                ? 'bg-cyan-500/90 text-white opacity-100'
+                : 'bg-slate-900/80 text-slate-400 hover:text-cyan-400 opacity-0 group-hover:opacity-100'
+            }`}
+            title={isWatched ? 'Watching — click to manage' : 'Watch this product'}
+          >
+            {isWatched ? <BellRing size={11} /> : <Bell size={11} />}
+          </button>
+        )}
       </div>
       <div className={`p-2.5 flex flex-col gap-1.5 flex-1 ${soldOut ? 'bg-slate-50 dark:bg-slate-950' : 'bg-white dark:bg-slate-900'}`}>
         <p className={`text-xs font-medium leading-snug line-clamp-2 transition-colors ${soldOut ? 'text-slate-500 dark:text-slate-400 group-hover:text-slate-400 dark:group-hover:text-slate-300' : 'text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300'}`}>
@@ -124,6 +144,15 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
         </div>
       </div>
     </a>
+    {showWatchModal && (
+      <WatchModal
+        product={product}
+        vendorName={vendorName ?? product.vendor_slug}
+        onClose={() => setShowWatchModal(false)}
+        onChanged={() => onWatchChanged?.()}
+      />
+    )}
+  </>
   );
 });
 

@@ -52,6 +52,7 @@ interface ExistingProduct {
   price: number;
   handle: string;
   title: string;
+  is_available: boolean;
   image_url: string | null;
 }
 
@@ -202,7 +203,7 @@ async function scrapeWooCommerceVendor(
 ): Promise<{ found: number; priceChanges: number; errors: number }> {
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title, image_url")
+    .select("shopify_id, price, handle, title, image_url, is_available")
     .eq("vendor_slug", vendor.slug)
     .limit(100000);
 
@@ -349,6 +350,43 @@ async function scrapeWooCommerceVendor(
     .from("vendor_scrape_configs")
     .update({ last_scraped_at: new Date().toISOString() })
     .eq("slug", vendor.slug);
+
+  // Fire notifications for products that changed this scrape (fire-and-forget)
+  const notifyEvents: object[] = [];
+  for (const id of unavailableIds) {
+    const ex = existingMap.get(id);
+    if (ex?.is_available !== false) {
+      notifyEvents.push({
+        vendor_slug: vendor.slug,
+        shopify_id: id,
+        product_title: ex?.title ?? '',
+        product_handle: ex?.handle ?? '',
+        vendor_base_url: vendor.base_url,
+        event_type: 'sold_out',
+      });
+    }
+  }
+  for (const h of historyRecords as any[]) {
+    if (h.price_change !== null && h.price_change !== 0) {
+      notifyEvents.push({
+        vendor_slug: h.vendor_slug,
+        shopify_id: h.shopify_id,
+        product_title: h.title,
+        product_handle: h.handle,
+        vendor_base_url: vendor.base_url,
+        event_type: h.price_change < 0 ? 'price_drop' : 'price_increase',
+        old_price: Math.round((h.price - h.price_change) * 100) / 100,
+        new_price: h.price,
+      });
+    }
+  }
+  if (notifyEvents.length > 0) {
+    fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-product-notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+      body: JSON.stringify({ events: notifyEvents }),
+    }).catch(e => console.error('Notification trigger failed:', e));
+  }
 
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }
@@ -563,7 +601,7 @@ async function scrapeMagentoVendor(
 ): Promise<{ found: number; priceChanges: number; errors: number }> {
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title, image_url")
+    .select("shopify_id, price, handle, title, image_url, is_available")
     .eq("vendor_slug", vendor.slug)
     .limit(100000);
 
@@ -766,6 +804,43 @@ async function scrapeMagentoVendor(
     .update({ last_scraped_at: new Date().toISOString() })
     .eq("slug", vendor.slug);
 
+  // Fire notifications for products that changed this scrape (fire-and-forget)
+  const notifyEvents: object[] = [];
+  for (const id of unavailableIds) {
+    const ex = existingMap.get(id);
+    if (ex?.is_available !== false) {
+      notifyEvents.push({
+        vendor_slug: vendor.slug,
+        shopify_id: id,
+        product_title: ex?.title ?? '',
+        product_handle: ex?.handle ?? '',
+        vendor_base_url: vendor.base_url,
+        event_type: 'sold_out',
+      });
+    }
+  }
+  for (const h of historyRecords as any[]) {
+    if (h.price_change !== null && h.price_change !== 0) {
+      notifyEvents.push({
+        vendor_slug: h.vendor_slug,
+        shopify_id: h.shopify_id,
+        product_title: h.title,
+        product_handle: h.handle,
+        vendor_base_url: vendor.base_url,
+        event_type: h.price_change < 0 ? 'price_drop' : 'price_increase',
+        old_price: Math.round((h.price - h.price_change) * 100) / 100,
+        new_price: h.price,
+      });
+    }
+  }
+  if (notifyEvents.length > 0) {
+    fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-product-notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+      body: JSON.stringify({ events: notifyEvents }),
+    }).catch(e => console.error('Notification trigger failed:', e));
+  }
+
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }
 
@@ -838,7 +913,7 @@ async function scrapeVenderUpVendor(
 
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title, image_url")
+    .select("shopify_id, price, handle, title, image_url, is_available")
     .eq("vendor_slug", vendor.slug)
     .limit(100000);
 
@@ -977,6 +1052,43 @@ async function scrapeVenderUpVendor(
     .update({ last_scraped_at: new Date().toISOString() })
     .eq("slug", vendor.slug);
 
+  // Fire notifications for products that changed this scrape (fire-and-forget)
+  const notifyEvents: object[] = [];
+  for (const id of unavailableIds) {
+    const ex = existingMap.get(id);
+    if (ex?.is_available !== false) {
+      notifyEvents.push({
+        vendor_slug: vendor.slug,
+        shopify_id: id,
+        product_title: ex?.title ?? '',
+        product_handle: ex?.handle ?? '',
+        vendor_base_url: vendor.base_url,
+        event_type: 'sold_out',
+      });
+    }
+  }
+  for (const h of historyRecords as any[]) {
+    if (h.price_change !== null && h.price_change !== 0) {
+      notifyEvents.push({
+        vendor_slug: h.vendor_slug,
+        shopify_id: h.shopify_id,
+        product_title: h.title,
+        product_handle: h.handle,
+        vendor_base_url: vendor.base_url,
+        event_type: h.price_change < 0 ? 'price_drop' : 'price_increase',
+        old_price: Math.round((h.price - h.price_change) * 100) / 100,
+        new_price: h.price,
+      });
+    }
+  }
+  if (notifyEvents.length > 0) {
+    fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-product-notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+      body: JSON.stringify({ events: notifyEvents }),
+    }).catch(e => console.error('Notification trigger failed:', e));
+  }
+
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }
 
@@ -987,7 +1099,7 @@ async function scrapeShopifyVendor(
 ): Promise<{ found: number; priceChanges: number; errors: number }> {
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title, image_url")
+    .select("shopify_id, price, handle, title, image_url, is_available")
     .eq("vendor_slug", vendor.slug)
     .limit(100000);
 
@@ -1142,6 +1254,43 @@ async function scrapeShopifyVendor(
     .update({ last_scraped_at: new Date().toISOString() })
     .eq("slug", vendor.slug);
 
+  // Fire notifications for products that changed this scrape (fire-and-forget)
+  const notifyEvents: object[] = [];
+  for (const id of unavailableIds) {
+    const ex = existingMap.get(id);
+    if (ex?.is_available !== false) {
+      notifyEvents.push({
+        vendor_slug: vendor.slug,
+        shopify_id: id,
+        product_title: ex?.title ?? '',
+        product_handle: ex?.handle ?? '',
+        vendor_base_url: vendor.base_url,
+        event_type: 'sold_out',
+      });
+    }
+  }
+  for (const h of historyRecords as any[]) {
+    if (h.price_change !== null && h.price_change !== 0) {
+      notifyEvents.push({
+        vendor_slug: h.vendor_slug,
+        shopify_id: h.shopify_id,
+        product_title: h.title,
+        product_handle: h.handle,
+        vendor_base_url: vendor.base_url,
+        event_type: h.price_change < 0 ? 'price_drop' : 'price_increase',
+        old_price: Math.round((h.price - h.price_change) * 100) / 100,
+        new_price: h.price,
+      });
+    }
+  }
+  if (notifyEvents.length > 0) {
+    fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-product-notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+      body: JSON.stringify({ events: notifyEvents }),
+    }).catch(e => console.error('Notification trigger failed:', e));
+  }
+
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }
 
@@ -1219,7 +1368,7 @@ async function scrapeVolusionVendor(
 ): Promise<{ found: number; priceChanges: number; errors: number }> {
   const { data: existingRaw } = await supabase
     .from("vendor_products")
-    .select("shopify_id, price, handle, title, image_url")
+    .select("shopify_id, price, handle, title, image_url, is_available")
     .eq("vendor_slug", vendor.slug)
     .limit(100000);
 
@@ -1358,6 +1507,43 @@ async function scrapeVolusionVendor(
     .from("vendor_scrape_configs")
     .update({ last_scraped_at: new Date().toISOString() })
     .eq("slug", vendor.slug);
+
+  // Fire notifications for products that changed this scrape (fire-and-forget)
+  const notifyEvents: object[] = [];
+  for (const id of unavailableIds) {
+    const ex = existingMap.get(id);
+    if (ex?.is_available !== false) {
+      notifyEvents.push({
+        vendor_slug: vendor.slug,
+        shopify_id: id,
+        product_title: ex?.title ?? '',
+        product_handle: ex?.handle ?? '',
+        vendor_base_url: vendor.base_url,
+        event_type: 'sold_out',
+      });
+    }
+  }
+  for (const h of historyRecords as any[]) {
+    if (h.price_change !== null && h.price_change !== 0) {
+      notifyEvents.push({
+        vendor_slug: h.vendor_slug,
+        shopify_id: h.shopify_id,
+        product_title: h.title,
+        product_handle: h.handle,
+        vendor_base_url: vendor.base_url,
+        event_type: h.price_change < 0 ? 'price_drop' : 'price_increase',
+        old_price: Math.round((h.price - h.price_change) * 100) / 100,
+        new_price: h.price,
+      });
+    }
+  }
+  if (notifyEvents.length > 0) {
+    fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-product-notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+      body: JSON.stringify({ events: notifyEvents }),
+    }).catch(e => console.error('Notification trigger failed:', e));
+  }
 
   return { found: totalFound, priceChanges: historyRecords.filter((h: any) => h.price_change !== null).length, errors };
 }

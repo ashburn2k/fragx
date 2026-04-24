@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { supabase, Badge, Review, Listing } from '../lib/supabase';
+import { supabase, Badge, Review, Listing, ProductWatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { User, Store, Sprout, CreditCard as Edit3, Check, X, ShieldCheck, Star, MessageSquare, Bell, BellOff } from 'lucide-react';
+import { User, Store, Sprout, CreditCard as Edit3, Check, X, ShieldCheck, Star, MessageSquare, Bell, BellOff, TrendingDown, TrendingUp, Mail, Trash2 } from 'lucide-react';
 import ReputationScore from '../components/ui/ReputationScore';
 import ListingCard from '../components/marketplace/ListingCard';
 
@@ -23,12 +23,14 @@ export default function ProfilePage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [watches, setWatches] = useState<ProductWatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [editForm, setEditForm] = useState({
     display_name: '',
     bio: '',
     location_city: '',
     location_state: '',
+    phone_number: '',
     notify_new_listings: false,
   });
   const [saving, setSaving] = useState(false);
@@ -40,6 +42,7 @@ export default function ProfilePage() {
       bio: profile.bio ?? '',
       location_city: profile.location_city ?? '',
       location_state: profile.location_state ?? '',
+      phone_number: (profile as any).phone_number ?? '',
       notify_new_listings: profile.notify_new_listings ?? false,
     });
     loadProfileData();
@@ -48,14 +51,16 @@ export default function ProfilePage() {
   async function loadProfileData() {
     if (!user) return;
     setLoading(true);
-    const [badgeRes, reviewRes, listingRes] = await Promise.all([
+    const [badgeRes, reviewRes, listingRes, watchRes] = await Promise.all([
       supabase.from('user_badges').select('badge_id, badges(*)').eq('user_id', user.id),
       supabase.from('reviews').select('*, reviewer:reviewer_id(username, avatar_url)').eq('reviewed_id', user.id).order('created_at', { ascending: false }),
       supabase.from('listings').select('*, coral_species(*), coral_morphs(*), listing_images(*)').eq('seller_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('product_watches').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
     ]);
     setBadges((badgeRes.data ?? []).map((b: { badge_id: string; badges: Badge | Badge[] }) => Array.isArray(b.badges) ? b.badges[0] : b.badges).filter(Boolean));
     setReviews(reviewRes.data ?? []);
     setListings(listingRes.data ?? []);
+    setWatches(watchRes.data ?? []);
     setLoading(false);
   }
 
@@ -67,6 +72,7 @@ export default function ProfilePage() {
       bio: editForm.bio || null,
       location_city: editForm.location_city || null,
       location_state: editForm.location_state || null,
+      phone_number: editForm.phone_number || null,
       notify_new_listings: editForm.notify_new_listings,
       updated_at: new Date().toISOString(),
     }).eq('id', user.id);
@@ -135,6 +141,13 @@ export default function ProfilePage() {
                   placeholder="State"
                 />
               </div>
+              <input
+                value={editForm.phone_number}
+                onChange={e => setEditForm(f => ({ ...f, phone_number: e.target.value }))}
+                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
+                placeholder="Phone number (for SMS alerts, e.g. +15551234567)"
+                type="tel"
+              />
               <button
                 type="button"
                 onClick={() => setEditForm(f => ({ ...f, notify_new_listings: !f.notify_new_listings }))}
@@ -240,6 +253,64 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Watches */}
+      <div>
+        <h3 className="text-slate-900 dark:text-white font-semibold mb-3 flex items-center gap-2">
+          <Bell size={16} className="text-cyan-400" />
+          Product Watches ({watches.length})
+        </h3>
+        {watches.length === 0 ? (
+          <div className="text-center py-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+            <Bell size={28} className="text-slate-400 dark:text-slate-600 mx-auto mb-2" />
+            <p className="text-slate-400 dark:text-slate-500 text-sm">No watches yet</p>
+            <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Click the bell icon on any product to get notified of changes.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {watches.map(w => (
+              <div key={w.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200">
+                <div className="flex-1 min-w-0">
+                  <p className="text-slate-900 dark:text-white text-sm font-medium truncate">{w.product_title}</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs capitalize">{w.vendor_slug.replace(/-/g, ' ')}</p>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {w.notify_sold_out && (
+                    <span title="Sold out alerts" className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+                      <BellOff size={11} className="text-slate-400" />
+                    </span>
+                  )}
+                  {w.notify_price_drop && (
+                    <span title="Price drop alerts" className="p-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                      <TrendingDown size={11} className="text-emerald-500" />
+                    </span>
+                  )}
+                  {w.notify_price_increase && (
+                    <span title="Price increase alerts" className="p-1 rounded-lg bg-red-50 dark:bg-red-900/20">
+                      <TrendingUp size={11} className="text-red-400" />
+                    </span>
+                  )}
+                  {w.notify_via_email && (
+                    <span title="Email notifications" className="p-1 rounded-lg bg-cyan-50 dark:bg-cyan-900/20">
+                      <Mail size={11} className="text-cyan-500" />
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={async () => {
+                    await supabase.from('product_watches').delete().eq('id', w.id);
+                    setWatches(prev => prev.filter(x => x.id !== w.id));
+                  }}
+                  className="text-slate-400 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0"
+                  title="Remove watch"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Reviews */}
       <div>

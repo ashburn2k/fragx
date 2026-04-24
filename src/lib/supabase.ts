@@ -220,6 +220,21 @@ export interface VendorScrapeRun {
   error_message: string | null;
 }
 
+export interface ProductWatch {
+  id: string;
+  user_id: string;
+  vendor_slug: string;
+  shopify_id: number;
+  product_title: string;
+  product_handle: string;
+  notify_sold_out: boolean;
+  notify_price_drop: boolean;
+  notify_price_increase: boolean;
+  notify_via_email: boolean;
+  notify_via_sms: boolean;
+  created_at: string;
+}
+
 export interface VendorPriceHistory {
   id: string;
   vendor_slug: string;
