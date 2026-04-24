@@ -147,7 +147,7 @@ const VendorProductCard = memo(function VendorProductCard({ product, vendorBaseU
     {showWatchModal && (
       <WatchModal
         product={product}
-        vendorName={vendorName ?? product.vendor_slug}
+        vendorName={vendorName ?? 'Other Vendor'}
         onClose={() => setShowWatchModal(false)}
         onChanged={() => onWatchChanged?.()}
       />

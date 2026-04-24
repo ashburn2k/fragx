@@ -957,11 +957,20 @@ export default function VendorPricesPage() {
   }
 
   async function fetchAllVendorsPage(): Promise<VendorProduct[]> {
-    const { data } = await buildBaseQuery()
-      .order('is_available', { ascending: false })
-      .order('scraped_at', { ascending: false })
-      .limit(1200);
-    return (data as VendorProduct[]) ?? [];
+    const CHUNK = 5000;
+    const all: VendorProduct[] = [];
+    let from = 0;
+    while (all.length < 15000) {
+      const { data } = await buildBaseQuery()
+        .order('is_available', { ascending: false })
+        .order('scraped_at', { ascending: false })
+        .range(from, from + CHUNK - 1);
+      const batch = (data as VendorProduct[]) ?? [];
+      all.push(...batch);
+      if (batch.length < CHUNK) break;
+      from += CHUNK;
+    }
+    return all;
   }
 
   async function loadProducts(vendorSlug: string) {
@@ -1794,7 +1803,7 @@ export default function VendorPricesPage() {
                           key={product.id}
                           product={product}
                           vendorBaseUrl={vendorCfg?.public_url ?? vendorCfg?.base_url ?? currentVendor?.public_url ?? currentVendor?.base_url ?? ''}
-                          vendorName={vendorCfg?.name}
+                          vendorName={vendorCfg?.name ?? 'Other Vendor'}
                           showVendorBadge={selectedVendor === ALL_VENDORS_SLUG}
                           vendorSlug={product.vendor_slug}
                           isWatched={watchedSet.has(`${product.vendor_slug}:${product.shopify_id}`)}
