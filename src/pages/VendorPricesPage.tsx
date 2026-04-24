@@ -1717,32 +1717,6 @@ export default function VendorPricesPage() {
                     </div>
                   </div>
 
-                  {tagOptions.length > 0 && (
-                    <div>
-                      <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-2">
-                        <Tag size={11} />
-                        Filter by Tag
-                      </label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {tagOptions.map(({ label, color, count }) => {
-                          const isActive = selectedTags.has(label);
-                          const classes = TAG_COLOR_CLASSES[color];
-                          return (
-                            <button
-                              key={label}
-                              onClick={() => toggleTag(label)}
-                              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium transition-all duration-150 ${
-                                isActive ? classes.active : classes.base
-                              }`}
-                            >
-                              {label}
-                              <span className="opacity-60 font-normal">{count}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-4 flex-wrap">
