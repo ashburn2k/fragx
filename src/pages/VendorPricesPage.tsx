@@ -402,6 +402,55 @@ const FISH_TITLE_PATTERNS = [
   /\bfilefish\b|\bseahorse\b|\bpipefish\b/i,
 ];
 
+const INVERT_COLLECTION_PATTERNS = [
+  /^inverts?$/i,
+  /^invertebrates?$/i,
+  /^cuc$|^clean[\s-]?up[\s-]?crew/i,
+  /^shrimp$/i,
+  /^snails?$/i,
+  /^crabs?$/i,
+  /^hermit[\s-]?crabs?$/i,
+  /^urchins?$/i,
+  /^sea[\s-]?urchins?$/i,
+  /^starfish$|^sea[\s-]?star/i,
+  /^clams?$/i,
+  /^gorgonians?|^sea[\s-]?fans?$/i,
+  /^sponges?$/i,
+  /^nudibranchs?$/i,
+  /^lobsters?$/i,
+  /^octopus$/i,
+  /^feather[\s-]?dusters?$/i,
+  /^macro[\s-]?algae$/i,
+  /saltwater[\s-]?inverts?/i,
+  /marine[\s-]?inverts?/i,
+  /reef[\s-]?inverts?/i,
+  /live[\s-]?inverts?/i,
+];
+
+const INVERT_PRODUCT_TYPES = new Set([
+  'invert', 'inverts', 'invertebrate', 'invertebrates',
+  'clam', 'shrimp', 'crab', 'sea urchin', 'starfish', 'snail',
+  'cuc', 'clean up crew', 'clean-up crew',
+  'gorgonian', 'nudibranch', 'macro algae', 'macroalgae',
+]);
+
+const INVERT_TITLE_PATTERNS = [
+  /\binverts?\b|\binvertebrate\b/i,
+  /\bclean[\s-]?up[\s-]?crew\b|\bcuc\b/i,
+  /\bshrimp\b/i,
+  /\bsnail\b/i,
+  /\bhermit[\s-]?crab\b/i,
+  /\burchin\b/i,
+  /\bstarfish\b|\bsea[\s-]?star\b/i,
+  /\bclam\b/i,
+  /\bgorgonian\b|\bsea[\s-]?fan\b/i,
+  /\bnudibranch\b/i,
+  /\blobster\b|\boctopus\b/i,
+  /\bsponge\b/i,
+  /\bfeather[\s-]?duster\b/i,
+  /\bmacro[\s-]?algae\b|\bmacroalgae\b/i,
+];
+
 const JUNK_COLLECTIONS = new Set([
   'gift-card', 'gift-cards', 'gift-certificates', 'nugget_giftcard',
   'reef-stock', 'reef-wear', 'apparel', 'merch', 'clothing', 'sea-urchin-hats',
@@ -447,6 +496,10 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   if (FISH_PRODUCT_TYPES.has(pt)) return 'fish';
   if (FISH_COLLECTION_PATTERNS.some(p => p.test(col))) return 'fish';
   if (FISH_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
+  if (INVERT_PRODUCT_TYPES.has(pt)) return 'fish';
+  if (INVERT_COLLECTION_PATTERNS.some(p => p.test(col))) return 'fish';
+  if (INVERT_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
+  if (tags.some(t => INVERT_TITLE_PATTERNS.some(p => p.test(t.trim())))) return 'fish';
   if (isMaybeLivestock(tags, col, title, pt)) return 'coral';
   return 'equipment';
 }
@@ -1443,7 +1496,7 @@ export default function VendorPricesPage() {
               <div className="flex gap-1.5">
                 {([
                   { cat: 'coral' as ProductCategory, label: 'Coral', icon: <Waves size={14} /> },
-                  { cat: 'fish' as ProductCategory, label: 'Fish', icon: <Fish size={14} /> },
+                  { cat: 'fish' as ProductCategory, label: 'Fish / Invert', icon: <Fish size={14} /> },
                   { cat: 'equipment' as ProductCategory, label: 'Equipment', icon: <Wrench size={14} /> },
                 ] as { cat: ProductCategory; label: string; icon: React.ReactNode }[]).map(({ cat, label, icon }) => (
                   <button
