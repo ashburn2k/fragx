@@ -14,10 +14,10 @@ import DailyUpdatesBanner from '../components/vendor-prices/DailyUpdatesBanner';
 import { buildTagFilterOptions, productMatchesTagFilter, getSmallTagLabels, NormalizedTag } from '../lib/tagNormalizer';
 
 const EQUIPMENT_TAGS = new Set([
-  'dosing', 'testing', 'ro/di', 'rodi', 'ro di', 'fragging', 'light', 'filtration',
-  'pump', 'rock', 'maintenance', 'powerhead', 'heater', 'salt', 'ato', 'merch',
+  'dosing', 'testing', 'ro/di', 'rodi', 'ro di', 'fragging', 'filtration',
+  'pump', 'maintenance', 'powerhead', 'heater', 'ato', 'merch',
   'bacteria', 'lighting', 'equipment', 'plumbing', 'sand',
-  'reef stock', 'subscriptions', 'service', 'box fee', 'shipping', 'shipping fee',
+  'subscriptions', 'service', 'box fee', 'shipping fee',
   'shipping upgrade', 'shipping insurance', 'handling fee', 'overnight shipping',
   'flat rate shipping', 'live arrival guarantee', 'lag',
   'replacement blades', 'power supply holder', 'light shade', 'aquarium viewer',
