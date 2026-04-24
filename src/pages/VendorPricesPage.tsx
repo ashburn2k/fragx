@@ -493,6 +493,8 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   const col = product.collection.toLowerCase().trim();
   const pt = product.product_type.toLowerCase().trim();
   const { title, tags } = product;
+
+  // Fish / invert detection (checked first)
   if (FISH_PRODUCT_TYPES.has(pt)) return 'fish';
   if (FISH_COLLECTION_PATTERNS.some(p => p.test(col))) return 'fish';
   if (FISH_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
@@ -500,8 +502,15 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   if (INVERT_COLLECTION_PATTERNS.some(p => p.test(col))) return 'fish';
   if (INVERT_TITLE_PATTERNS.some(p => p.test(title))) return 'fish';
   if (tags.some(t => INVERT_TITLE_PATTERNS.some(p => p.test(t.trim())))) return 'fish';
-  if (isMaybeLivestock(tags, col, title, pt)) return 'coral';
-  return 'equipment';
+
+  // Explicit dry-goods / equipment detection
+  if (HIDDEN_PRODUCT_TYPES.has(pt)) return 'equipment';
+  if (HIDDEN_COLLECTIONS.has(col)) return 'equipment';
+  if (tags.some(t => EQUIPMENT_TAGS.has(t.toLowerCase().trim()))) return 'equipment';
+  if (HIDDEN_TITLE_PATTERNS.some(p => p.test(title))) return 'equipment';
+
+  // Default: treat as coral (these are reef-vendor catalogs)
+  return 'coral';
 }
 
 type ViewTab = 'catalog' | 'history';
