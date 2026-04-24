@@ -2,7 +2,7 @@ import React from 'react';
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Search, RefreshCw,
-  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff, Shield, Link2, Check
+  X, TrendingDown, Clock, Store, AlertCircle, BarChart2, ShoppingBag, ChevronDown, SlidersHorizontal, Tag, MoreHorizontal, EyeOff, Shield, Link2, Check, Fish, Wrench, Waves
 } from 'lucide-react';
 import { supabase, VendorScrapeConfig, VendorProduct, VendorScrapeRun } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
