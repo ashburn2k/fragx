@@ -526,73 +526,143 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
     }
   }
 
-  if (items.length === 0) return [];
-
   const domain = baseUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
-  const linkPattern = new RegExp(`href="https://${domain.replace(/\./g, "\\.")}/(([\\w-]+)\\.html)"`, "g");
-  const linkPositions: { pos: number; handle: string }[] = [];
-  let lm;
-  while ((lm = linkPattern.exec(html)) !== null) {
-    linkPositions.push({ pos: lm.index, handle: lm[1] });
-  }
-
-  const imgPattern = /(?:data-src|src)="([^"]*\/media\/catalog\/product\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
-  const imgPositions: { pos: number; url: string }[] = [];
-  let im;
-  while ((im = imgPattern.exec(html)) !== null) {
-    const raw = im[1];
-    const url = (raw.startsWith("http") ? raw : `${baseUrl}${raw}`).split("?")[0];
-    imgPositions.push({ pos: im.index, url });
-  }
-
-  const handleImageMap = new Map<string, string>();
-  for (let i = 0; i < linkPositions.length; i++) {
-    const { pos, handle } = linkPositions[i];
-    if (handleImageMap.has(handle)) continue;
-    const nextLinkPos = i + 1 < linkPositions.length ? linkPositions[i + 1].pos : html.length;
-    const nearbyImg = imgPositions.find(img => img.pos > pos && img.pos < nextLinkPos);
-    if (nearbyImg) handleImageMap.set(handle, nearbyImg.url);
-  }
-
-  const allHandles = linkPositions
-    .map(l => l.handle)
-    .filter((h, i, arr) => arr.indexOf(h) === i);
-
-  function slugifyName(name: string): string {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  }
-
-  const usedHandles = new Set<string>();
-
-  return items.map((item) => {
-    const price = parseFloat(item.price);
-    if (isNaN(price) || price <= 0) return null;
-    const nameSlug = slugifyName(item.item_name);
-    const matchedHandle = allHandles.find(h => !usedHandles.has(h) && h.includes(nameSlug));
-    let handle: string;
-    if (matchedHandle) {
-      handle = matchedHandle;
-      usedHandles.add(matchedHandle);
-    } else {
-      handle = `${item.item_id}.html`;
+  if (items.length > 0) {
+    // GTM data found — match handles and images by position
+    const linkPattern = new RegExp(`href="https://${domain.replace(/\./g, "\\.")}/(([\\w-]+)\\.html)"`, "g");
+    const linkPositions: { pos: number; handle: string }[] = [];
+    let lm;
+    while ((lm = linkPattern.exec(html)) !== null) {
+      linkPositions.push({ pos: lm.index, handle: lm[1] });
     }
-    return {
+
+    const imgPattern = /(?:data-src|src)="([^"]*\/media\/catalog\/product\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
+    const imgPositions: { pos: number; url: string }[] = [];
+    let im;
+    while ((im = imgPattern.exec(html)) !== null) {
+      const raw = im[1];
+      const url = (raw.startsWith("http") ? raw : `${baseUrl}${raw}`).split("?")[0];
+      imgPositions.push({ pos: im.index, url });
+    }
+
+    const handleImageMap = new Map<string, string>();
+    for (let i = 0; i < linkPositions.length; i++) {
+      const { pos, handle } = linkPositions[i];
+      if (handleImageMap.has(handle)) continue;
+      const nextLinkPos = i + 1 < linkPositions.length ? linkPositions[i + 1].pos : html.length;
+      const nearbyImg = imgPositions.find(img => img.pos > pos && img.pos < nextLinkPos);
+      if (nearbyImg) handleImageMap.set(handle, nearbyImg.url);
+    }
+
+    const allHandles = linkPositions.map(l => l.handle).filter((h, i, arr) => arr.indexOf(h) === i);
+
+    function slugifyName(name: string): string {
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+
+    const usedHandles = new Set<string>();
+
+    return items.map((item) => {
+      const price = parseFloat(item.price);
+      if (isNaN(price) || price <= 0) return null;
+      const nameSlug = slugifyName(item.item_name);
+      const matchedHandle = allHandles.find(h => !usedHandles.has(h) && h.includes(nameSlug));
+      let handle: string;
+      if (matchedHandle) {
+        handle = matchedHandle;
+        usedHandles.add(matchedHandle);
+      } else {
+        handle = `${item.item_id}.html`;
+      }
+      return {
+        vendor_slug: vendorSlug,
+        shopify_id: parseInt(item.item_id),
+        handle,
+        title: item.item_name,
+        product_type: item.item_category ?? "coral",
+        collection,
+        price,
+        compare_at_price: null,
+        image_url: handleImageMap.get(handle) ?? null,
+        tags: [],
+        description: null,
+        scraped_at: new Date().toISOString(),
+        is_available: true,
+      };
+    }).filter(Boolean);
+  }
+
+  // Fallback: no GTM data — parse product URLs, names, and prices directly from HTML.
+  // Works for Magento stores that don't use a GTM data layer (e.g. BulkReefSupply).
+  const productLinkRe = new RegExp(
+    `href="https?://${domain.replace(/\./g, "\\.")}(/(?![^"]*\\?)[\\w-]+\\.html)"`,
+    "g"
+  );
+  const productEntries: Array<{ handle: string; pos: number }> = [];
+  const seenHandles = new Set<string>();
+  let pl;
+  while ((pl = productLinkRe.exec(html)) !== null) {
+    const handle = pl[1].replace(/^\//, "");
+    // skip category/navigation pages (paths with more than one segment or known patterns)
+    if (handle.includes("/") || /^(?:live-goods|categories|customer|checkout|cart|search)/.test(handle)) continue;
+    if (!seenHandles.has(handle)) {
+      productEntries.push({ handle, pos: pl.index });
+      seenHandles.add(handle);
+    }
+  }
+
+  if (productEntries.length === 0) return [];
+
+  const fallbackResults: object[] = [];
+  const seenFallbackIds = new Set<number>();
+
+  for (let i = 0; i < productEntries.length; i++) {
+    const { handle, pos } = productEntries[i];
+    const nextPos = i + 1 < productEntries.length ? productEntries[i + 1].pos : Math.min(html.length, pos + 5000);
+    const block = html.slice(pos, nextPos);
+
+    // Name from alt attribute (most reliable in Magento product cards)
+    const altMatch = block.match(/alt="([^"]{3,120})"/);
+    // Or from link text
+    const linkTextMatch = block.match(/<a[^>]+class="[^"]*(?:product-item-link|product-name)[^"]*"[^>]*>\s*([^<]{3,120})\s*<\/a>/i)
+      ?? block.match(/class="[^"]*product-item-name[^"]*"[^>]*>[\s\S]{0,100}?<a[^>]*>([^<]{3,120})<\/a>/i);
+    const name = linkTextMatch?.[1]?.trim() ?? altMatch?.[1]?.trim();
+    if (!name || name.length < 3) continue;
+
+    // Price: first $X.XX in the block
+    const priceMatch = block.match(/\$([\d,]+\.\d{2})/);
+    if (!priceMatch) continue;
+    const price = parseFloat(priceMatch[1].replace(/,/g, ""));
+    if (isNaN(price) || price <= 0) continue;
+
+    // Image: media/catalog CDN or any img src in the block
+    const imgMatch = block.match(/(?:data-src|src)="([^"]*\/media\/catalog\/product\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i)
+      ?? block.match(/(?:data-src|src)="(https?:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i);
+    const imageUrl = imgMatch ? (imgMatch[1].startsWith("http") ? imgMatch[1] : `${baseUrl}${imgMatch[1]}`).split("?")[0] : null;
+
+    const id = hashStringToBigint(handle);
+    if (seenFallbackIds.has(id)) continue;
+    seenFallbackIds.add(id);
+
+    fallbackResults.push({
       vendor_slug: vendorSlug,
-      shopify_id: parseInt(item.item_id),
+      shopify_id: id,
       handle,
-      title: item.item_name,
-      product_type: item.item_category ?? "coral",
+      title: name,
+      product_type: collection,
       collection,
       price,
       compare_at_price: null,
-      image_url: handleImageMap.get(handle) ?? null,
+      image_url: imageUrl,
       tags: [],
       description: null,
       scraped_at: new Date().toISOString(),
       is_available: true,
-    };
-  }).filter(Boolean);
+    });
+  }
+
+  return fallbackResults;
 }
 
 async function scrapeMagentoVendor(
@@ -856,72 +926,74 @@ interface BigCommerceItem {
 }
 
 function parseBigCommerceProductsFromHtml(html: string, vendorSlug: string, collection: string): object[] {
-  const items: BigCommerceItem[] = [];
+  // BigCommerce category pages embed product IDs in cart.php links as product%5Fid (URL-encoded _)
+  // Extract each occurrence and look at surrounding HTML for name and price.
+  const productPositions: Array<{ id: number; pos: number }> = [];
   const seenIds = new Set<number>();
+  const cartRe = /product(?:%5[Ff]|_)id=(\d+)/g;
   let m: RegExpExecArray | null;
-
-  // Strategy 1: GA4 dataLayer – item_name before item_id
-  const r1 = /\{[^{}]*"item_name"\s*:\s*"([^"]+)"[^{}]*"item_id"\s*:\s*"(\d+)"[^{}]*"price"\s*:\s*([\d.]+)[^{}]*\}/g;
-  while ((m = r1.exec(html)) !== null) {
-    const id = parseInt(m[2]);
-    const price = parseFloat(m[3]);
-    if (!seenIds.has(id) && !isNaN(price) && price > 0) {
-      items.push({ id, name: m[1], price, compareAtPrice: null, imageUrl: null, isAvailable: true });
+  while ((m = cartRe.exec(html)) !== null) {
+    const id = parseInt(m[1]);
+    if (!seenIds.has(id) && id > 0) {
+      productPositions.push({ id, pos: m.index });
       seenIds.add(id);
     }
   }
+  if (productPositions.length === 0) return [];
 
-  // Strategy 2: GA4 dataLayer – item_id before item_name
-  if (seenIds.size === 0) {
-    const r2 = /\{[^{}]*"item_id"\s*:\s*"(\d+)"[^{}]*"item_name"\s*:\s*"([^"]+)"[^{}]*"price"\s*:\s*([\d.]+)[^{}]*\}/g;
-    while ((m = r2.exec(html)) !== null) {
-      const id = parseInt(m[1]);
-      const price = parseFloat(m[3]);
-      if (!seenIds.has(id) && !isNaN(price) && price > 0) {
-        items.push({ id, name: m[2], price, compareAtPrice: null, imageUrl: null, isAvailable: true });
-        seenIds.add(id);
+  // Pre-collect CDN images so we can pair them with products by position
+  const imgPositions: Array<{ pos: number; url: string }> = [];
+  const imgRe = /(?:data-src|src)="(https:\/\/cdn\d+\.bigcommerce\.com\/s-[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
+  while ((m = imgRe.exec(html)) !== null) {
+    imgPositions.push({ pos: m.index, url: m[1].split("?")[0] });
+  }
+
+  return productPositions.map(({ id, pos }) => {
+    const WINDOW = 4000;
+    const before = html.slice(Math.max(0, pos - WINDOW), pos);
+
+    // Product name: last meaningful link text before the cart URL
+    const linkMatches = [...before.matchAll(/<a[^>]+href="\/[^"]{5,100}"[^>]*>\s*([^<]{3,100})\s*<\/a>/g)];
+    let name: string | null = null;
+    for (let i = linkMatches.length - 1; i >= 0; i--) {
+      const candidate = linkMatches[i][1].trim();
+      if (candidate.length >= 3 && !/^(add|cart|view|shop|buy|more|details)/i.test(candidate)) {
+        name = candidate;
+        break;
       }
     }
-  }
-
-  // Strategy 3: Classic UA Enhanced Ecommerce (name/id/price as strings)
-  if (seenIds.size === 0) {
-    const r3 = /\{"name":"([^"]+)","id":"(\d+)","price":"([\d.]+)"[^}]*\}/g;
-    while ((m = r3.exec(html)) !== null) {
-      const id = parseInt(m[2]);
-      const price = parseFloat(m[3]);
-      if (!seenIds.has(id) && !isNaN(price) && price > 0) {
-        items.push({ id, name: m[1], price, compareAtPrice: null, imageUrl: null, isAvailable: true });
-        seenIds.add(id);
-      }
+    // Fallback: alt text of nearest product image before cart link
+    if (!name) {
+      const altMatch = before.match(/alt="([^"]{3,100})"\s*(?:width|height|class|style)/i);
+      if (altMatch) name = altMatch[1].trim();
     }
-  }
+    if (!name || name.length < 3) return null;
 
-  if (items.length === 0) return [];
+    // Price: last $X.XX before the cart URL
+    const priceMatch = before.match(/\$([\d,]+\.\d{2})(?=[^$]*$)/);
+    if (!priceMatch) return null;
+    const price = parseFloat(priceMatch[1].replace(/,/g, ""));
+    if (isNaN(price) || price <= 0) return null;
 
-  // Extract CDN images in page order and pair by position
-  const imgRegex = /(?:data-src|src)="(https:\/\/cdn\d+\.bigcommerce\.com\/s-[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
-  const imgs: string[] = [];
-  while ((m = imgRegex.exec(html)) !== null) {
-    const url = m[1].split("?")[0];
-    if (!imgs.includes(url)) imgs.push(url);
-  }
+    // Nearest CDN image before the cart link
+    const nearImg = imgPositions.filter(ip => ip.pos < pos).slice(-1)[0];
 
-  return items.map((item, i) => ({
-    vendor_slug: vendorSlug,
-    shopify_id: item.id,
-    handle: String(item.id),
-    title: item.name,
-    product_type: collection,
-    collection,
-    price: item.price,
-    compare_at_price: item.compareAtPrice,
-    image_url: imgs[i] ?? null,
-    tags: [],
-    description: null,
-    scraped_at: new Date().toISOString(),
-    is_available: item.isAvailable,
-  }));
+    return {
+      vendor_slug: vendorSlug,
+      shopify_id: id,
+      handle: String(id),
+      title: name,
+      product_type: collection,
+      collection,
+      price,
+      compare_at_price: null,
+      image_url: nearImg?.url ?? null,
+      tags: [],
+      description: null,
+      scraped_at: new Date().toISOString(),
+      is_available: true,
+    };
+  }).filter(Boolean);
 }
 
 async function scrapeBigCommerceVendor(
