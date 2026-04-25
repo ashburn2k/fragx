@@ -546,6 +546,13 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   // are live animals used in refugiums, not supplies, even if in a food collection
   if (/\bcopepod|\bamphipod|\brotifer/i.test(title)) return 'fish';
 
+  // Live cleanup-crew inverts (snails, hermits, shrimp, crabs sold as livestock)
+  // sometimes get mis-tagged with product_type='equipment' by category-based
+  // scrapers. Detect strong live-stock signals before the equipment short-circuit.
+  if (/\bcleanup\s*crew\b|\bclean[\s-]up\s*crew\b|\bcuc\b/i.test(title)) return 'fish';
+  if (/\bhermit\s*crab\b/i.test(title)) return 'fish';
+  if (/\b(?:lysmata|mithraculus|trochus|nassarius|turbo|nerite|cerith|astrea)\b/i.test(title)) return 'fish';
+
   // Equipment first — prevents brand names like "Reef Octopus" matching invert patterns
   if (HIDDEN_PRODUCT_TYPES.has(pt)) return 'equipment';
   if (HIDDEN_COLLECTIONS.has(col)) return 'equipment';
