@@ -1131,35 +1131,64 @@ async function scrapeBigCommerceVendor(
     { paths: vendor.equipment_collections ?? [], forceType: "equipment" },
   ];
 
+  const visitedPaths = new Set<string>();
+  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  async function scrapeCategory(categoryPath: string, forceType: string | null, depth: number): Promise<void> {
+    if (visitedPaths.has(categoryPath)) return;
+    visitedPaths.add(categoryPath);
+
+    let page = 1;
+    let totalForCategory = 0;
+    let firstPageHtml: string | null = null;
+
+    while (true) {
+      const url = `${vendor.base_url}/${categoryPath}/?page=${page}&limit=100`;
+      const html = await fetchHtmlPage(url);
+      if (!html) break;
+      if (page === 1) firstPageHtml = html;
+
+      const products = parseBigCommerceProductsFromHtml(html, vendor.slug, categoryPath);
+      if (products.length === 0) break;
+
+      let newCount = 0;
+      for (const product of products) {
+        const rec = product as { shopify_id: number; product_type: string };
+        if (forceType) rec.product_type = forceType;
+        if (!seenIds.has(rec.shopify_id)) {
+          allRecords.set(rec.shopify_id, product);
+          seenIds.add(rec.shopify_id);
+          newCount++;
+        }
+      }
+      totalForCategory += products.length;
+
+      if (newCount === 0) break;
+      if (products.length < 100) break;
+      if (page >= 20) break;
+      page++;
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    // BigCommerce often nests product listings under brand/leaf subcategories,
+    // with the parent serving only as a landing page. If this path yielded
+    // nothing, walk the discovered subcategory links once.
+    if (totalForCategory === 0 && firstPageHtml && depth < 2) {
+      const subRe = new RegExp(`href="${escapeRe(vendor.base_url)}/${escapeRe(categoryPath)}/([a-z0-9][a-z0-9-]*)/"`, "gi");
+      const subs = new Set<string>();
+      let sm: RegExpExecArray | null;
+      while ((sm = subRe.exec(firstPageHtml)) !== null) subs.add(sm[1]);
+      for (const sub of subs) {
+        await scrapeCategory(`${categoryPath}/${sub}`, forceType, depth + 1);
+        await new Promise(r => setTimeout(r, 200));
+      }
+    }
+    await new Promise(r => setTimeout(r, 300));
+  }
+
   for (const { paths, forceType } of sections) {
     for (const categoryPath of paths) {
-      let page = 1;
-      while (true) {
-        const url = `${vendor.base_url}/${categoryPath}/?page=${page}&limit=100`;
-        const html = await fetchHtmlPage(url);
-        if (!html) break;
-
-        const products = parseBigCommerceProductsFromHtml(html, vendor.slug, categoryPath);
-        if (products.length === 0) break;
-
-        let newCount = 0;
-        for (const product of products) {
-          const rec = product as { shopify_id: number; product_type: string };
-          if (forceType) rec.product_type = forceType;
-          if (!seenIds.has(rec.shopify_id)) {
-            allRecords.set(rec.shopify_id, product);
-            seenIds.add(rec.shopify_id);
-            newCount++;
-          }
-        }
-
-        if (newCount === 0) break;
-        if (products.length < 100) break;
-        if (page >= 20) break;
-        page++;
-        await new Promise(r => setTimeout(r, 500));
-      }
-      await new Promise(r => setTimeout(r, 300));
+      await scrapeCategory(categoryPath, forceType, 0);
     }
   }
 
