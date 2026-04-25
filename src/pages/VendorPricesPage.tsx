@@ -826,7 +826,6 @@ export default function VendorPricesPage() {
   const [vendorOverflowOpen, setVendorOverflowOpen] = useState(false);
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [totalDbCount, setTotalDbCount] = useState<number | null>(null);
   const [vendorLastRuns, setVendorLastRuns] = useState<Map<string, string | null>>(new Map());
   const [dbSearchResults, setDbSearchResults] = useState<VendorProduct[] | null>(null);
   const [isDbSearching, setIsDbSearching] = useState(false);
@@ -889,13 +888,6 @@ export default function VendorPricesPage() {
 
   useEffect(() => {
     loadVendors();
-    supabase
-      .from('vendor_products')
-      .select('*', { count: 'exact', head: true })
-      .not('collection', 'in', COLLECTION_BLOCK_LIST)
-      .then(({ count }) => {
-        if (count !== null) setTotalDbCount(count);
-      });
   }, []);
 
   useEffect(() => {
@@ -1749,21 +1741,15 @@ export default function VendorPricesPage() {
                   {isDbSearching
                     ? <><RefreshCw size={12} className="animate-spin" /> Searching all vendors...</>
                     : <>
-                        {selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters && totalDbCount !== null
-                          ? `${totalDbCount.toLocaleString()} products`
-                          : `${filtered.length.toLocaleString()} products`}
+                        {`${filtered.length.toLocaleString()} products`}
                         {hasActiveFilters && <span className="text-slate-400 dark:text-slate-500"> (filtered)</span>}
                       </>
                   }
                 </span>
                 <div className="flex items-center gap-2">
-                  {!(selectedVendor === ALL_VENDORS_SLUG && !hasActiveFilters) && (
-                    <span className="text-slate-400 dark:text-slate-500 text-xs hidden sm:inline">
-                      {selectedVendor === ALL_VENDORS_SLUG && totalDbCount !== null
-                        ? `${totalDbCount.toLocaleString()} total in catalog`
-                        : `${catalogCount.toLocaleString()} total in catalog`}
-                    </span>
-                  )}
+                  <span className="text-slate-400 dark:text-slate-500 text-xs hidden sm:inline">
+                    {`${catalogCount.toLocaleString()} in ${selectedCategory}`}
+                  </span>
                   <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 transition-colors duration-200">
                     {([50, 100, 200] as PageSize[]).map(size => (
                       <button
