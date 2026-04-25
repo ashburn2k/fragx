@@ -1091,29 +1091,42 @@ async function scrapeBigCommerceVendor(
   const allRecords = new Map<number, object>();
   const seenIds = new Set<number>();
 
-  for (const categoryPath of vendor.coral_collections) {
-    let page = 1;
-    while (true) {
-      const url = `${vendor.base_url}/${categoryPath}/?page=${page}&limit=100`;
-      const html = await fetchHtmlPage(url);
-      if (!html) break;
+  const sections: Array<{ paths: string[]; forceType: string | null }> = [
+    { paths: vendor.coral_collections ?? [], forceType: null },
+    { paths: vendor.fish_collections ?? [], forceType: null },
+    { paths: vendor.equipment_collections ?? [], forceType: "equipment" },
+  ];
 
-      const products = parseBigCommerceProductsFromHtml(html, vendor.slug, categoryPath);
-      if (products.length === 0) break;
+  for (const { paths, forceType } of sections) {
+    for (const categoryPath of paths) {
+      let page = 1;
+      while (true) {
+        const url = `${vendor.base_url}/${categoryPath}/?page=${page}&limit=100`;
+        const html = await fetchHtmlPage(url);
+        if (!html) break;
 
-      for (const product of products) {
-        const rec = product as { shopify_id: number };
-        if (!seenIds.has(rec.shopify_id)) {
-          allRecords.set(rec.shopify_id, product);
-          seenIds.add(rec.shopify_id);
+        const products = parseBigCommerceProductsFromHtml(html, vendor.slug, categoryPath);
+        if (products.length === 0) break;
+
+        let newCount = 0;
+        for (const product of products) {
+          const rec = product as { shopify_id: number; product_type: string };
+          if (forceType) rec.product_type = forceType;
+          if (!seenIds.has(rec.shopify_id)) {
+            allRecords.set(rec.shopify_id, product);
+            seenIds.add(rec.shopify_id);
+            newCount++;
+          }
         }
-      }
 
-      if (products.length < 100) break;
-      page++;
-      await new Promise(r => setTimeout(r, 500));
+        if (newCount === 0) break;
+        if (products.length < 100) break;
+        if (page >= 20) break;
+        page++;
+        await new Promise(r => setTimeout(r, 500));
+      }
+      await new Promise(r => setTimeout(r, 300));
     }
-    await new Promise(r => setTimeout(r, 300));
   }
 
   const historyRecords: object[] = [];
