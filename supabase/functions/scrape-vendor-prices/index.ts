@@ -514,7 +514,7 @@ interface MagentoItem {
   item_category?: string;
 }
 
-function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl: string, collection: string): object[] {
+function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl: string, collection: string, allCollectionPaths: string[] = []): object[] {
   const items: MagentoItem[] = [];
   const itemRegex = /\{"item_name":"([^"]+)","item_id":"(\d+)","price":"([\d.]+)"[^}]*\}/g;
   let m;
@@ -594,18 +594,31 @@ function parseMagentoProductsFromHtml(html: string, vendorSlug: string, baseUrl:
   }
 
   // Fallback: no GTM data — parse product URLs, names, and prices directly from HTML.
-  // Works for Magento stores that don't use a GTM data layer (e.g. BulkReefSupply).
+  // Works for Magento stores like BulkReefSupply where products live under a category prefix
+  // e.g. https://www.bulkreefsupply.com/live-goods/product-name.html
   const productLinkRe = new RegExp(
-    `href="https?://${domain.replace(/\./g, "\\.")}(/(?![^"]*\\?)[\\w-]+\\.html)"`,
+    `href="https?://${domain.replace(/\./g, "\\.")}(/(?![^"]*\\?)[\\w/-]+\\.html)"`,
     "g"
   );
+
+  // Build a set of category/navigation handles to skip
+  const skipHandles = new Set<string>([
+    collection,
+    collection + ".html",
+    ...allCollectionPaths.map(p => p.replace(/^\//, "")),
+    ...allCollectionPaths.map(p => p.replace(/^\//, "").replace(/\.html$/, "")),
+  ]);
+
   const productEntries: Array<{ handle: string; pos: number }> = [];
   const seenHandles = new Set<string>();
   let pl;
   while ((pl = productLinkRe.exec(html)) !== null) {
     const handle = pl[1].replace(/^\//, "");
-    // skip category/navigation pages (paths with more than one segment or known patterns)
-    if (handle.includes("/") || /^(?:live-goods|categories|customer|checkout|cart|search)/.test(handle)) continue;
+    if (skipHandles.has(handle)) continue;
+    // Skip system/navigation paths
+    if (/^(?:categories|customer|checkout|cart|search|catalogsearch|wishlist|account|cms|contact|returns|info)/.test(handle)) continue;
+    // Skip paths deeper than one category level (3+ segments)
+    if ((handle.match(/\//g) ?? []).length >= 2) continue;
     if (!seenHandles.has(handle)) {
       productEntries.push({ handle, pos: pl.index });
       seenHandles.add(handle);
@@ -693,7 +706,8 @@ async function scrapeMagentoVendor(
       const html = await fetchHtmlPage(url);
       if (!html) break;
 
-      const products = parseMagentoProductsFromHtml(html, vendor.slug, vendor.base_url, catalogPath.replace(/\.html$/, ""));
+      const allCollPaths = [...(vendor.coral_collections ?? []), ...(vendor.fish_collections ?? [])];
+      const products = parseMagentoProductsFromHtml(html, vendor.slug, vendor.base_url, catalogPath.replace(/\.html$/, ""), allCollPaths);
       if (products.length === 0) break;
 
       for (const product of products) {
