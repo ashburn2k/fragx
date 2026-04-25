@@ -1029,7 +1029,7 @@ function parseBigCommerceProductsFromHtml(html: string, vendorSlug: string, coll
     const before = html.slice(Math.max(0, pos - WINDOW), pos);
 
     // Product name: last meaningful link text before the cart URL
-    const linkMatches = [...before.matchAll(/<a[^>]+href="\/[^"]{5,100}"[^>]*>\s*([^<]{3,100})\s*<\/a>/g)];
+    const linkMatches = [...before.matchAll(/<a[^>]+href="(?:https?:\/\/[^"]+)?\/[^"]{5,200}"[^>]*>\s*([^<]{3,200})\s*<\/a>/g)];
     let name: string | null = null;
     for (let i = linkMatches.length - 1; i >= 0; i--) {
       const candidate = linkMatches[i][1].trim();
