@@ -42,6 +42,7 @@ interface VendorConfig {
   base_url: string;
   coral_collections: string[];
   fish_collections: string[];
+  equipment_collections?: string[];
   use_products_endpoint?: boolean;
   platform?: string;
   venderup_site_link?: string;
@@ -722,6 +723,44 @@ async function scrapeMagentoVendor(
 
       // Stop if this page added nothing new (some Magento stores ignore ?p= and
       // return the same product set on every page, causing an infinite loop).
+      if (newCount === 0) break;
+      if (products.length < 96) break;
+      if (page >= 20) break;
+      page++;
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  // Equipment categories — scraped the same way as coral, but tagged with
+  // product_type='equipment' so the frontend classifier routes them to the
+  // Equipment tab.
+  for (const catalogPath of (vendor.equipment_collections ?? [])) {
+    let page = 1;
+    while (true) {
+      const url = `${vendor.base_url}/${catalogPath}?product_list_limit=96&p=${page}`;
+      const html = await fetchHtmlPage(url);
+      if (!html) break;
+
+      const allCollPaths = [
+        ...(vendor.coral_collections ?? []),
+        ...(vendor.fish_collections ?? []),
+        ...(vendor.equipment_collections ?? []),
+      ];
+      const products = parseMagentoProductsFromHtml(html, vendor.slug, vendor.base_url, catalogPath.replace(/\.html$/, ""), allCollPaths);
+      if (products.length === 0) break;
+
+      let newCount = 0;
+      for (const product of products) {
+        const rec = product as { shopify_id: number; product_type: string };
+        // Force equipment classification regardless of source path
+        rec.product_type = "equipment";
+        if (!seenIds.has(rec.shopify_id)) {
+          allRecords.set(rec.shopify_id, product);
+          seenIds.add(rec.shopify_id);
+          newCount++;
+        }
+      }
+
       if (newCount === 0) break;
       if (products.length < 96) break;
       if (page >= 20) break;
