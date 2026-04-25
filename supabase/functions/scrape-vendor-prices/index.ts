@@ -710,18 +710,41 @@ async function scrapeMagentoVendor(
       const products = parseMagentoProductsFromHtml(html, vendor.slug, vendor.base_url, catalogPath.replace(/\.html$/, ""), allCollPaths);
       if (products.length === 0) break;
 
+      let newCount = 0;
       for (const product of products) {
         const rec = product as { shopify_id: number };
         if (!seenIds.has(rec.shopify_id)) {
           allRecords.set(rec.shopify_id, product);
           seenIds.add(rec.shopify_id);
+          newCount++;
         }
       }
 
+      // Stop if this page added nothing new (some Magento stores ignore ?p= and
+      // return the same product set on every page, causing an infinite loop).
+      if (newCount === 0) break;
       if (products.length < 96) break;
+      if (page >= 20) break;
       page++;
       await new Promise(r => setTimeout(r, 500));
     }
+  }
+
+  // Persist HTML-parsed products immediately so a timeout in later enrichment
+  // (GraphQL, CDX archive lookups) doesn't lose the main scrape result.
+  if (allRecords.size > 0) {
+    const earlyArr = Array.from(allRecords.values());
+    resolveImageUrls(allRecords, existingMap, storagePrefix);
+    const EBATCH = 250;
+    for (let i = 0; i < earlyArr.length; i += EBATCH) {
+      await supabase
+        .from("vendor_products")
+        .upsert(earlyArr.slice(i, i + EBATCH), { onConflict: "vendor_slug,shopify_id" });
+    }
+    await supabase
+      .from("vendor_scrape_configs")
+      .update({ last_scraped_at: new Date().toISOString() })
+      .eq("slug", vendor.slug);
   }
 
   for (const catalogPath of vendor.coral_collections) {
