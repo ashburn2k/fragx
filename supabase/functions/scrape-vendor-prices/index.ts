@@ -731,6 +731,40 @@ async function scrapeMagentoVendor(
     }
   }
 
+  // Fish / invert categories — same parsing as coral, no forced product_type.
+  for (const catalogPath of (vendor.fish_collections ?? [])) {
+    let page = 1;
+    while (true) {
+      const url = `${vendor.base_url}/${catalogPath}?product_list_limit=96&p=${page}`;
+      const html = await fetchHtmlPage(url);
+      if (!html) break;
+
+      const allCollPaths = [
+        ...(vendor.coral_collections ?? []),
+        ...(vendor.fish_collections ?? []),
+        ...(vendor.equipment_collections ?? []),
+      ];
+      const products = parseMagentoProductsFromHtml(html, vendor.slug, vendor.base_url, catalogPath.replace(/\.html$/, ""), allCollPaths);
+      if (products.length === 0) break;
+
+      let newCount = 0;
+      for (const product of products) {
+        const rec = product as { shopify_id: number };
+        if (!seenIds.has(rec.shopify_id)) {
+          allRecords.set(rec.shopify_id, product);
+          seenIds.add(rec.shopify_id);
+          newCount++;
+        }
+      }
+
+      if (newCount === 0) break;
+      if (products.length < 96) break;
+      if (page >= 20) break;
+      page++;
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
   // Equipment categories — scraped the same way as coral, but tagged with
   // product_type='equipment' so the frontend classifier routes them to the
   // Equipment tab.
