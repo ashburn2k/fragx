@@ -93,8 +93,6 @@ const HIDDEN_TITLE_PATTERNS = [
   /\bzoo?plankton\b/i,
   /\bmysis\s+shrimp\b/i,
   /\bbrine\s+shrimp\b/i,
-  /\bcopepod/i,
-  /\broti(fer)?/i,
   /\bnori\b/i,
   /\bseaweed\s+(select|sheet|clip)/i,
   /\bfeed(ing)?\s+(block|station|ring)\b/i,
@@ -208,6 +206,7 @@ const HIDDEN_COLLECTIONS = new Set([
   'algae-control', 'algae-scrapers', 'cleaning',
   'fish-food', 'coral-food', 'reef-food', 'frozen-foods',
   'live-food', 'dry-food', 'food-and-supplements',
+  'oversized', 'drop-shipped',
 ]);
 
 const HIDDEN_PRODUCT_TYPES = new Set([
@@ -227,6 +226,7 @@ const HIDDEN_PRODUCT_TYPES = new Set([
   'maintenance', 'water maintenance', 'water care', 'tank maintenance',
   'fish food', 'coral food', 'reef food', 'frozen food', 'live food',
   'food and supplements', 'fish food and supplements',
+  'oversized', 'drop shipped', 'drop-shipped',
 ]);
 
 const HIDDEN_TAG_PATTERNS = [
@@ -253,6 +253,13 @@ const VENDOR_HIDE_RULES: Record<string, { collections?: RegExp[]; titlePatterns?
   },
   'living-reef-orlando': {
     collections: [/^all$/i, /^foods?-?(&|-and-)?-?maintenance$/i, /^shipping-?module$/i],
+  },
+  'areef-creation': {
+    collections: [/^test$/i],
+    titlePatterns: [/^shopify\s+auction\s*$/i],
+  },
+  'top-shelf-aquatics': {
+    collections: [/^ground-?shipping$/i],
   },
 };
 
@@ -503,6 +510,7 @@ const JUNK_COLLECTIONS = new Set([
   'african-cichlids', 'barbs', 'bettas-siamese-fighting-fish', 'bichir',
   'captive-bred-freshwater-fish', 'captive-bred-freshwater-fish-and-invertebrates',
   'cory-corydoras-catfish', 'danios-minnows',
+  'coral-pos',
 ]);
 
 const JUNK_TITLE_PATTERNS = [
@@ -533,6 +541,10 @@ function getProductCategory(product: { tags: string[]; collection: string; title
   const col = product.collection.toLowerCase().trim();
   const pt = product.product_type.toLowerCase().trim();
   const { title, tags } = product;
+
+  // Live reef organisms override equipment classification — copepods/amphipods/rotifers
+  // are live animals used in refugiums, not supplies, even if in a food collection
+  if (/\bcopepod|\bamphipod|\brotifer/i.test(title)) return 'fish';
 
   // Equipment first — prevents brand names like "Reef Octopus" matching invert patterns
   if (HIDDEN_PRODUCT_TYPES.has(pt)) return 'equipment';
