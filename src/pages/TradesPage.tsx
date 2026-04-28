@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, X, ArrowLeftRight, Heart, Inbox, MessageSquare, CheckCircle, XCircle, Pencil, Shield, LogIn } from 'lucide-react';
 import { supabase, HaveListItem, WantListItem, TradeMatch } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,14 @@ import TradeModPanel from '../components/admin/TradeModPanel';
 import CommunityFeed from '../components/trades/CommunityFeed';
 
 const CORAL_TYPES = ['SPS', 'LPS', 'Soft Coral', 'Equipment', 'Tank', 'Light', 'Other'];
+const INPUT_CLASS = 'w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500';
+const BUTTON_SECONDARY_CLASS = 'flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white py-3 rounded-xl transition-colors text-sm';
+const BUTTON_PRIMARY_CLASS = 'flex-1 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 text-sm';
+const TAB_BASE_CLASS = 'snap-start flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200';
+const TAB_ACTIVE_CLASS = 'bg-cyan-500 text-white shadow-sm shadow-cyan-500/25';
+const TAB_INACTIVE_CLASS = 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+const TAB_MOD_ACTIVE_CLASS = 'bg-amber-500 text-white shadow-sm shadow-amber-500/25';
+const TAB_MOD_INACTIVE_CLASS = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50';
 
 type TradeTab = 'browse' | 'have' | 'want' | 'matches' | 'messages' | 'moderate';
 
@@ -35,7 +43,7 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
       <select
         value={addForm.coral_type}
         onChange={e => setAddForm(f => ({ ...f, coral_type: e.target.value }))}
-        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
+        className={INPUT_CLASS}
       >
         <option value="">Select coral type...</option>
         {CORAL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -46,7 +54,7 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
           onChange={e => setAddForm(f => ({ ...f, max_price: e.target.value }))}
           type="number"
           placeholder="Max price willing to pay ($)"
-          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+          className={INPUT_CLASS}
         />
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
@@ -56,7 +64,7 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
             type="number"
             min="1"
             placeholder="Quantity available"
-            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            className={INPUT_CLASS}
           />
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm pointer-events-none">$</span>
@@ -75,17 +83,17 @@ function CoralForm({ addForm, setAddForm, imageUrl, setImageUrl, submitting, onS
         value={addForm.notes}
         onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
         placeholder="Notes (optional)"
-        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+        className={INPUT_CLASS}
       />
       <ImageUpload value={imageUrl} onChange={setImageUrl} />
       <div className="flex gap-3">
-        <button onClick={onCancel} className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white py-3 rounded-xl transition-colors text-sm">
+        <button onClick={onCancel} className={BUTTON_SECONDARY_CLASS}>
           Cancel
         </button>
         <button
           onClick={onSubmit}
           disabled={submitting || !addForm.coral_type}
-          className="flex-1 bg-gradient-to-r from-cyan-500 to-teal-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 text-sm"
+          className={BUTTON_PRIMARY_CLASS}
         >
           {submitting ? (isEdit ? 'Saving...' : 'Adding...') : (isEdit ? 'Save Changes' : 'Add')}
         </button>
@@ -119,29 +127,21 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const currentUserId = user?.id;
+  const unreadMessageCount = useMemo(() => conversations.reduce((a, c) => a + c.unread, 0), [conversations]);
+  const pendingMatchesCount = useMemo(() => matches.filter(m => m.status === 'pending').length, [matches]);
+  const selectedConversation = useMemo(() => (
+    selectedConvo ? conversations.find(c => c.partnerId === selectedConvo) : undefined
+  ), [conversations, selectedConvo]);
 
-  useEffect(() => {
-    if (!user) return;
-    loadAll();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
-    const interval = setInterval(() => {
-      supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [user]);
-
-  async function loadAll() {
-    if (!user) return;
+  const loadAll = useCallback(async () => {
+    if (!currentUserId) return;
     setLoading(true);
     const [haveRes, wantRes, matchRes, msgRes] = await Promise.all([
-      supabase.from('have_list').select('*').eq('user_id', user.id).eq('is_active', true),
-      supabase.from('want_list').select('*').eq('user_id', user.id).eq('is_active', true),
-      supabase.from('trade_matches').select('*, user_a:user_a_id(username, display_name, reputation_score, total_reviews), user_b:user_b_id(username, display_name, reputation_score, total_reviews)').or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`).order('created_at', { ascending: false }),
-      supabase.from('messages').select('*, sender:sender_id(username), recipient:recipient_id(username)').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at', { ascending: false }),
+      supabase.from('have_list').select('*').eq('user_id', currentUserId).eq('is_active', true),
+      supabase.from('want_list').select('*').eq('user_id', currentUserId).eq('is_active', true),
+      supabase.from('trade_matches').select('*, user_a:user_a_id(username, display_name, reputation_score, total_reviews), user_b:user_b_id(username, display_name, reputation_score, total_reviews)').or(`user_a_id.eq.${currentUserId},user_b_id.eq.${currentUserId}`).order('created_at', { ascending: false }),
+      supabase.from('messages').select('*, sender:sender_id(username), recipient:recipient_id(username)').or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`).order('created_at', { ascending: false }),
     ]);
 
     setHaveList(haveRes.data ?? []);
@@ -151,19 +151,33 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
     const msgs = msgRes.data ?? [];
     const convMap = new Map<string, typeof conversations[number]>();
     msgs.forEach(m => {
-      const partnerId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
-      const partnerName = m.sender_id === user.id
+      const partnerId = m.sender_id === currentUserId ? m.recipient_id : m.sender_id;
+      const partnerName = m.sender_id === currentUserId
         ? (m.recipient as { username: string } | null)?.username ?? 'User'
         : (m.sender as { username: string } | null)?.username ?? 'User';
       if (!convMap.has(partnerId)) {
-        convMap.set(partnerId, { partnerId, partnerName, lastMsg: m.content, unread: m.status === 'sent' && m.recipient_id === user.id ? 1 : 0 });
-      } else if (m.status === 'sent' && m.recipient_id === user.id) {
+        convMap.set(partnerId, { partnerId, partnerName, lastMsg: m.content, unread: m.status === 'sent' && m.recipient_id === currentUserId ? 1 : 0 });
+      } else if (m.status === 'sent' && m.recipient_id === currentUserId) {
         convMap.get(partnerId)!.unread++;
       }
     });
     setConversations(Array.from(convMap.values()));
     setLoading(false);
-  }
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadAll();
+  }, [loadAll, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
+    const interval = setInterval(() => {
+      supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   async function loadConversation(partnerId: string) {
     if (!user) return;
@@ -293,41 +307,42 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
     loadAll();
   }
 
-  const tabs: { id: TradeTab; label: string; count?: number; modOnly?: boolean; publicOnly?: boolean }[] = [
-    { id: 'browse', label: 'Browse', publicOnly: true },
+  const tabs: { id: TradeTab; label: string; icon?: React.ReactNode; count?: number; modOnly?: boolean; publicOnly?: boolean }[] = [
+    { id: 'browse', label: 'Browse', icon: <Inbox size={12} />, publicOnly: true },
     ...(user ? [
-      { id: 'have' as TradeTab, label: 'Have', count: haveList.length },
-      { id: 'want' as TradeTab, label: 'Want', count: wantList.length },
-      { id: 'matches' as TradeTab, label: 'Matches', count: matches.filter(m => m.status === 'pending').length },
-      { id: 'messages' as TradeTab, label: 'Messages', count: conversations.reduce((a, c) => a + c.unread, 0) },
+      { id: 'have' as TradeTab, label: 'Have', icon: <Plus size={12} />, count: haveList.length },
+      { id: 'want' as TradeTab, label: 'Want', icon: <Heart size={12} />, count: wantList.length },
+      { id: 'matches' as TradeTab, label: 'Matches', icon: <ArrowLeftRight size={12} />, count: pendingMatchesCount },
+      { id: 'messages' as TradeTab, label: 'Messages', icon: <MessageSquare size={12} />, count: unreadMessageCount },
     ] : []),
-    ...(canModerate ? [{ id: 'moderate' as TradeTab, label: 'Moderate', modOnly: true }] : []),
+    ...(canModerate ? [{ id: 'moderate' as TradeTab, label: 'Moderate', icon: <Shield size={12} />, modOnly: true }] : []),
   ];
 
   return (
     <div className="flex gap-6 items-start">
       <div className="flex-1 min-w-0 space-y-5">
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {tabs.map(({ id, label, count, modOnly }) => (
+      <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
+        {tabs.map(({ id, label, icon, count, modOnly }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+            aria-pressed={activeTab === id}
+            className={`${TAB_BASE_CLASS} ${
               activeTab === id
-                ? modOnly ? 'bg-amber-500 text-white' : 'bg-cyan-500 text-white'
+                ? modOnly ? TAB_MOD_ACTIVE_CLASS : TAB_ACTIVE_CLASS
                 : modOnly
-                  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? TAB_MOD_INACTIVE_CLASS
+                  : TAB_INACTIVE_CLASS
             }`}
           >
-            {modOnly && <Shield size={12} />}
+            {icon}
             {label}
             {count !== undefined && count > 0 && (
               <span className={`text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold ${
                 activeTab === id ? 'bg-white/20' : 'bg-cyan-500 text-white'
               }`}>
-                {count}
+                {count > 99 ? '99+' : count}
               </span>
             )}
           </button>
@@ -343,7 +358,7 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
           </div>
           <button
             onClick={onShowAuth}
-            className="flex-shrink-0 bg-cyan-500 hover:bg-cyan-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+            className="flex-shrink-0 bg-cyan-500 hover:bg-cyan-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm shadow-cyan-500/30"
           >
             Sign In
           </button>
@@ -352,7 +367,7 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
 
       {activeTab === 'browse' && (
         <CommunityFeed
-          onContactSeller={(sellerId, sellerName) => {
+          onContactSeller={(sellerId) => {
             if (!user) return;
             setActiveTab('messages');
             loadConversation(sellerId);
@@ -520,7 +535,7 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Add items to your Have & Want lists to get matched</p>
                 </div>
               ) : matches.map(match => {
-                const partner = match.user_a_id === user.id ? match.user_b : match.user_a;
+                const partner = match.user_a_id === currentUserId ? match.user_b : match.user_a;
                 const partnerObj = partner as { username: string; display_name: string | null } | undefined;
                 return (
                   <div key={match.id} className={`bg-white dark:bg-slate-900 border rounded-xl p-4 space-y-3 transition-colors duration-200 ${
@@ -596,16 +611,16 @@ export default function TradesPage({ onShowAuth }: TradesPageProps) {
                       ← Back
                     </button>
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white">
-                      {conversations.find(c => c.partnerId === selectedConvo)?.partnerName?.[0]?.toUpperCase() ?? '?'}
+                      {selectedConversation?.partnerName?.[0]?.toUpperCase() ?? '?'}
                     </div>
-                    <span className="text-slate-900 dark:text-white font-medium">{conversations.find(c => c.partnerId === selectedConvo)?.partnerName}</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{selectedConversation?.partnerName}</span>
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {messages.map(msg => (
-                      <div key={msg.id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
+                      <div key={msg.id} className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
-                          msg.sender_id === user.id
+                          msg.sender_id === currentUserId
                             ? 'bg-cyan-600 text-white rounded-br-sm'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-sm'
                         }`}>
